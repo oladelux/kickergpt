@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
 
 export default function Profile() {
   const [user] = useState({
@@ -20,7 +21,8 @@ export default function Profile() {
   const usagePercentage = (user.creditsUsed / user.creditsTotal) * 100;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4 pb-20 md:pb-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4 pb-20 md:pb-4 md:pt-20">
+      <TopNav />
       <div className="max-w-4xl mx-auto space-y-6 animate-slide-up">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">

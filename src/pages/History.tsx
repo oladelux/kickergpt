@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
 
 type SavedInsight = {
   id: string;
@@ -57,7 +58,8 @@ export default function History() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-secondary pb-20 md:pb-4">
+    <div className="min-h-screen bg-gradient-to-b from-background to-secondary pb-20 md:pb-4 md:pt-20">
+      <TopNav />
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">

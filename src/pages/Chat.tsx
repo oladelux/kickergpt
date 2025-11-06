@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import BottomNav from "@/components/BottomNav";
+import TopNav from "@/components/TopNav";
 
 type Message = {
   id: string;
@@ -50,7 +51,8 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pb-16 md:pb-0">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pb-16 md:pb-0 md:pt-16">
+      <TopNav />
       <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
