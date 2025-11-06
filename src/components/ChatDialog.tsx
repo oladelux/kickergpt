@@ -1,0 +1,130 @@
+import { useState } from "react";
+import { Send, Bot, User, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Match } from "@/services/matches.service";
+
+type Message = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: Date;
+};
+
+interface ChatDialogProps {
+  match: Match | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProps) {
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !match) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: input,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+
+    setTimeout(() => {
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: "assistant",
+        content: `Here's an analysis for ${match.homeTeam} vs ${match.awayTeam}: Based on recent form and head-to-head stats, this promises to be an exciting match!`,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, aiMessage]);
+    }, 1000);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b">
+          <DialogTitle className="text-lg font-semibold">
+            {match && `${match.homeTeam} vs ${match.awayTeam} - AI Analysis`}
+          </DialogTitle>
+        </DialogHeader>
+
+        <ScrollArea className="flex-1 px-6 py-4">
+          <div className="space-y-4">
+            {messages.length === 0 && (
+              <div className="flex gap-3">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-2xl p-4 bg-card border border-border">
+                  <p className="text-sm">
+                    Hi! Ask me anything about this match - predictions, team stats, player performance, or tactical insights!
+                  </p>
+                </div>
+              </div>
+            )}
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex gap-3 animate-fade-in ${
+                  message.role === "user" ? "justify-end" : "justify-start"
+                }`}
+              >
+                {message.role === "assistant" && (
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                )}
+                
+                <div
+                  className={`rounded-2xl p-4 max-w-[80%] ${
+                    message.role === "user"
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-card border border-border"
+                  }`}
+                >
+                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <p className="text-xs opacity-60 mt-2">
+                    {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+
+                {message.role === "user" && (
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+                    <User className="h-4 w-4 text-foreground" />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </ScrollArea>
+
+        <div className="border-t bg-card/50 backdrop-blur-sm p-4">
+          <form onSubmit={handleSend} className="flex gap-2">
+            <Input
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about the match..."
+              className="flex-1"
+            />
+            <Button 
+              type="submit" 
+              size="icon"
+              className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+            >
+              <Send className="h-4 w-4" />
+            </Button>
+          </form>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
