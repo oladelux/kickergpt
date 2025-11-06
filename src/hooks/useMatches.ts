@@ -1,16 +1,17 @@
-import { useState, useEffect } from 'react';
-import { matchesService, Match } from '@/services/matches.service';
+import { useState, useEffect } from "react";
+import { matchesService, Match } from "@/services/matches.service";
+import type { SportmonksFixturesRequestOptions } from "@/lib/api";
 
 export const useMatches = () => {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadMatches = () => {
+  const loadMatches = (options?: SportmonksFixturesRequestOptions) => {
     setLoading(true);
     setError(null);
 
-    matchesService.getMatches().subscribe({
+    matchesService.getMatches(options).subscribe({
       next: (data) => {
         setMatches(data);
         setLoading(false);
@@ -29,9 +30,7 @@ export const useMatches = () => {
   const toggleFavorite = (matchId: string) => {
     matchesService.toggleFavorite(matchId).subscribe({
       next: (updatedMatch) => {
-        setMatches((prev) =>
-          prev.map((m) => (m.id === updatedMatch.id ? updatedMatch : m))
-        );
+        setMatches((prev) => prev.map((m) => (m.id === updatedMatch.id ? updatedMatch : m)));
       },
       error: (err) => {
         setError(err.message);

@@ -23,16 +23,17 @@ export const useAuth = () => {
   }, []);
 
   const signup = (
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
-    planId: string,
+    planId?: string,
   ) => {
     setLoading(true);
     setError(null);
 
     return new Promise<AuthResponse>((resolve, reject) => {
-      authService.signup(name, email, password, planId).subscribe({
+      authService.signup(firstName, lastName, email, password, planId).subscribe({
         next: (response) => {
           setLoading(false);
           resolve(response);

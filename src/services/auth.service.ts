@@ -1,5 +1,6 @@
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { delay, map, tap } from 'rxjs/operators';
+import { BehaviorSubject, Observable, of, from } from "rxjs";
+import { map, tap, catchError, switchMap, finalize, shareReplay } from "rxjs/operators";
+import { api, getToken, removeToken } from "@/lib/api";
 
 export interface User {
   id: string;
@@ -16,93 +17,112 @@ export interface AuthResponse {
 class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
-
-  // Mock data
-  private mockUsers = [
-    {
-      id: '1',
-      email: 'demo@example.com',
-      password: 'password123',
-      name: 'Demo User',
-      planId: 'premium',
-    },
-  ];
+  private currentUserRequest$: Observable<User | null> | null = null;
 
   signup(
-    name: string,
+    firstName: string,
+    lastName: string,
     email: string,
     password: string,
-    planId: string,
+    planId?: string
   ): Observable<AuthResponse> {
-    // Mock signup
-    return of({
-      user: { id: Math.random().toString(), name, email, planId },
-      token: 'mock-token-' + Math.random(),
-    }).pipe(
-      delay(1000),
-      tap((response) => {
-        localStorage.setItem('token', response.token);
-        this.currentUserSubject.next(response.user);
-      }),
+    return from(api.auth.signup({ firstName, lastName, email, password })).pipe(
+      switchMap(() => this.login(email, password))
     );
   }
 
   login(email: string, password: string): Observable<AuthResponse> {
-    // Mock login
-    const user = this.mockUsers.find((u) => u.email === email);
-
-    if (!user || user.password !== password) {
-      return throwError(() => new Error('Invalid credentials')).pipe(
-        delay(500),
-      );
-    }
-
-    return of({
-      user: { id: user.id, name: user.name, email: user.email, planId: user.planId },
-      token: 'mock-token-' + Math.random(),
-    }).pipe(
-      delay(1000),
-      tap((response) => {
-        localStorage.setItem('token', response.token);
-        this.currentUserSubject.next(response.user);
-      }),
+    return from(api.auth.login({ email, password })).pipe(
+      map((response) => this.normalizeAuthResponse(response)),
+      tap(({ user }) => this.currentUserSubject.next(user))
     );
   }
 
   logout(): Observable<void> {
-    return of(void 0).pipe(
-      delay(500),
+    return from(api.auth.logout()).pipe(
+      catchError(() => of(null)),
       tap(() => {
-        localStorage.removeItem('token');
+        removeToken();
         this.currentUserSubject.next(null);
+        this.currentUserRequest$ = null;
       }),
+      map(() => void 0)
     );
   }
 
   forgotPassword(email: string): Observable<{ message: string }> {
-    return of({ message: 'Password reset email sent' }).pipe(delay(1000));
+    return from(api.auth.forgotPassword({ email })).pipe(
+      map((response) => ({
+        message: response?.message ?? "Password reset email sent",
+      }))
+    );
   }
 
-  getCurrentUser(): Observable<User | null> {
-    const token = localStorage.getItem('token');
+  getCurrentUser(force = false): Observable<User | null> {
+    const existingUser = this.currentUserSubject.value;
+    if (!force && existingUser) {
+      return of(existingUser);
+    }
+
+    if (!force && this.currentUserRequest$) {
+      return this.currentUserRequest$;
+    }
+
+    const token = getToken();
     if (!token) {
       return of(null);
     }
 
-    // Mock getting current user
-    return of({
-      id: '1',
-      name: 'Demo User',
-      email: 'demo@example.com',
-      planId: 'premium',
-    }).pipe(
-      delay(500),
+    const request$ = from(api.auth.me()).pipe(
+      map((response) => this.normalizeUser(response?.user ?? response)),
       tap((user) => this.currentUserSubject.next(user)),
+      catchError(() => {
+        this.currentUserSubject.next(null);
+        removeToken();
+        return of(null);
+      }),
+      finalize(() => {
+        this.currentUserRequest$ = null;
+      }),
+      shareReplay({ bufferSize: 1, refCount: false })
     );
+
+    this.currentUserRequest$ = request$;
+    return request$;
   }
 
   isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+    return !!getToken();
+  }
+
+  private normalizeAuthResponse(data: any): AuthResponse {
+    const user = this.normalizeUser(data?.user ?? data);
+    return {
+      user,
+      token: data?.token ?? data?.accessToken ?? getToken() ?? "",
+    };
+  }
+
+  private normalizeUser(data: any): User {
+    if (!data) {
+      return {
+        id: "",
+        name: "",
+        email: "",
+        planId: "",
+      };
+    }
+
+    const firstName = data.firstName ?? data.given_name ?? "";
+    const lastName = data.lastName ?? data.family_name ?? "";
+    const name = data.name ?? [firstName, lastName].filter(Boolean).join(" ");
+
+    return {
+      id: data.id ?? data._id ?? "",
+      name,
+      email: data.email ?? "",
+      planId: data.planId ?? data.plan_id ?? data.subscriptionPlanId ?? "",
+    };
   }
 }
 

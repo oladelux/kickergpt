@@ -1,5 +1,10 @@
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { Observable, from, of, throwError } from "rxjs";
+import { map, catchError } from "rxjs/operators";
+import {
+  api,
+  SportmonksFixture,
+  SportmonksFixturesRequestOptions,
+} from "@/lib/api";
 
 export interface Match {
   id: string;
@@ -14,75 +19,105 @@ export interface Match {
 }
 
 class MatchesService {
-  private mockMatches: Match[] = [
-    {
-      id: '1',
-      homeTeam: 'Manchester United',
-      awayTeam: 'Liverpool',
-      homeTeamLogo: '🔴',
-      awayTeamLogo: '🔴',
-      league: 'Premier League',
-      leagueIcon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      kickoffTime: new Date(Date.now() + 3600000),
-      isFavorite: false,
-    },
-    {
-      id: '2',
-      homeTeam: 'Arsenal',
-      awayTeam: 'Chelsea',
-      homeTeamLogo: '🔴',
-      awayTeamLogo: '🔵',
-      league: 'Premier League',
-      leagueIcon: '🏴󠁧󠁢󠁥󠁮󠁧󠁿',
-      kickoffTime: new Date(Date.now() + 7200000),
-      isFavorite: true,
-    },
-    {
-      id: '3',
-      homeTeam: 'Real Madrid',
-      awayTeam: 'Barcelona',
-      homeTeamLogo: '⚪',
-      awayTeamLogo: '🔵',
-      league: 'La Liga',
-      leagueIcon: '🇪🇸',
-      kickoffTime: new Date(Date.now() + 10800000),
-      isFavorite: false,
-    },
-    {
-      id: '4',
-      homeTeam: 'Bayern Munich',
-      awayTeam: 'Borussia Dortmund',
-      homeTeamLogo: '🔴',
-      awayTeamLogo: '🟡',
-      league: 'Bundesliga',
-      leagueIcon: '🇩🇪',
-      kickoffTime: new Date(Date.now() + 14400000),
-      isFavorite: false,
-    },
-    {
-      id: '5',
-      homeTeam: 'PSG',
-      awayTeam: 'Marseille',
-      homeTeamLogo: '🔵',
-      awayTeamLogo: '⚪',
-      league: 'Ligue 1',
-      leagueIcon: '🇫🇷',
-      kickoffTime: new Date(Date.now() + 18000000),
-      isFavorite: true,
-    },
-  ];
+  private favorites = new Set<string>();
+  private matchCache = new Map<string, Match>();
 
-  getMatches(): Observable<Match[]> {
-    return of(this.mockMatches).pipe(delay(500));
+  getMatches(options?: SportmonksFixturesRequestOptions): Observable<Match[]> {
+    return from(api.matches.getTodayFixtures(options)).pipe(
+      map((response) =>
+        response.data.map((fixture) => this.mapFixture(fixture))
+      ),
+      map((matches) => {
+        const normalizedMatches = matches.map((match) => {
+          const isFavorite = this.favorites.has(match.id);
+          return { ...match, isFavorite };
+        });
+
+        this.matchCache.clear();
+        normalizedMatches.forEach((match) => this.matchCache.set(match.id, match));
+
+        return normalizedMatches;
+      }),
+      catchError((error) =>
+        throwError(
+          () =>
+            new Error(
+              error?.message ?? "Failed to load today's fixtures. Please try again."
+            )
+        )
+      )
+    );
   }
 
   toggleFavorite(matchId: string): Observable<Match> {
-    const match = this.mockMatches.find((m) => m.id === matchId);
-    if (match) {
-      match.isFavorite = !match.isFavorite;
-      return of(match).pipe(delay(300));
+    const match = this.matchCache.get(matchId);
+    if (!match) {
+      return throwError(() => new Error("Match not found"));
     }
-    throw new Error('Match not found');
+
+    const updated = { ...match, isFavorite: !match.isFavorite };
+    if (updated.isFavorite) {
+      this.favorites.add(matchId);
+    } else {
+      this.favorites.delete(matchId);
+    }
+    this.matchCache.set(matchId, updated);
+    return of(updated);
+  }
+
+  private mapFixture(fixture: SportmonksFixture): Match {
+    const { homeTeam, awayTeam } = this.extractTeams(fixture.name);
+    const id = String(fixture.id);
+    const kickoffTime = this.normalizeDate(fixture.starting_at);
+
+    return {
+      id,
+      homeTeam,
+      awayTeam,
+      homeTeamLogo: this.emojiForTeam(homeTeam),
+      awayTeamLogo: this.emojiForTeam(awayTeam),
+      league: fixture.league_id ? `League ${fixture.league_id}` : "Unknown League",
+      leagueIcon: "⚽",
+      kickoffTime,
+      isFavorite: this.favorites.has(id),
+    };
+  }
+
+  private extractTeams(name: string): { homeTeam: string; awayTeam: string } {
+    if (!name) {
+      return { homeTeam: "Home", awayTeam: "Away" };
+    }
+
+    const parts = name.split(/\s+vs\.?\s+|\s+v\s+| - /i).map((part) => part.trim());
+    if (parts.length >= 2) {
+      return { homeTeam: parts[0], awayTeam: parts[1] };
+    }
+
+    return { homeTeam: name, awayTeam: name };
+  }
+
+  private emojiForTeam(team: string): string {
+    const trimmed = team.trim();
+    if (!trimmed) return "⚽";
+    const firstChar = Array.from(trimmed)[0];
+    const codePoint = firstChar.codePointAt(0);
+    if (codePoint && codePoint >= 0x1f300 && codePoint <= 0x1f9ff) {
+      return firstChar;
+    }
+    return firstChar.toUpperCase();
+  }
+
+  private normalizeDate(dateString?: string | null): Date {
+    if (!dateString) {
+      return new Date();
+    }
+
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) {
+      return new Date();
+    }
+
+    return date;
   }
 }
 

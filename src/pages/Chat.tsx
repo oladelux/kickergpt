@@ -18,13 +18,16 @@ export default function Chat() {
   if (loading) return <LoadingPage />;
 
   // Group matches by league
-  const matchesByLeague = matches.reduce((acc, match) => {
-    if (!acc[match.league]) {
-      acc[match.league] = [];
-    }
-    acc[match.league].push(match);
-    return acc;
-  }, {} as Record<string, Match[]>);
+  const matchesByLeague = matches.reduce(
+    (acc, match) => {
+      if (!acc[match.league]) {
+        acc[match.league] = [];
+      }
+      acc[match.league].push(match);
+      return acc;
+    },
+    {} as Record<string, Match[]>
+  );
 
   const handleAnalysisClick = (match: Match) => {
     setSelectedMatch(match);
@@ -67,11 +70,11 @@ export default function Chat() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="text-xs text-muted-foreground mb-3">
-                        {match.kickoffTime.toLocaleTimeString([], { 
-                          hour: "2-digit", 
-                          minute: "2-digit" 
+                        {match.kickoffTime.toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
                         })}
                       </div>
 
@@ -107,11 +110,7 @@ export default function Chat() {
         </div>
       </ScrollArea>
 
-      <ChatDialog
-        match={selectedMatch}
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-      />
+      <ChatDialog match={selectedMatch} open={chatOpen} onOpenChange={setChatOpen} />
 
       <BottomNav />
     </div>
