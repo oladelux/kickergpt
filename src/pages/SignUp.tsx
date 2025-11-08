@@ -50,7 +50,7 @@ export default function SignUp() {
   const location = useLocation();
   const redirectTo = useMemo(() => {
     const state = location.state as { from?: Location } | null;
-    return state?.from?.pathname ?? "/chat";
+    return state?.from?.pathname ?? "/fixtures";
   }, [location.state]);
   const [showPassword, setShowPassword] = useState(false);
   const [step, setStep] = useState<"account" | "plan">("account");
@@ -89,7 +89,7 @@ export default function SignUp() {
         title: "Account created",
         description: "Welcome aboard! Redirecting you to the dashboard.",
       });
-      navigate("/chat");
+      navigate("/fixtures");
     } catch (err) {
       const message = err instanceof Error ? err.message : "Unable to complete sign up.";
       toast({

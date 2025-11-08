@@ -7,11 +7,11 @@ export const useMatches = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadMatches = (options?: SportmonksFixturesRequestOptions) => {
+  const loadMatches = () => {
     setLoading(true);
     setError(null);
 
-    matchesService.getMatches(options).subscribe({
+    matchesService.getMatches().subscribe({
       next: (data) => {
         setMatches(data);
         setLoading(false);

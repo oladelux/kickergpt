@@ -3,12 +3,118 @@ import { Heart, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import ChatDialog from "@/components/ChatDialog";
 import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/services/matches.service";
 import { LoadingPage } from "@/components/LoadingPage";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+
+const LIVE_STATUS_CODES = new Set(["1H", "2H", "ET", "BT", "P", "LIVE", "HT"]);
+const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "AW", "WO"]);
+const STATUS_LABELS: Record<string, string> = {
+  FT: "Full Time",
+  HT: "Half Time",
+  ET: "Extra Time",
+  AET: "After ET",
+  PEN: "Penalties",
+  BT: "Break",
+  PST: "Postponed",
+  CANC: "Cancelled",
+  INT: "Interrupted",
+  SUSP: "Suspended",
+  ABD: "Abandoned",
+  AWD: "Awarded",
+  TBD: "To Be Decided",
+  LIVE: "Live",
+};
+
+const getInitials = (name?: string) =>
+  (name ?? "")
+    .split(" ")
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join("")
+    .slice(0, 3)
+    .toUpperCase() || "?";
+
+const formatKickoffTime = (date: Date) =>
+  date.toLocaleString([], {
+    weekday: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
+const getTimeUntilKickoff = (date: Date) => {
+  const diffMs = date.getTime() - Date.now();
+  if (diffMs <= 0) {
+    return "Live";
+  }
+
+  const diffMinutes = Math.round(diffMs / 60000);
+  if (diffMinutes < 60) {
+    return `in ${diffMinutes}m`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    const minutes = diffMinutes % 60;
+    return `in ${diffHours}h${minutes ? ` ${minutes}m` : ""}`;
+  }
+
+  const diffDays = Math.round(diffHours / 24);
+  return `in ${diffDays}d`;
+};
+
+const isLiveMatch = (match: Match) => {
+  const short = match.status?.short?.toUpperCase();
+  if (!short) return false;
+  return LIVE_STATUS_CODES.has(short);
+};
+
+const isFinishedMatch = (match: Match) => {
+  const short = match.status?.short?.toUpperCase();
+  if (!short) return false;
+  return FINISHED_STATUS_CODES.has(short);
+};
+
+const getMatchStatusLabel = (match: Match) => {
+  const short = match.status?.short?.toUpperCase();
+  if (!short || short === "NS") {
+    return getTimeUntilKickoff(match.kickoffTime);
+  }
+
+  if (STATUS_LABELS[short]) {
+    if (short === "LIVE" && typeof match.status?.elapsed === "number") {
+      return `${STATUS_LABELS[short]} ${match.status.elapsed}'`;
+    }
+    return STATUS_LABELS[short];
+  }
+
+  if (typeof match.status?.elapsed === "number") {
+    return `${match.status.elapsed}' ${match.status?.long ?? short}`.trim();
+  }
+
+  return match.status?.long ?? short;
+};
+
+const getStatusBadgeClasses = (match: Match) => {
+  if (isLiveMatch(match)) {
+    return "text-destructive border-destructive/60 bg-destructive/5";
+  }
+  if (isFinishedMatch(match)) {
+    return "text-emerald-500 border-emerald-500/50 bg-emerald-500/5";
+  }
+  return "text-muted-foreground border-border/60";
+};
 
 export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
@@ -17,16 +123,48 @@ export default function Chat() {
 
   if (loading) return <LoadingPage />;
 
-  // Group matches by league
-  const matchesByLeague = matches.reduce(
+  // Group matches by country, then by league
+  const matchesByCountry = matches.reduce(
     (acc, match) => {
-      if (!acc[match.league]) {
-        acc[match.league] = [];
+      const country = match.country ?? "International";
+      const league = match.league ?? "Other";
+
+      if (!acc[country]) {
+        acc[country] = {};
       }
-      acc[match.league].push(match);
+
+      if (!acc[country][league]) {
+        acc[country][league] = [];
+      }
+
+      acc[country][league].push(match);
       return acc;
     },
-    {} as Record<string, Match[]>
+    {} as Record<string, Record<string, Match[]>>
+  );
+
+  const renderTeam = (team: {
+    name: string;
+    logo: string;
+    label: string;
+    alignRight?: boolean;
+  }) => (
+    <div
+      className={`flex items-center gap-3 ${team.alignRight ? "flex-row-reverse text-right" : ""}`}
+    >
+      <Avatar className="size-11 border border-border/60 shadow-sm">
+        <AvatarImage src={team.logo} alt={team.name} />
+        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+          {getInitials(team.name)}
+        </AvatarFallback>
+      </Avatar>
+      <div className={`space-y-1 ${team.alignRight ? "text-right" : "text-left"}`}>
+        <p className="text-sm font-semibold text-foreground">{team.name}</p>
+        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
+          {team.label}
+        </Badge>
+      </div>
+    </div>
   );
 
   const handleAnalysisClick = (match: Match) => {
@@ -48,65 +186,152 @@ export default function Chat() {
 
       <ScrollArea className="flex-1 p-4">
         <div className="max-w-6xl mx-auto space-y-6 pb-4">
-          {Object.entries(matchesByLeague).map(([league, leagueMatches]) => (
-            <div key={league} className="space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">{leagueMatches[0].leagueIcon}</span>
-                <h2 className="text-lg font-semibold text-foreground">{league}</h2>
-              </div>
-              <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                {leagueMatches.map((match) => (
-                  <Card key={match.id} className="hover:shadow-lg transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{match.homeTeamLogo}</span>
-                            <span className="font-medium text-foreground">{match.homeTeam}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-2xl">{match.awayTeamLogo}</span>
-                            <span className="font-medium text-foreground">{match.awayTeam}</span>
-                          </div>
-                        </div>
-                      </div>
+          <Accordion type="multiple" className="space-y-4">
+            {Object.entries(matchesByCountry)
+              .sort(([countryA], [countryB]) => countryA.localeCompare(countryB))
+              .map(([country, leagues]) => (
+                <AccordionItem
+                  key={country}
+                  value={country}
+                  className="rounded-2xl border bg-card/40 px-4"
+                >
+                  <AccordionTrigger className="text-lg font-semibold text-foreground">
+                    {country}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-6 pt-2">
+                      {Object.entries(leagues)
+                        .sort(([leagueA], [leagueB]) => leagueA.localeCompare(leagueB))
+                        .map(([league, leagueMatches]) => (
+                          <div key={league} className="space-y-3">
+                            <div className="flex items-center gap-2">
+                              <Avatar className="size-8">
+                                <AvatarImage
+                                  src={leagueMatches[0].leagueIcon}
+                                  alt={league}
+                                  width={24}
+                                  height={24}
+                                />
+                                <AvatarFallback className="bg-primary/10">
+                                  {leagueMatches[0].leagueIcon?.split("/").pop()?.split(".")[0] ??
+                                    league
+                                      .split(" ")
+                                      .map((name) => name[0])
+                                      .join("")}
+                                </AvatarFallback>
+                              </Avatar>
+                              <h3 className="text-base font-semibold text-foreground">{league}</h3>
+                            </div>
+                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                          {leagueMatches.map((match) => {
+                            const kickoffLabel = formatKickoffTime(match.kickoffTime);
+                            const statusLabel = getMatchStatusLabel(match);
+                            const statusBadgeClasses = getStatusBadgeClasses(match);
 
-                      <div className="text-xs text-muted-foreground mb-3">
-                        {match.kickoffTime.toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
-                      </div>
+                            return (
+                              <Card
+                                key={match.id}
+                                    className="group relative overflow-hidden border border-border/60 bg-card/70 backdrop-blur transition hover:border-primary/50"
+                                  >
+                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                                    <CardContent className="relative z-10 p-5 space-y-5">
+                                      <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-[11px] font-medium"
+                                        >
+                                          {kickoffLabel}
+                                        </Badge>
+                                        <Badge
+                                          variant="outline"
+                                          className={`text-[11px] font-semibold ${statusBadgeClasses}`}
+                                        >
+                                          {statusLabel}
+                                        </Badge>
+                                      </div>
 
-                      <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => toggleFavorite(match.id)}
-                        >
-                          <Heart
-                            className={`h-4 w-4 ${
-                              match.isFavorite ? "fill-current text-destructive" : ""
-                            }`}
-                          />
-                        </Button>
-                        <Button
-                          variant="default"
-                          size="sm"
-                          className="flex-1 gap-2"
-                          onClick={() => handleAnalysisClick(match)}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          Analysis
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </div>
-          ))}
+                                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                                        {renderTeam({
+                                          name: match.homeTeam,
+                                          logo: match.homeTeamLogo,
+                                          label: "Home",
+                                        })}
+
+                                        <div className="flex flex-col items-center gap-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                                          <span>vs</span>
+                                          <span className="text-lg font-semibold tracking-normal text-foreground">
+                                            {match.kickoffTime.toLocaleTimeString([], {
+                                              hour: "2-digit",
+                                              minute: "2-digit",
+                                            })}
+                                          </span>
+                                        </div>
+
+                                        {renderTeam({
+                                          name: match.awayTeam,
+                                          logo: match.awayTeamLogo,
+                                          label: "Away",
+                                          alignRight: true,
+                                        })}
+                                      </div>
+
+                                      <div className="flex flex-wrap items-center gap-3">
+                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                          {match.country && (
+                                            <Badge variant="outline" className="text-[11px]">
+                                              {match.country}
+                                            </Badge>
+                                          )}
+                                          <span className="font-medium text-foreground/80">
+                                            {match.league}
+                                          </span>
+                                        </div>
+
+                                        <div className="ml-auto flex items-center gap-2">
+                                          <Button
+                                            type="button"
+                                            variant="ghost"
+                                            size="icon"
+                                            className={`rounded-full border border-border/60 text-muted-foreground transition-colors ${
+                                              match.isFavorite
+                                                ? "text-destructive border-destructive/40"
+                                                : ""
+                                            }`}
+                                            onClick={() => toggleFavorite(match.id)}
+                                          >
+                                            <Heart
+                                              className={`h-4 w-4 ${
+                                                match.isFavorite
+                                                  ? "fill-current text-destructive"
+                                                  : ""
+                                              }`}
+                                            />
+                                          </Button>
+                                          {!isFinishedMatch(match) && (
+                                            <Button
+                                              variant="default"
+                                              size="sm"
+                                              className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 md:flex-none"
+                                              onClick={() => handleAnalysisClick(match)}
+                                            >
+                                              <MessageSquare className="h-4 w-4" />
+                                              Match Insight
+                                            </Button>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+          </Accordion>
         </div>
       </ScrollArea>
 

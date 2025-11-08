@@ -42,11 +42,111 @@ export type SportmonksFixturesResponse = {
   pagination: SportmonksPagination;
 };
 
+export type ApiFootballFixturePeriods = {
+  first: number | null;
+  second: number | null;
+};
+
+export type ApiFootballFixtureVenue = {
+  id: number | null;
+  name: string | null;
+  city: string | null;
+};
+
+export type ApiFootballFixtureStatus = {
+  long: string;
+  short: string;
+  elapsed: number | null;
+  extra: string | null;
+};
+
+export type ApiFootballFixtureDetails = {
+  id: number;
+  referee: string | null;
+  timezone: string;
+  date: string;
+  timestamp: number;
+  periods: ApiFootballFixturePeriods;
+  venue: ApiFootballFixtureVenue;
+  status: ApiFootballFixtureStatus;
+};
+
+export type ApiFootballLeague = {
+  id: number;
+  name: string;
+  country: string;
+  logo: string | null;
+  flag: string | null;
+  season: number;
+  round: string | null;
+};
+
+export type ApiFootballTeam = {
+  id: number;
+  name: string;
+  logo: string | null;
+  winner: boolean | null;
+};
+
+export type ApiFootballTeams = {
+  home: ApiFootballTeam;
+  away: ApiFootballTeam;
+};
+
+export type ApiFootballGoals = {
+  home: number | null;
+  away: number | null;
+};
+
+export type ApiFootballScorePeriod = {
+  home: number | null;
+  away: number | null;
+};
+
+export type ApiFootballScore = {
+  halftime: ApiFootballScorePeriod;
+  fulltime: ApiFootballScorePeriod;
+  extratime: ApiFootballScorePeriod;
+  penalty: ApiFootballScorePeriod;
+};
+
+export type ApiFootballFixture = {
+  fixture: ApiFootballFixtureDetails;
+  league: ApiFootballLeague;
+  teams: ApiFootballTeams;
+  goals: ApiFootballGoals;
+  score: ApiFootballScore;
+};
+
+export type ApiFootballPaging = {
+  current: number;
+  total: number;
+};
+
+export type ApiFootballFixturesResponse = {
+  get: string;
+  parameters: Record<string, string>;
+  errors: string[];
+  results: number;
+  paging: ApiFootballPaging;
+  response: ApiFootballFixture[];
+};
+
 export type SportmonksFixturesRequestOptions = {
   date?: string;
   order?: "asc" | "desc";
   perPage?: number;
   page?: number;
+};
+
+export type FixtureChatMessage = {
+  id: string;
+  fixtureId: number;
+  message: string;
+  tone?: string | null;
+  summary: string;
+  metadata?: Record<string, unknown>;
+  createdAt: string;
 };
 
 /**
@@ -217,6 +317,44 @@ export const api = {
   matches: {
     getTodayFixtures: async (): Promise<SportmonksFixturesResponse> => {
       const res = await apiRequest(`/matches/today?date=2025-11-08&limit=100`, "GET");
+      return res.json();
+    },
+  },
+
+  fixtures: {
+    getTodayFixtures: async (): Promise<ApiFootballFixturesResponse> => {
+      const res = await apiRequest(`/fixtures/today`, "GET");
+      return res.json();
+    },
+
+    getUserChats: async (params?: {
+      limit?: number;
+      offset?: number;
+    }): Promise<FixtureChatMessage[]> => {
+      const searchParams = new URLSearchParams();
+      if (typeof params?.limit === "number") {
+        searchParams.set("limit", String(params.limit));
+      }
+      if (typeof params?.offset === "number") {
+        searchParams.set("offset", String(params.offset));
+      }
+      const query = searchParams.toString();
+      const endpoint = `/fixtures/user/chats${query ? `?${query}` : ""}`;
+      const res = await apiRequest(endpoint, "GET");
+      return res.json() as Promise<FixtureChatMessage[]>;
+    },
+
+    analyzeFixture: async (
+      fixtureId: string,
+      data: { message: string; tone?: string }
+    ): Promise<{
+      summary?: string;
+      analysis?: string;
+      message?: string;
+      tokens?: Record<string, unknown>;
+      [key: string]: unknown;
+    }> => {
+      const res = await apiRequest(`/fixtures/${fixtureId}/analyze`, "POST", data);
       return res.json();
     },
   },

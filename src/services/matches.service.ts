@@ -2,6 +2,7 @@ import { Observable, from, of, throwError } from "rxjs";
 import { map, catchError } from "rxjs/operators";
 import {
   api,
+  ApiFootballFixture,
   SportmonksFixture,
   SportmonksFixturesRequestOptions,
 } from "@/lib/api";
@@ -13,20 +14,31 @@ export interface Match {
   homeTeamLogo: string;
   awayTeamLogo: string;
   league: string;
+  leagueId?: string;
+  country?: string;
   leagueIcon: string;
   kickoffTime: Date;
+  status?: {
+    short: string;
+    long: string;
+    elapsed: number | null;
+  };
   isFavorite: boolean;
 }
+
+const FAVORITES_STORAGE_KEY = "boot-room:favorites";
 
 class MatchesService {
   private favorites = new Set<string>();
   private matchCache = new Map<string, Match>();
 
-  getMatches(options?: SportmonksFixturesRequestOptions): Observable<Match[]> {
-    return from(api.matches.getTodayFixtures(options)).pipe(
-      map((response) =>
-        response.data.map((fixture) => this.mapFixture(fixture))
-      ),
+  constructor() {
+    this.loadFavoritesFromStorage();
+  }
+
+  getMatches(): Observable<Match[]> {
+    return from(api.fixtures.getTodayFixtures()).pipe(
+      map((response) => response.response.map((fixture) => this.mapFixture(fixture))),
       map((matches) => {
         const normalizedMatches = matches.map((match) => {
           const isFavorite = this.favorites.has(match.id);
@@ -40,10 +52,7 @@ class MatchesService {
       }),
       catchError((error) =>
         throwError(
-          () =>
-            new Error(
-              error?.message ?? "Failed to load today's fixtures. Please try again."
-            )
+          () => new Error(error?.message ?? "Failed to load today's fixtures. Please try again.")
         )
       )
     );
@@ -61,24 +70,28 @@ class MatchesService {
     } else {
       this.favorites.delete(matchId);
     }
+    this.persistFavorites();
     this.matchCache.set(matchId, updated);
     return of(updated);
   }
 
-  private mapFixture(fixture: SportmonksFixture): Match {
-    const { homeTeam, awayTeam } = this.extractTeams(fixture.name);
-    const id = String(fixture.id);
-    const kickoffTime = this.normalizeDate(fixture.starting_at);
+  private mapFixture(fixture: ApiFootballFixture): Match {
+    const { home, away } = fixture.teams;
+    const id = String(fixture.fixture.id);
+    const kickoffTime = this.normalizeDate(fixture.fixture.date);
 
     return {
       id,
-      homeTeam,
-      awayTeam,
-      homeTeamLogo: this.emojiForTeam(homeTeam),
-      awayTeamLogo: this.emojiForTeam(awayTeam),
-      league: fixture.league_id ? `League ${fixture.league_id}` : "Unknown League",
-      leagueIcon: "⚽",
+      homeTeam: home.name,
+      awayTeam: away.name,
+      homeTeamLogo: home.logo,
+      awayTeamLogo: away.logo,
+      league: fixture.league.name,
+      leagueId: fixture.league.id ? String(fixture.league.id) : undefined,
+      country: fixture.league.country ?? undefined,
+      leagueIcon: fixture.league.logo,
       kickoffTime,
+      status: fixture.fixture.status,
       isFavorite: this.favorites.has(id),
     };
   }
@@ -118,6 +131,34 @@ class MatchesService {
     }
 
     return date;
+  }
+
+  private loadFavoritesFromStorage() {
+    if (typeof window === "undefined") return;
+    try {
+      const stored = window.localStorage.getItem(FAVORITES_STORAGE_KEY);
+      if (!stored) return;
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed)) {
+        parsed.forEach((id) => {
+          if (typeof id === "string" && id.trim()) {
+            this.favorites.add(id);
+          }
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to load favorite fixtures from storage:", error);
+    }
+  }
+
+  private persistFavorites() {
+    if (typeof window === "undefined") return;
+    try {
+      const serialized = JSON.stringify([...this.favorites]);
+      window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
+    } catch (error) {
+      console.warn("Failed to persist favorite fixtures:", error);
+    }
   }
 }
 

@@ -15,7 +15,7 @@ export default function Login() {
   const location = useLocation();
   const redirectTo = useMemo(() => {
     const state = location.state as { from?: Location } | null;
-    return state?.from?.pathname ?? "/chat";
+    return state?.from?.pathname ?? "/fixtures";
   }, [location.state]);
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");

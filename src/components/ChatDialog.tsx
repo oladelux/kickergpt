@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Send, Bot, User, X } from "lucide-react";
+import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Match } from "@/services/matches.service";
+import { api } from "@/lib/api";
 
 type Message = {
   id: string;
@@ -22,10 +23,11 @@ interface ChatDialogProps {
 export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !match) return;
+    if (!input.trim() || !match || isThinking) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -36,16 +38,39 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
+    setIsThinking(true);
 
-    setTimeout(() => {
+    try {
+      const response = await api.fixtures.analyzeFixture(match.id, {
+        message: userMessage.content,
+        tone: "concise",
+      });
+
+      const assistantContent =
+        response.summary ??
+        response.analysis ??
+        response.message ??
+        `I'm having trouble generating an analysis for ${match.homeTeam} vs ${match.awayTeam}.`;
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: `Here's an analysis for ${match.homeTeam} vs ${match.awayTeam}: Based on recent form and head-to-head stats, this promises to be an exciting match!`,
+        content: assistantContent,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+    } catch (error) {
+      console.error("Failed to fetch analysis", error);
+      const fallbackMessage: Message = {
+        id: `${Date.now()}-error`,
+        role: "assistant",
+        content: "Sorry, I couldn't fetch the analysis right now. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, fallbackMessage]);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   return (
@@ -53,7 +78,7 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
       <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-lg font-semibold">
-            {match && `${match.homeTeam} vs ${match.awayTeam} - AI Analysis`}
+            {match ? `${match.homeTeam} vs ${match.awayTeam}` : "Match Chat"}
           </DialogTitle>
         </DialogHeader>
 
@@ -104,6 +129,17 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
                 )}
               </div>
             ))}
+            {isThinking && (
+              <div className="flex gap-3 animate-fade-in justify-start">
+                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                  <Bot className="h-4 w-4 text-primary-foreground" />
+                </div>
+                <div className="rounded-2xl p-4 bg-card border border-border flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Thinking...</p>
+                </div>
+              </div>
+            )}
           </div>
         </ScrollArea>
 
@@ -119,8 +155,9 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
               type="submit" 
               size="icon"
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+              disabled={isThinking || !input.trim()}
             >
-              <Send className="h-4 w-4" />
+              {isThinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
             </Button>
           </form>
         </div>

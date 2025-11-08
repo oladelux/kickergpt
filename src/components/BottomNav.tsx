@@ -1,10 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, MessageCircle, Clock, User } from "lucide-react";
+import { MessageCircle, Clock, User, Heart } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { icon: Home, label: "Home", path: "/" },
-  { icon: MessageCircle, label: "Chat", path: "/chat" },
+  { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
+  { icon: Heart, label: "Favorites", path: "/favorites" },
   { icon: Clock, label: "History", path: "/history" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
@@ -23,9 +23,7 @@ export default function BottomNav() {
               to={item.path}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors",
-                isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
             >
               <item.icon className={cn("h-5 w-5", isActive && "scale-110")} />
