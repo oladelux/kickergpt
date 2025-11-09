@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +24,26 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const conversationCache = useRef<Map<string, Message[]>>(new Map());
+
+  useEffect(() => {
+    if (!match?.id) {
+      setMessages([]);
+      setInput("");
+      setIsThinking(false);
+      return;
+    }
+    const cached = conversationCache.current.get(match.id);
+    setMessages(cached ?? []);
+    setInput("");
+    setIsThinking(false);
+  }, [match?.id]);
+
+  useEffect(() => {
+    if (match?.id) {
+      conversationCache.current.set(match.id, messages);
+    }
+  }, [messages, match?.id]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +95,7 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0">
+      <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 max-sm:w-[calc(100%-2rem)] max-sm:h-[calc(100vh-3rem)]">
         <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="text-lg font-semibold">
             {match ? `${match.homeTeam} vs ${match.awayTeam}` : "Match Chat"}
@@ -91,7 +111,8 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
                 </div>
                 <div className="rounded-2xl p-4 bg-card border border-border">
                   <p className="text-sm">
-                    Hi! Ask me anything about this match - predictions, team stats, player performance, or tactical insights!
+                    Hi! Ask me anything about this match - predictions, team stats, player
+                    performance, or tactical insights!
                   </p>
                 </div>
               </div>
@@ -108,7 +129,7 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
                     <Bot className="h-4 w-4 text-primary-foreground" />
                   </div>
                 )}
-                
+
                 <div
                   className={`rounded-2xl p-4 max-w-[80%] ${
                     message.role === "user"
@@ -118,7 +139,10 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
                 >
                   <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                   <p className="text-xs opacity-60 mt-2">
-                    {message.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    {message.timestamp.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
                   </p>
                 </div>
 
@@ -151,13 +175,17 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
               placeholder="Ask about the match..."
               className="flex-1"
             />
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               size="icon"
               className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
               disabled={isThinking || !input.trim()}
             >
-              {isThinking ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {isThinking ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Send className="h-4 w-4" />
+              )}
             </Button>
           </form>
         </div>
