@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageSquare } from "lucide-react";
+import { Heart, MessageSquare, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,6 +17,7 @@ import { Match } from "@/services/matches.service";
 import { LoadingPage } from "@/components/LoadingPage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 const LIVE_STATUS_CODES = new Set(["1H", "2H", "ET", "BT", "P", "LIVE", "HT"]);
 const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "AW", "WO"]);
@@ -36,6 +37,21 @@ const STATUS_LABELS: Record<string, string> = {
   TBD: "To Be Decided",
   LIVE: "Live",
 };
+
+const PRIORITY_COUNTRIES = [
+  "England",
+  "Spain",
+  "France",
+  "Germany",
+  "Italy",
+  "Netherlands",
+  "Portugal",
+  "Turkey",
+] as const;
+
+const PRIORITY_COUNTRY_RANK = new Map(
+  PRIORITY_COUNTRIES.map((country, index) => [country.toLowerCase(), index])
+);
 
 const getInitials = (name?: string) =>
   (name ?? "")
@@ -120,6 +136,7 @@ export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
+  const [countryFilter, setCountryFilter] = useState("");
 
   if (loading) return <LoadingPage />;
 
@@ -142,6 +159,38 @@ export default function Chat() {
     },
     {} as Record<string, Record<string, Match[]>>
   );
+
+  const normalizedFilter = countryFilter.trim().toLowerCase();
+  const countriesData = Object.entries(matchesByCountry)
+    .map(([country, leagues]) => {
+      const matchCount = Object.values(leagues).reduce(
+        (sum, leagueMatches) => sum + leagueMatches.length,
+        0
+      );
+      return {
+        country,
+        leagues,
+        matchCount,
+      };
+    })
+    .filter(({ country }) =>
+      normalizedFilter ? country.toLowerCase().includes(normalizedFilter) : true
+    )
+    .sort((countryA, countryB) => {
+      const rankA = PRIORITY_COUNTRY_RANK.get(countryA.country.toLowerCase());
+      const rankB = PRIORITY_COUNTRY_RANK.get(countryB.country.toLowerCase());
+
+      if (rankA !== undefined && rankB !== undefined) {
+        return rankA - rankB;
+      }
+      if (rankA !== undefined) {
+        return -1;
+      }
+      if (rankB !== undefined) {
+        return 1;
+      }
+      return countryA.country.localeCompare(countryB.country);
+    });
 
   const renderTeam = (team: {
     name: string;
@@ -186,17 +235,57 @@ export default function Chat() {
 
       <ScrollArea className="flex-1 p-4">
         <div className="max-w-6xl mx-auto space-y-6 pb-4">
-          <Accordion type="multiple" className="space-y-4">
-            {Object.entries(matchesByCountry)
-              .sort(([countryA], [countryB]) => countryA.localeCompare(countryB))
-              .map(([country, leagues]) => (
+          <div className="space-y-3">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="relative w-full md:max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                <Input
+                  className="pl-10"
+                  placeholder="Quick filter by country..."
+                  value={countryFilter}
+                  onChange={(event) => setCountryFilter(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {PRIORITY_COUNTRIES.map((country) => (
+                  <Button
+                    type="button"
+                    key={country}
+                    size="sm"
+                    variant={countryFilter === country ? "default" : "outline"}
+                    className="rounded-full"
+                    onClick={() =>
+                      setCountryFilter((prev) => (prev === country ? "" : country))
+                    }
+                  >
+                    {country}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {countriesData.length === 0 ? (
+            <Card className="border border-dashed bg-card/40">
+              <CardContent className="py-8 text-center text-muted-foreground">
+                No countries match your search just yet.
+              </CardContent>
+            </Card>
+          ) : (
+            <Accordion type="multiple" className="space-y-4">
+              {countriesData.map(({ country, leagues, matchCount }) => (
                 <AccordionItem
                   key={country}
                   value={country}
                   className="rounded-2xl border bg-card/40 px-4"
                 >
                   <AccordionTrigger className="text-lg font-semibold text-foreground">
-                    {country}
+                    <div className="flex w-full items-center justify-between">
+                      <span>{country}</span>
+                      <Badge variant="secondary" className="text-xs font-semibold">
+                        {matchCount} {matchCount === 1 ? "Match" : "Matches"}
+                      </Badge>
+                    </div>
                   </AccordionTrigger>
                   <AccordionContent>
                     <div className="space-y-6 pt-2">
@@ -331,7 +420,8 @@ export default function Chat() {
                   </AccordionContent>
                 </AccordionItem>
               ))}
-          </Accordion>
+            </Accordion>
+          )}
         </div>
       </ScrollArea>
 
