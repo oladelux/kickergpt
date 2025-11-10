@@ -110,9 +110,9 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
                   <Bot className="h-4 w-4 text-primary-foreground" />
                 </div>
                 <div className="rounded-2xl p-4 bg-card border border-border">
-                  <p className="text-sm">
-                    Hi! Ask me anything about this match - predictions, team stats, player
-                    performance, or tactical insights!
+                  <p className="text-sm text-muted-foreground">
+                    Kickergpt is live on this fixture. Ask for scenario breakdowns, tactical pivots,
+                    confidence swings, or anything else you need before the whistle.
                   </p>
                 </div>
               </div>

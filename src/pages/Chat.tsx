@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Heart, MessageSquare, Search } from "lucide-react";
+import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -52,6 +52,8 @@ const PRIORITY_COUNTRIES = [
 const PRIORITY_COUNTRY_RANK = new Map(
   PRIORITY_COUNTRIES.map((country, index) => [country.toLowerCase(), index])
 );
+
+type StatusFilter = "all" | "live" | "upcoming" | "favorites";
 
 const getInitials = (name?: string) =>
   (name ?? "")
@@ -132,16 +134,85 @@ const getStatusBadgeClasses = (match: Match) => {
   return "text-muted-foreground border-border/60";
 };
 
+const isUpcomingMatch = (match: Match) => !isLiveMatch(match) && !isFinishedMatch(match);
+
 export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
+  const [matchSearch, setMatchSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
   if (loading) return <LoadingPage />;
 
+  const totalMatches = matches.length;
+  const liveMatchesCount = matches.filter(isLiveMatch).length;
+  const upcomingMatchesCount = matches.filter(isUpcomingMatch).length;
+  const favoriteMatchesCount = matches.filter((match) => match.isFavorite).length;
+
+  const summaryCards = [
+    {
+      label: "Total fixtures",
+      value: totalMatches,
+      icon: Globe,
+      accent: "bg-primary/10 text-primary",
+    },
+    {
+      label: "Live now",
+      value: liveMatchesCount,
+      icon: Activity,
+      accent: "bg-destructive/10 text-destructive",
+    },
+    {
+      label: "Upcoming today",
+      value: upcomingMatchesCount,
+      icon: Clock,
+      accent: "bg-accent/10 text-accent",
+    },
+    {
+      label: "Favorites",
+      value: favoriteMatchesCount,
+      icon: Star,
+      accent: "bg-amber-100/50 text-amber-500",
+    },
+  ] as const;
+
+  const statusOptions: { value: StatusFilter; label: string }[] = [
+    { value: "all", label: "All matches" },
+    { value: "live", label: "Live now" },
+    { value: "upcoming", label: "Upcoming" },
+    { value: "favorites", label: "Favorites" },
+  ];
+
+  const normalizedMatchQuery = matchSearch.trim().toLowerCase();
+
+  const filteredMatches = matches.filter((match) => {
+    if (statusFilter === "live" && !isLiveMatch(match)) return false;
+    if (statusFilter === "upcoming" && !isUpcomingMatch(match)) return false;
+    if (statusFilter === "favorites" && !match.isFavorite) return false;
+
+    if (normalizedMatchQuery) {
+      const haystack =
+        `${match.homeTeam} ${match.awayTeam} ${match.league ?? ""} ${match.country ?? ""}`.toLowerCase();
+      if (!haystack.includes(normalizedMatchQuery)) return false;
+    }
+
+    return true;
+  });
+
+  const filtersApplied = Boolean(
+    normalizedMatchQuery || countryFilter.trim() || statusFilter !== "all"
+  );
+
+  const handleResetFilters = () => {
+    setMatchSearch("");
+    setCountryFilter("");
+    setStatusFilter("all");
+  };
+
   // Group matches by country, then by league
-  const matchesByCountry = matches.reduce(
+  const matchesByCountry = filteredMatches.reduce(
     (acc, match) => {
       const country = match.country ?? "International";
       const league = match.league ?? "Other";
@@ -222,7 +293,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pb-16 md:pb-0 md:pt-16">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pt-16 pb-16 md:pb-0">
       <TopNav />
       <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
         <div className="max-w-6xl mx-auto">
@@ -235,21 +306,70 @@ export default function Chat() {
 
       <ScrollArea className="flex-1 p-4">
         <div className="max-w-6xl mx-auto space-y-6 pb-4">
-          <div className="space-y-3">
-            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div className="relative w-full md:max-w-sm">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {summaryCards.map((card) => (
+              <Card key={card.label} className="border-border/70 bg-card/70 backdrop-blur">
+                <CardContent className="flex items-center justify-between p-5">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      {card.label}
+                    </p>
+                    <p className="text-2xl font-semibold text-foreground">{card.value}</p>
+                  </div>
+                  <div className={`rounded-2xl p-3 ${card.accent}`}>
+                    <card.icon className="h-5 w-5" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+
+          <div className="space-y-4 rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="relative w-full lg:max-w-lg">
                 <Search
                   className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                   size={16}
                 />
                 <Input
                   className="pl-10"
-                  placeholder="Quick filter by country..."
+                  placeholder="Search clubs, leagues, or matchups..."
+                  value={matchSearch}
+                  onChange={(event) => setMatchSearch(event.target.value)}
+                />
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {statusOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    type="button"
+                    variant={statusFilter === option.value ? "default" : "outline"}
+                    size="sm"
+                    className={`rounded-full ${
+                      statusFilter === option.value ? "" : "border-border/60"
+                    }`}
+                    onClick={() => setStatusFilter(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div className="relative w-full md:max-w-sm">
+                <Globe
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={16}
+                />
+                <Input
+                  className="pl-10"
+                  placeholder="Focus on a specific country..."
                   value={countryFilter}
                   onChange={(event) => setCountryFilter(event.target.value)}
                 />
               </div>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {PRIORITY_COUNTRIES.map((country) => (
                   <Button
                     type="button"
@@ -262,6 +382,17 @@ export default function Chat() {
                     {country}
                   </Button>
                 ))}
+                {filtersApplied && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="ml-auto text-xs text-muted-foreground hover:text-primary"
+                    onClick={handleResetFilters}
+                  >
+                    Reset filters
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -269,7 +400,7 @@ export default function Chat() {
           {countriesData.length === 0 ? (
             <Card className="border border-dashed bg-card/40">
               <CardContent className="py-8 text-center text-muted-foreground">
-                No countries match your search just yet.
+                No matches fit your filters yet. Try adjusting your search or filters.
               </CardContent>
             </Card>
           ) : (
