@@ -1,51 +1,218 @@
 import { Link } from "react-router-dom";
-import { MessageCircle, TrendingUp, Users, Zap } from "lucide-react";
+import {
+  Activity,
+  ArrowRight,
+  LineChart,
+  Radar,
+  ShieldCheck,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+const featureHighlights = [
+  {
+    icon: Sparkles,
+    title: "Scenario-aware brain",
+    description:
+      "Understands tactical match-ups, coaching patterns, and historic duels before suggesting an outcome.",
+  },
+  {
+    icon: Target,
+    title: "Condition tracking",
+    description:
+      "Feeds injury news, pitch reports, weather, travel fatigue, morale, and officiating trends into one verdict.",
+  },
+  {
+    icon: LineChart,
+    title: "Live momentum radar",
+    description:
+      "Reads in-game tempo, xG swings, substitutions, and form curves to reassess probabilities on the fly.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Audit-ready reasoning",
+    description:
+      "Every recommendation ships with transparent rationale so analysts can trust and act instantly.",
+  },
+];
+
+const coverageStack = [
+  "Squad availability, suspensions, and late fitness calls.",
+  "Coaching tactics, formations, and matchup-specific gameplans.",
+  "Stadium factors: pitch size, surface, altitude, weather, and travel.",
+  "Psychology levers such as rivalry pressure, contract noise, or morale.",
+  "Market signals, sharp money movement, and historical close-game data.",
+];
 
 export default function Index() {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-secondary to-background">
-      <div className="max-w-6xl mx-auto px-4 py-16 space-y-16">
-        <div className="text-center space-y-6 animate-slide-up">
-          <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-accent mb-4 shadow-[0_0_40px_hsl(var(--primary)/0.4)]">
-            <svg className="h-10 w-10 text-primary-foreground" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-            </svg>
-          </div>
-          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
-            Football AI Insights
-          </h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Get expert match analysis, predictions, and tactical insights powered by advanced AI
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
-            <Button asChild size="lg" className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
-              <Link to="/signup">Get Started</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline">
-              <Link to="/login">Sign In</Link>
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-background via-background/90 to-secondary/30 text-foreground">
+      <div className="relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-0 opacity-50">
+          <div className="absolute -top-10 left-1/4 h-64 w-64 bg-primary/10 blur-3xl" />
+          <div className="absolute top-32 right-10 h-72 w-72 bg-accent/10 blur-[120px]" />
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[
-            { icon: MessageCircle, title: "AI Chat", desc: "Real-time football insights" },
-            { icon: TrendingUp, title: "Predictions", desc: "Match outcome analysis" },
-            { icon: Users, title: "Team Stats", desc: "Comprehensive data" },
-            { icon: Zap, title: "Live Updates", desc: "Instant notifications" },
-          ].map((feature, i) => (
-            <Card key={i} className="bg-card/50 backdrop-blur-sm border-border hover:border-primary/50 transition-all hover:shadow-[0_0_20px_hsl(var(--primary)/0.2)] animate-fade-in">
-              <CardContent className="pt-6 text-center space-y-3">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-lg bg-gradient-to-br from-primary/20 to-accent/20">
-                  <feature.icon className="h-6 w-6 text-primary" />
+        <div className="relative z-10 mx-auto max-w-6xl px-4 pb-24 pt-10 space-y-16">
+          <header className="flex items-center justify-between gap-4 rounded-full border border-border/60 bg-card/60 px-6 py-3 backdrop-blur">
+            <Link to="/" className="text-lg font-semibold tracking-tight">
+              kickergpt<span className="text-primary">.</span>
+            </Link>
+            <div className="hidden gap-6 text-sm text-muted-foreground md:flex">
+              <span>Platform</span>
+              <span>Coverage</span>
+              <span>Pricing</span>
+              <span>Stories</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <Button asChild variant="ghost">
+                <Link to="/login">Sign in</Link>
+              </Button>
+              <Button
+                asChild
+                size="sm"
+                className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20"
+              >
+                <Link to="/signup">Request access</Link>
+              </Button>
+            </div>
+          </header>
+
+          <section className="space-y-8 text-center">
+            <Badge className="mx-auto w-fit border border-primary/30 bg-primary/10 text-primary">
+              Football intelligence copilot
+            </Badge>
+            <div className="space-y-6">
+              <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
+                Kickergpt delivers the{" "}
+                <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+                  most exhaustive football match analysis
+                </span>{" "}
+                on the planet.
+              </h1>
+              <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
+                Every scenario that can bend a match result—weather chaos, tired legs, bench depth,
+                referees, supporter morale—is modeled before Kickergpt hands you a decision-ready
+                insight.
+              </p>
+            </div>
+            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Button
+                asChild
+                size="lg"
+                className="gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+              >
+                <Link to="/signup">
+                  Unlock match intelligence
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="border-dashed">
+                <Link to="/fixtures">See today's brief</Link>
+              </Button>
+            </div>
+            <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
+              {[
+                { label: "Scenarios evaluated / match", value: "2,400+" },
+                { label: "Leagues modeled", value: "150+" },
+                { label: "Analyst hours saved weekly", value: "~12" },
+              ].map((stat) => (
+                <div key={stat.label} className="space-y-1">
+                  <p className="text-3xl font-semibold tracking-tight">{stat.value}</p>
+                  <p className="text-sm text-muted-foreground">{stat.label}</p>
                 </div>
-                <h3 className="font-semibold">{feature.title}</h3>
-                <p className="text-sm text-muted-foreground">{feature.desc}</p>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-8">
+            <div className="flex flex-col gap-3 text-center">
+              <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                Trusted toolkit
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                Everything a modern football desk expects
+              </h2>
+              <p className="mx-auto max-w-3xl text-muted-foreground">
+                Kickergpt is engineered like a premium SaaS platform—clean console, instant sharing,
+                enterprise-grade security. Plug it into scouting, betting, or media workflows.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {featureHighlights.map((feature) => (
+                <Card key={feature.title} className="border-border/70 bg-card/80 backdrop-blur">
+                  <CardHeader className="flex flex-row items-center gap-4">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                      <feature.icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-2 text-muted-foreground">
+                    {feature.description}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="mx-auto grid gap-10 justify-center">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/5 shadow-xl shadow-primary/10">
+              <CardHeader>
+                <Badge variant="outline" className="w-fit border-primary/40 text-primary">
+                  Scenario coverage
+                </Badge>
+                <CardTitle className="text-2xl">No variable left out of the equation</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4 text-muted-foreground">
+                {coverageStack.map((item) => (
+                  <div key={item} className="flex items-start gap-3">
+                    <Radar className="mt-1 h-5 w-5 text-primary" />
+                    <p>{item}</p>
+                  </div>
+                ))}
               </CardContent>
             </Card>
-          ))}
+          </section>
+
+          <footer className="mt-16 rounded-3xl border border-border/60 bg-card/70 p-8 text-sm text-muted-foreground backdrop-blur">
+            <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-2">
+                <p className="text-lg font-semibold text-foreground">
+                  kickergpt<span className="text-primary">.</span>
+                </p>
+                <p>Scenario-perfect football intelligence for analysts and storytellers.</p>
+              </div>
+              <div className="flex flex-wrap gap-6 text-foreground/80">
+                <Link to="/signup" className="hover:text-primary">
+                  Create a workspace
+                </Link>
+                <Link to="/fixtures" className="hover:text-primary">
+                  Explore fixtures
+                </Link>
+                <Link to="/login" className="hover:text-primary">
+                  Analyst login
+                </Link>
+              </div>
+            </div>
+            <div className="mt-6 flex flex-col gap-3 border-t border-border/40 pt-6 text-xs text-muted-foreground md:flex-row md:items-center md:justify-between">
+              <p>© {new Date().getFullYear()} Kickergpt. All rights reserved.</p>
+              <div className="flex gap-4">
+                <Link to="/terms" className="hover:text-primary">
+                  Terms
+                </Link>
+                <Link to="/privacy" className="hover:text-primary">
+                  Privacy
+                </Link>
+                <a href="mailto:hello@kickergpt.com" className="hover:text-primary">
+                  Contact
+                </a>
+              </div>
+            </div>
+          </footer>
         </div>
       </div>
     </div>

@@ -238,7 +238,10 @@ export default function Chat() {
           <div className="space-y-3">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="relative w-full md:max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
+                <Search
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                  size={16}
+                />
                 <Input
                   className="pl-10"
                   placeholder="Quick filter by country..."
@@ -254,9 +257,7 @@ export default function Chat() {
                     size="sm"
                     variant={countryFilter === country ? "default" : "outline"}
                     className="rounded-full"
-                    onClick={() =>
-                      setCountryFilter((prev) => (prev === country ? "" : country))
-                    }
+                    onClick={() => setCountryFilter((prev) => (prev === country ? "" : country))}
                   >
                     {country}
                   </Button>
@@ -312,14 +313,14 @@ export default function Chat() {
                               <h3 className="text-base font-semibold text-foreground">{league}</h3>
                             </div>
                             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                          {leagueMatches.map((match) => {
-                            const kickoffLabel = formatKickoffTime(match.kickoffTime);
-                            const statusLabel = getMatchStatusLabel(match);
-                            const statusBadgeClasses = getStatusBadgeClasses(match);
+                              {leagueMatches.map((match) => {
+                                const kickoffLabel = formatKickoffTime(match.kickoffTime);
+                                const statusLabel = getMatchStatusLabel(match);
+                                const statusBadgeClasses = getStatusBadgeClasses(match);
 
-                            return (
-                              <Card
-                                key={match.id}
+                                return (
+                                  <Card
+                                    key={match.id}
                                     className="group relative overflow-hidden border border-border/60 bg-card/70 backdrop-blur transition hover:border-primary/50"
                                   >
                                     <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
