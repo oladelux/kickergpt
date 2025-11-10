@@ -60,14 +60,9 @@ export default function Index() {
         <div className="relative z-10 mx-auto max-w-6xl px-4 pb-24 pt-10 space-y-16">
           <header className="flex items-center justify-between gap-4 rounded-full border border-border/60 bg-card/60 px-6 py-3 backdrop-blur">
             <Link to="/" className="text-lg font-semibold tracking-tight">
-              kickergpt<span className="text-primary">.</span>
+              kicker<span className="bold text-primary">GPT</span>
             </Link>
-            <div className="hidden gap-6 text-sm text-muted-foreground md:flex">
-              <span>Platform</span>
-              <span>Coverage</span>
-              <span>Pricing</span>
-              <span>Stories</span>
-            </div>
+            <div className="hidden gap-6 text-sm text-muted-foreground md:flex"></div>
             <div className="flex items-center gap-3">
               <Button asChild variant="ghost">
                 <Link to="/login">Sign in</Link>

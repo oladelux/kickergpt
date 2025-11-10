@@ -17,7 +17,7 @@ export default function TopNav() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="text-xl font-semibold tracking-tight">
-            kickergpt<span className="text-primary">.</span>
+            kicker<span className="bold text-primary">GPT</span>
           </Link>
 
           <div className="hidden items-center gap-2 md:flex">
@@ -29,7 +29,7 @@ export default function TopNav() {
                   asChild
                   size="sm"
                   variant={isActive ? "default" : "ghost"}
-                  className="rounded-full"
+                  className="rounded-md"
                 >
                   <Link to={item.path} className="flex items-center gap-2 text-sm font-medium">
                     <item.icon className="h-4 w-4" />
