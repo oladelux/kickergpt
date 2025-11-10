@@ -187,14 +187,11 @@ export default function Index() {
                 <p>Scenario-perfect football intelligence for analysts and storytellers.</p>
               </div>
               <div className="flex flex-wrap gap-6 text-foreground/80">
-                <Link to="/signup" className="hover:text-primary">
-                  Create a workspace
-                </Link>
                 <Link to="/fixtures" className="hover:text-primary">
                   Explore fixtures
                 </Link>
                 <Link to="/login" className="hover:text-primary">
-                  Analyst login
+                  login
                 </Link>
               </div>
             </div>
