@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { MessageCircle, Clock, User, Heart } from "lucide-react";
+import { MessageCircle, Clock, User, Heart, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
   { icon: Heart, label: "Favorites", path: "/favorites" },
   { icon: Clock, label: "History", path: "/history" },
+  { icon: CreditCard, label: "Plan", path: "/plans" },
   { icon: User, label: "Profile", path: "/profile" },
 ];
 

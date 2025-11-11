@@ -1,14 +1,6 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  User,
-  Mail,
-  CreditCard,
-  Crown,
-  TrendingUp,
-  Loader2,
-  RefreshCw,
-  AlertTriangle,
-} from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { User, Mail, CreditCard, Loader2, RefreshCw, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,43 +10,36 @@ import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import { firstValueFrom } from "rxjs";
 import { profileService, type ProfileData } from "@/services/profile.service";
-
-type UsageStats = {
-  used: number;
-  total: number;
-  percentage: number;
-};
+import { useSubscriptionData } from "@/hooks/useSubscription";
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
-  const [usage, setUsage] = useState<UsageStats | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [profileError, setProfileError] = useState<string | null>(null);
   const isMountedRef = useRef(true);
+  const {
+    plan: subscription,
+    usage,
+    loading: subscriptionLoading,
+    error: subscriptionError,
+    refreshAll: refreshSubscription,
+  } = useSubscriptionData();
 
   const loadProfile = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    setProfileLoading(true);
+    setProfileError(null);
     try {
-      const [profileData, usageData] = await Promise.all([
-        firstValueFrom(profileService.getProfile()),
-        firstValueFrom(profileService.getUsage()).catch(() => null),
-      ]);
-
+      const profileData = await firstValueFrom(profileService.getProfile());
       if (!isMountedRef.current) return;
-
       setProfile(profileData);
-      setUsage(usageData);
     } catch (err) {
       if (!isMountedRef.current) return;
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to load your profile. Please try again."
+      setProfileError(
+        err instanceof Error ? err.message : "Failed to load your profile. Please try again."
       );
     } finally {
       if (isMountedRef.current) {
-        setLoading(false);
+        setProfileLoading(false);
       }
     }
   }, []);
@@ -66,38 +51,48 @@ export default function Profile() {
     };
   }, [loadProfile]);
 
-  const resolvedUsage = useMemo<UsageStats | null>(() => {
-    if (usage) return usage;
-    if (!profile) return null;
+  const planName =
+    subscription?.plan === "PRO"
+      ? "Pro plan"
+      : subscription?.plan === "FREE"
+        ? "Free plan"
+        : profile?.planName?.trim() || "Free plan";
+  const subscriptionStatusLabel =
+    subscription?.status === "ACTIVE"
+      ? "Active"
+      : subscription?.status === "INACTIVE"
+        ? "Inactive"
+        : profile?.isActive
+          ? "Active"
+          : "Inactive";
 
-    const used = Math.max(0, profile.creditsUsed ?? 0);
-    const total = profile.creditsTotal ?? 0;
-
-    if (!total || total <= 0) {
-      return { used, total: 0, percentage: 0 };
-    }
-
-    return {
-      used,
-      total,
-      percentage: Math.min(100, (used / total) * 100),
-    };
-  }, [usage, profile]);
-
-  const planName = profile?.planName?.trim() || "Free plan";
-  const subscriptionStatusLabel = profile?.isActive ? "Active" : "Inactive";
-  const usageDisplay = resolvedUsage
-    ? resolvedUsage.total > 0
-      ? `${resolvedUsage.used} / ${resolvedUsage.total}`
-      : `${resolvedUsage.used} analyses`
-    : "--";
-  const usageHelper = resolvedUsage
-    ? resolvedUsage.total > 0
-      ? `${Math.max(resolvedUsage.total - resolvedUsage.used, 0)} analyses remaining`
-      : "Unlimited analyses included"
-    : "Usage data unavailable right now.";
+  const monthlyAllowance = usage?.monthlyAllowance ?? profile?.creditsTotal ?? 0;
+  const monthlyUsed = usage?.monthlyUsed ?? profile?.creditsUsed ?? 0;
+  const monthlyRemaining = usage?.monthlyRemaining ?? Math.max(monthlyAllowance - monthlyUsed, 0);
+  const addonCredits = usage?.addonCreditsRemaining ?? 0;
+  const usageDisplay =
+    monthlyAllowance > 0 ? `${monthlyUsed} / ${monthlyAllowance}` : `${monthlyUsed} prompts`;
+  const usageHelper =
+    monthlyAllowance > 0 ? `${monthlyRemaining} prompts remaining` : "Prompts refresh monthly.";
   const usageProgress =
-    resolvedUsage && resolvedUsage.total > 0 ? resolvedUsage.percentage : 0;
+    monthlyAllowance > 0 ? Math.min(100, (monthlyUsed / monthlyAllowance) * 100) : 0;
+  const renewalDate = subscription?.currentPeriodEnd
+    ? new Date(subscription.currentPeriodEnd).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : subscription?.plan === "PRO"
+      ? "Renews monthly"
+      : "Resets monthly";
+
+  const combinedLoading = profileLoading || subscriptionLoading;
+  const combinedError = profileError ?? subscriptionError ?? null;
+
+  const handleRefreshAll = useCallback(() => {
+    loadProfile();
+    refreshSubscription();
+  }, [loadProfile, refreshSubscription]);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4 pb-20 md:pb-4 md:pt-20">
@@ -107,8 +102,13 @@ export default function Profile() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
             Profile
           </h1>
-          <Button variant="outline" size="icon" onClick={loadProfile} disabled={loading}>
-            {loading ? (
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleRefreshAll}
+            disabled={combinedLoading}
+          >
+            {combinedLoading ? (
               <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
               <RefreshCw className="h-4 w-4" />
@@ -116,25 +116,25 @@ export default function Profile() {
           </Button>
         </div>
 
-        {loading ? (
+        {combinedLoading ? (
           <StatusMessage
             title="Loading your profile"
             description="Give us a moment while we fetch your details."
           />
-        ) : error ? (
+        ) : combinedError ? (
           <StatusMessage
             variant="error"
             title="Unable to load profile"
-            description={error}
+            description={combinedError}
             actionLabel="Try again"
-            onAction={loadProfile}
+            onAction={handleRefreshAll}
           />
         ) : !profile ? (
           <StatusMessage
             title="No profile data"
             description="We couldn’t find your details. Refresh to try again."
             actionLabel="Refresh"
-            onAction={loadProfile}
+            onAction={handleRefreshAll}
           />
         ) : (
           <>
@@ -155,18 +155,18 @@ export default function Profile() {
               </CardHeader>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border">
+            <Card className="bg-card/50 backdrop-blur border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-5 w-5 text-primary" />
-                  Usage This Month
+                  <Sparkles className="h-5 w-5 text-primary" />
+                  Prompt Usage This Month
                 </CardTitle>
-                <CardDescription>Track how many analyses you’ve requested</CardDescription>
+                <CardDescription>Track how many prompts you’ve consumed</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Analyses Used</span>
+                    <span className="text-muted-foreground">Prompts Used</span>
                     <span className="font-medium">{usageDisplay}</span>
                   </div>
                   <Progress value={usageProgress} className="h-2" />
@@ -177,40 +177,42 @@ export default function Profile() {
 
                 <div className="grid grid-cols-2 gap-4 text-center">
                   <div className="space-y-1">
-                    <p className="text-2xl font-bold text-primary">
-                      {resolvedUsage?.used ?? 0}
-                    </p>
+                    <p className="text-2xl font-bold text-primary">{monthlyUsed}</p>
                     <p className="text-xs text-muted-foreground">Used</p>
                   </div>
                   <div className="space-y-1">
                     <p className="text-2xl font-bold text-accent">
-                      {resolvedUsage && resolvedUsage.total > 0
-                        ? Math.max(resolvedUsage.total - resolvedUsage.used, 0)
-                        : "∞"}
+                      {monthlyAllowance > 0 ? monthlyRemaining : "∞"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {resolvedUsage && resolvedUsage.total > 0 ? "Remaining" : "Included"}
+                      {monthlyAllowance > 0 ? "Remaining" : "Included"}
                     </p>
                   </div>
+                </div>
+
+                <Separator />
+
+                <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+                  <span>Monthly allowance: {monthlyAllowance || "Included"}</span>
+                  <span>Add-on credits: {addonCredits}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="bg-card/50 backdrop-blur-sm border-border">
+            <Card className="bg-card/50 backdrop-blur border-border">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Crown className="h-5 w-5 text-primary" />
+                  <CreditCard className="h-5 w-5 text-primary" />
                   Subscription
                 </CardTitle>
-                <CardDescription>Manage your subscription plan</CardDescription>
+                <CardDescription>Your current plan and billing status</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium">Current Plan</p>
-                    <p className="text-sm text-muted-foreground">
-                      {planName} {resolvedUsage?.total === 0 ? "— Unlimited access" : ""}
-                    </p>
+                    <p className="text-sm text-muted-foreground">{planName}</p>
+                    <p className="text-xs text-muted-foreground">Renews: {renewalDate}</p>
                   </div>
                   <Badge variant="default" className="bg-gradient-to-r from-primary to-accent">
                     {subscriptionStatusLabel}
@@ -219,37 +221,32 @@ export default function Profile() {
 
                 <Separator />
 
-                <div className="space-y-3">
-                  <h3 className="font-medium">Premium Features</h3>
-                  <ul className="space-y-2 text-sm text-muted-foreground">
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Match-specific AI reports
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Tactical and betting insights
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Head-to-head & form breakdowns
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <div className="h-1.5 w-1.5 rounded-full bg-primary" />
-                      Priority analysis queue
-                    </li>
-                  </ul>
+                <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.4em]">Plan tier</p>
+                    <p className="text-foreground">{subscription?.plan ?? "FREE"}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.4em]">Status</p>
+                    <p className="text-foreground">{subscriptionStatusLabel}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.4em]">Add-on credits</p>
+                    <p className="text-foreground">{addonCredits}</p>
+                  </div>
                 </div>
 
                 <Separator />
 
-                <div className="flex gap-2">
-                  <Button variant="outline" className="flex-1">
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Update Payment
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Button
+                    asChild
+                    className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  >
+                    <Link to="/plans">Manage plan</Link>
                   </Button>
-                  <Button variant="outline" className="flex-1">
-                    Cancel Plan
+                  <Button variant="outline" className="flex-1" onClick={refreshSubscription}>
+                    Refresh subscription
                   </Button>
                 </div>
               </CardContent>
@@ -257,21 +254,21 @@ export default function Profile() {
 
             <Card className="bg-card/50 backdrop-blur-sm border-border">
               <CardHeader>
-                <CardTitle>Account Settings</CardTitle>
-                <CardDescription>Manage your account preferences</CardDescription>
+                <CardTitle>Account Actions</CardTitle>
+                <CardDescription>Quick links for common account tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button variant="outline" className="w-full justify-start">
-                  Change Password
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/plans">Upgrade or buy credits</Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  Notification Settings
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <Link to="/forgot-password">Change password</Link>
                 </Button>
                 <Button
                   variant="outline"
                   className="w-full justify-start text-destructive hover:text-destructive"
                 >
-                  Delete Account
+                  Delete account
                 </Button>
               </CardContent>
             </Card>

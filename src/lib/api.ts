@@ -392,4 +392,19 @@ export const api = {
       return res.json();
     },
   },
+
+  subscriptions: {
+    getCurrent: async () => {
+      const res = await apiRequest("/subscriptions/me", "GET");
+      return res.status === 204 ? null : res.json();
+    },
+    getUsage: async () => {
+      const res = await apiRequest("/subscriptions/usage", "GET");
+      return res.status === 204 ? null : res.json();
+    },
+    selectPlan: async (data: { plan: "FREE" | "PRO" }) => {
+      const res = await apiRequest("/subscriptions/select-plan", "POST", data);
+      return res.status === 204 ? null : res.json();
+    },
+  },
 };
