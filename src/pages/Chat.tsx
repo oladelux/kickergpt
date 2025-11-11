@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ import { LoadingPage } from "@/components/LoadingPage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { useSubscriptionData } from "@/hooks/useSubscription";
 
 const LIVE_STATUS_CODES = new Set(["1H", "2H", "ET", "BT", "P", "LIVE", "HT"]);
 const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "AW", "WO"]);
@@ -138,13 +140,21 @@ const isUpcomingMatch = (match: Match) => !isLiveMatch(match) && !isFinishedMatc
 
 export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
+  const {
+    plan: subscriptionPlan,
+    usage,
+    loading: subscriptionLoading,
+    error: subscriptionError,
+    refreshUsage,
+    refreshAll,
+  } = useSubscriptionData();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
   const [matchSearch, setMatchSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
 
-  if (loading) return <LoadingPage />;
+  if (loading || subscriptionLoading) return <LoadingPage />;
 
   const totalMatches = matches.length;
   const liveMatchesCount = matches.filter(isLiveMatch).length;
@@ -323,6 +333,39 @@ export default function Chat() {
               </Card>
             ))}
           </div>
+
+          {subscriptionError && (
+            <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <span>{subscriptionError}</span>
+                <Button variant="outline" size="sm" onClick={refreshAll}>
+                  Retry
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {usage && (
+            <Card className="border-border/70 bg-card/80 backdrop-blur">
+              <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                    {subscriptionPlan?.plan ?? "FREE"} plan
+                  </p>
+                  <p className="text-sm text-foreground">
+                    {usage.monthlyRemaining}/{usage.monthlyAllowance} prompts left this month
+                  </p>
+                </div>
+                <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-6">
+                  <span>Used: {usage.monthlyUsed}</span>
+                  <span>Add-on credits: {usage.addonCreditsRemaining ?? 0}</span>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link to="/plans">Manage plan</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-4 rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -557,7 +600,15 @@ export default function Chat() {
         </div>
       </ScrollArea>
 
-      <ChatDialog match={selectedMatch} open={chatOpen} onOpenChange={setChatOpen} />
+      <ChatDialog
+        match={selectedMatch}
+        open={chatOpen}
+        onOpenChange={setChatOpen}
+        usage={usage}
+        plan={subscriptionPlan}
+        onAnalysisComplete={refreshUsage}
+        onPromptLimitReached={refreshUsage}
+      />
 
       <BottomNav />
     </div>

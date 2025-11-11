@@ -13,6 +13,7 @@ import Chat from "./pages/Chat";
 import Favorites from "./pages/Favorites";
 import Profile from "./pages/Profile";
 import History from "./pages/History";
+import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,14 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route
+            path="/plans"
+            element={
+              <ProtectedRoute>
+                <Plans />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/fixtures"
             element={

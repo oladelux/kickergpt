@@ -83,16 +83,16 @@ export default function Index() {
             </Badge>
             <div className="space-y-6">
               <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                Kickergpt delivers the{" "}
+                kicker<span className="bold text-primary">GPT</span> delivers the{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
                   most exhaustive football match analysis
                 </span>{" "}
                 on the planet.
               </h1>
               <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
-                Every scenario that can bend a match result—weather chaos, tired legs, bench depth,
-                referees, supporter morale—is modeled before Kickergpt hands you a decision-ready
-                insight.
+                Every scenario that can bend a match result, weather chaos, tired legs, bench depth,
+                referees, supporter morale is modeled before Kicker
+                <span className="bold text-primary">GPT</span> hands you an insight.
               </p>
             </div>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -132,10 +132,6 @@ export default function Index() {
               <h2 className="text-3xl font-semibold tracking-tight">
                 Everything a modern football desk expects
               </h2>
-              <p className="mx-auto max-w-3xl text-muted-foreground">
-                Kickergpt is engineered like a premium SaaS platform—clean console, instant sharing,
-                enterprise-grade security. Plug it into scouting, betting, or media workflows.
-              </p>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
               {featureHighlights.map((feature) => (
@@ -177,7 +173,7 @@ export default function Index() {
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
-                  kickergpt<span className="text-primary">.</span>
+                  kicker<span className="bold text-primary">GPT</span>
                 </p>
                 <p>Scenario-perfect football intelligence for analysts and storytellers.</p>
               </div>

@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
 import { Send, Bot, User, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Match } from "@/services/matches.service";
-import { api } from "@/lib/api";
+import { api, ClientError } from "@/lib/api";
+import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
 
 type Message = {
   id: string;
@@ -18,12 +20,25 @@ interface ChatDialogProps {
   match: Match | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  usage?: SubscriptionUsage | null;
+  plan?: SubscriptionRecord | null;
+  onAnalysisComplete?: () => void | Promise<void>;
+  onPromptLimitReached?: () => void | Promise<void>;
 }
 
-export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProps) {
+export default function ChatDialog({
+  match,
+  open,
+  onOpenChange,
+  usage,
+  plan,
+  onAnalysisComplete,
+  onPromptLimitReached,
+}: ChatDialogProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
+  const [limitReached, setLimitReached] = useState(false);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
 
   useEffect(() => {
@@ -31,6 +46,7 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
       setMessages([]);
       setInput("");
       setIsThinking(false);
+      setLimitReached(false);
       return;
     }
     const cached = conversationCache.current.get(match.id);
@@ -45,9 +61,16 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
     }
   }, [messages, match?.id]);
 
+  useEffect(() => {
+    if (!open) {
+      setLimitReached(false);
+    }
+  }, [open]);
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim() || !match || isThinking) return;
+    setLimitReached(false);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -79,15 +102,25 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
+      await onAnalysisComplete?.();
     } catch (error) {
-      console.error("Failed to fetch analysis", error);
-      const fallbackMessage: Message = {
-        id: `${Date.now()}-error`,
-        role: "assistant",
-        content: "Sorry, I couldn't fetch the analysis right now. Please try again.",
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, fallbackMessage]);
+      if (
+        error instanceof ClientError &&
+        error.status === 403 &&
+        error.responseBody?.message === "promptLimitReached"
+      ) {
+        setLimitReached(true);
+        await onPromptLimitReached?.();
+      } else {
+        console.error("Failed to fetch analysis", error);
+        const fallbackMessage: Message = {
+          id: `${Date.now()}-error`,
+          role: "assistant",
+          content: "Sorry, I couldn't fetch the analysis right now. Please try again.",
+          timestamp: new Date(),
+        };
+        setMessages((prev) => [...prev, fallbackMessage]);
+      }
     } finally {
       setIsThinking(false);
     }
@@ -104,6 +137,42 @@ export default function ChatDialog({ match, open, onOpenChange }: ChatDialogProp
 
         <ScrollArea className="flex-1 px-6 py-4">
           <div className="space-y-4">
+            {usage && (
+              <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
+                <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                  {plan?.plan ?? "FREE"} plan
+                </p>
+                <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
+                  <span>
+                    {usage.monthlyRemaining}/{usage.monthlyAllowance} monthly prompts left
+                  </span>
+                  <span>Add-on credits: {usage.addonCreditsRemaining ?? 0}</span>
+                  <Button asChild variant="ghost" size="sm" className="ml-auto px-3">
+                    <Link to="/plans">Manage plan</Link>
+                  </Button>
+                </div>
+              </div>
+            )}
+            {limitReached && (
+              <div className="space-y-3 rounded-2xl border border-destructive/60 bg-destructive/5 p-4">
+                <p className="text-sm font-semibold text-destructive">Prompt limit reached</p>
+                <p className="text-sm text-muted-foreground">
+                  Upgrade to Pro or buy add-on credits to keep asking Kickergpt about this fixture.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    asChild
+                    size="sm"
+                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                  >
+                    <Link to="/plans">Upgrade / Buy credits</Link>
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setLimitReached(false)}>
+                    Dismiss
+                  </Button>
+                </div>
+              </div>
+            )}
             {messages.length === 0 && (
               <div className="flex gap-3">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
