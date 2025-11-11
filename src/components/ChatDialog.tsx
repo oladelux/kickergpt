@@ -1,10 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Match } from "@/services/matches.service";
 import { api, ClientError } from "@/lib/api";
 import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
@@ -30,8 +36,8 @@ export default function ChatDialog({
   match,
   open,
   onOpenChange,
-  usage,
-  plan,
+  usage: _usage,
+  plan: _plan,
   onAnalysisComplete,
   onPromptLimitReached,
 }: ChatDialogProps) {
@@ -40,6 +46,9 @@ export default function ChatDialog({
   const [isThinking, setIsThinking] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
+  const kickoffLabel = match?.kickoffTime
+    ? match.kickoffTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   useEffect(() => {
     if (!match?.id) {
@@ -128,31 +137,28 @@ export default function ChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl h-[80vh] flex flex-col p-0 max-sm:w-[calc(100%-2rem)] max-sm:h-[calc(100vh-3rem)]">
-        <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle className="text-lg font-semibold">
+      <DialogContent
+        hideClose
+        className="max-w-2xl h-[80vh] flex flex-col p-0 sm:rounded-3xl max-sm:left-0 max-sm:right-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-full max-sm:h-[min(88vh,600px)] max-sm:rounded-t-3xl max-sm:border-t max-sm:translate-x-0 max-sm:translate-y-0 max-sm:shadow-2xl"
+      >
+        <div className="sm:hidden flex justify-center pt-3">
+          <span className="h-1.5 w-12 rounded-full bg-muted-foreground/40" />
+        </div>
+        <DialogHeader className="relative px-6 py-4 border-b max-sm:px-4 text-center sm:text-center">
+          <DialogTitle className="text-base font-semibold leading-tight sm:text-lg">
             {match ? `${match.homeTeam} vs ${match.awayTeam}` : "Match Chat"}
           </DialogTitle>
+          {match && kickoffLabel && (
+            <p className="text-xs text-muted-foreground">{`${match.league} • ${kickoffLabel}`}</p>
+          )}
+          <DialogClose className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close chat dialog</span>
+          </DialogClose>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
+        <ScrollArea className="flex-1 px-6 py-4 max-sm:px-4">
           <div className="space-y-4">
-            {usage && (
-              <div className="rounded-2xl border border-border/70 bg-card/70 p-4">
-                <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
-                  {plan?.plan ?? "FREE"} plan
-                </p>
-                <div className="mt-2 flex flex-wrap items-center gap-4 text-sm">
-                  <span>
-                    {usage.monthlyRemaining}/{usage.monthlyAllowance} monthly prompts left
-                  </span>
-                  <span>Add-on credits: {usage.addonCreditsRemaining ?? 0}</span>
-                  <Button asChild variant="ghost" size="sm" className="ml-auto px-3">
-                    <Link to="/plans">Manage plan</Link>
-                  </Button>
-                </div>
-              </div>
-            )}
             {limitReached && (
               <div className="space-y-3 rounded-2xl border border-destructive/60 bg-destructive/5 p-4">
                 <p className="text-sm font-semibold text-destructive">Prompt limit reached</p>
