@@ -14,6 +14,7 @@ import {
 import { Match } from "@/services/matches.service";
 import { api, ClientError } from "@/lib/api";
 import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
+import { MarkdownContent } from "@/components/MarkdownContent";
 
 type Message = {
   id: string;
@@ -212,7 +213,7 @@ export default function ChatDialog({
                       : "bg-card border border-border"
                   }`}
                 >
-                  <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                  <MarkdownContent content={message.content} />
                   <p className="text-xs opacity-60 mt-2">
                     {message.timestamp.toLocaleTimeString([], {
                       hour: "2-digit",

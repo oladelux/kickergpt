@@ -14,6 +14,7 @@ import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import { api, FixtureChatMessage } from "@/lib/api";
 import { useMatches } from "@/hooks/useMatches";
+import { MarkdownContent } from "@/components/MarkdownContent";
 
 type ChatHistoryEntry = Omit<FixtureChatMessage, "createdAt"> & {
   createdAt: Date;
@@ -467,17 +468,20 @@ export default function History() {
                                 <p className="mb-1 text-xs uppercase tracking-wide text-muted-foreground">
                                   Your question
                                 </p>
-                                <CardDescription className="text-base text-foreground">
-                                  {entry.message}
-                                </CardDescription>
+                                <MarkdownContent
+                                  content={entry.message ?? ""}
+                                  size="base"
+                                  className="text-foreground"
+                                />
                               </div>
                               <div>
                                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                                   AI summary
                                 </p>
-                                <p className="text-sm leading-relaxed text-foreground">
-                                  {entry.summary}
-                                </p>
+                                <MarkdownContent
+                                  content={entry.summary ?? ""}
+                                  className="text-foreground"
+                                />
                               </div>
                             </div>
 
