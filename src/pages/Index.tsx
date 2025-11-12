@@ -78,9 +78,14 @@ export default function Index() {
           </header>
 
           <section className="space-y-8 text-center">
-            <Badge className="mx-auto w-fit border border-primary/30 bg-primary/10 text-primary">
-              Football intelligence copilot
-            </Badge>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Badge className="w-fit border border-primary/30 bg-primary/10 text-primary">
+                Football intelligence copilot
+              </Badge>
+              <Badge variant="outline" className="w-fit border-foreground/20 text-foreground/80">
+                Free forever · No credit card needed
+              </Badge>
+            </div>
             <div className="space-y-6">
               <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
                 kicker<span className="bold text-primary">GPT</span> delivers the{" "}
@@ -110,6 +115,9 @@ export default function Index() {
                 <Link to="/fixtures">See today's brief</Link>
               </Button>
             </div>
+            <p className="text-sm font-medium text-foreground/80">
+              Free access. No credit card required to get started.
+            </p>
             <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
               {[
                 { label: "Scenarios evaluated / match", value: "2,400+" },

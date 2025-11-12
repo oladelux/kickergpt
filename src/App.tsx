@@ -15,6 +15,7 @@ import Profile from "./pages/Profile";
 import History from "./pages/History";
 import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
+import { Analytics } from "@vercel/analytics/next";
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <Analytics />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />

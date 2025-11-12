@@ -1,0 +1,7 @@
+<svg width="214" height="66" viewBox="0 0 214 66" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="logoTitle logoDesc">
+  <title id="logoTitle">kickerGPT logo</title>
+  <desc id="logoDesc">Wordmark with “kicker” in light gray and “GPT” in vibrant green on a transparent background.</desc>
+  <text x="0" y="43" fill="#f2f4f7" font-family="Inter, 'Segoe UI', -apple-system, BlinkMacSystemFont, system-ui, sans-serif" font-size="32" font-weight="700">
+    kicker<tspan fill="#2ecb73">GPT</tspan>
+  </text>
+</svg>
