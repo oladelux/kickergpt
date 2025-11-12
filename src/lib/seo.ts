@@ -14,7 +14,7 @@ export const BASE_URL = "https://www.kickergpt.com";
 const OG_IMAGE = "https://www.kickergpt.com/twitter-header.png";
 
 export const DEFAULT_SEO: SeoConfig = {
-  title: "KickerGPT | Market Intel For Football Bettors",
+  title: "KickerGPT | Scenario-Perfect Football Intelligence",
   description:
     "KickerGPT surfaces officiating trends, tactical shifts, and weather context so football bettors can research every market responsibly—never a pick or guaranteed outcome.",
   keywords:
@@ -32,14 +32,14 @@ export const DEFAULT_SEO: SeoConfig = {
     potentialAction: {
       "@type": "SearchAction",
       target: `${BASE_URL}/fixtures?query={search_term_string}`,
-      "query-input": "required name=search_term_string"
-    }
-  }
+      "query-input": "required name=search_term_string",
+    },
+  },
 };
 
 export const seoConfig: Record<string, Partial<SeoConfig>> = {
   "/": {
-    title: "KickerGPT Index | Football Bettor Research Hub",
+    title: "KickerGPT | Scenario-Perfect Football Intelligence",
     description:
       "Scan fixtures for lineup news, pitch conditions, and officiating context so your betting research stays grounded in facts—not guaranteed picks.",
     keywords:
@@ -49,12 +49,8 @@ export const seoConfig: Record<string, Partial<SeoConfig>> = {
       "@type": "WebPage",
       name: "KickerGPT Betting Dashboard",
       url: BASE_URL,
-      about: [
-        "Football odds",
-        "Betting intelligence",
-        "Sports trading"
-      ]
-    }
+      about: ["Football odds", "Betting intelligence", "Sports trading"],
+    },
   },
   "/plans": {
     title: "Plans & Access Passes | Configure KickerGPT Research Feeds",
@@ -71,16 +67,17 @@ export const seoConfig: Record<string, Partial<SeoConfig>> = {
           "@type": "Offer",
           position: 1,
           availability: "https://schema.org/InStock",
-          description: "Baseline market context for casual bettors who want organized research."
+          description: "Baseline market context for casual bettors who want organized research.",
         },
         {
           "@type": "Offer",
           position: 2,
           availability: "https://schema.org/LimitedAvailability",
-          description: "High-frequency context drops for bettors who review multiple markets daily."
-        }
-      ]
-    }
+          description:
+            "High-frequency context drops for bettors who review multiple markets daily.",
+        },
+      ],
+    },
   },
   "/fixtures": {
     title: "Live Fixtures Intel | Real-Time Context For Bettors",
@@ -93,51 +90,49 @@ export const seoConfig: Record<string, Partial<SeoConfig>> = {
       "@type": "ItemList",
       name: "Live Football Fixtures",
       itemListOrder: "http://schema.org/ItemListOrderAscending",
-      numberOfItems: 10
-    }
+      numberOfItems: 10,
+    },
   },
   "/favorites": {
     title: "Watchlist | Track Your Preferred Clubs & Markets",
     description:
       "Pin the competitions and prop categories you watch most so relevant context hits your dashboard first.",
-    keywords:
-      "betting watchlist, tracked teams research, personalized football intel"
+    keywords: "betting watchlist, tracked teams research, personalized football intel",
   },
   "/history": {
     title: "Betting History | Audit Past Research & Signals",
     description:
       "Review which insights you acted on to refine your personal betting process without focusing on promised ROI.",
-    keywords:
-      "betting research journal, bet tracking workspace, responsible wagering review",
+    keywords: "betting research journal, bet tracking workspace, responsible wagering review",
     schema: {
       "@context": "https://schema.org",
       "@type": "Dataset",
       name: "Betting Signal History",
       description: "Historical record of research notes, fixtures, and outcomes from KickerGPT.",
-      citation: BASE_URL
-    }
+      citation: BASE_URL,
+    },
   },
   "/profile": {
     title: "Profile & Alerts | Tune The Context You Receive",
     description:
       "Set preferred leagues, bet types, and risk tolerance so each KickerGPT notification fits your study habits.",
     keywords:
-      "personalized betting research alerts, sports betting preferences, punter profile settings"
+      "personalized betting research alerts, sports betting preferences, punter profile settings",
   },
   "/login": {
     title: "Login | Re-Enter The KickerGPT Command Room",
     description: "Sign back in to sync your research notes, alerts, and chat briefs.",
-    keywords: "sports betting login, bettor research account access"
+    keywords: "sports betting login, bettor research account access",
   },
   "/signup": {
     title: "Create Account | Start Getting Responsible Football Intel",
     description:
       "Open a KickerGPT account to receive contextual football insights designed to inform bettors—not guarantee outcomes.",
-    keywords: "bettor research signup, football intel registration"
+    keywords: "bettor research signup, football intel registration",
   },
   "/forgot-password": {
     title: "Reset Credentials | Recover Your Research Workspace",
     description: "Reset your password to regain access to AI-driven football context.",
-    keywords: "betting account recovery, reset football research login"
-  }
+    keywords: "betting account recovery, reset football research login",
+  },
 };
