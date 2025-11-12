@@ -15,7 +15,7 @@ import Profile from "./pages/Profile";
 import History from "./pages/History";
 import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
-import { Analytics } from "@vercel/analytics/next";
+import { Analytics } from "@vercel/analytics/react";
 
 const queryClient = new QueryClient();
 
