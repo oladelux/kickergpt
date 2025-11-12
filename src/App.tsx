@@ -16,6 +16,7 @@ import History from "./pages/History";
 import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
+import MetaManager from "@/components/MetaManager";
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ const App = () => (
       <Sonner />
       <Analytics />
       <BrowserRouter>
+        <MetaManager />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/login" element={<Login />} />
