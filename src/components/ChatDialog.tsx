@@ -16,6 +16,7 @@ import { api, ClientError } from "@/lib/api";
 import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useToast } from "@/components/ui/use-toast";
 
 type Message = {
   id: string;
@@ -49,7 +50,10 @@ export default function ChatDialog({
   const [limitReached, setLimitReached] = useState(false);
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showSuggestionTip, setShowSuggestionTip] = useState(false);
+  const [limitToastShown, setLimitToastShown] = useState(false);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const { toast } = useToast();
   const kickoffLabel = match?.kickoffTime
     ? match.kickoffTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
@@ -61,6 +65,7 @@ export default function ChatDialog({
       setIsThinking(false);
       setLimitReached(false);
       setShowSuggestionTip(false);
+      setLimitToastShown(false);
       return;
     }
     const cached = conversationCache.current.get(match.id);
@@ -78,6 +83,7 @@ export default function ChatDialog({
   useEffect(() => {
     if (!open) {
       setLimitReached(false);
+      setLimitToastShown(false);
     }
   }, [open]);
 
@@ -86,6 +92,10 @@ export default function ChatDialog({
       setShowSuggestionTip(false);
     }
   }, [suggestionsOpen]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, isThinking, open]);
 
   const suggestedPrompts = useMemo(() => {
     if (!match) {
@@ -148,6 +158,14 @@ export default function ChatDialog({
         error.responseBody?.message === "promptLimitReached"
       ) {
         setLimitReached(true);
+        if (!limitToastShown) {
+          toast({
+            title: "Prompt limit reached",
+            description: "Upgrade to Pro or buy credits to continue chatting about this fixture.",
+            variant: "destructive",
+          });
+          setLimitToastShown(true);
+        }
         await onPromptLimitReached?.();
       } else {
         console.error("Failed to fetch analysis", error);
@@ -192,6 +210,11 @@ export default function ChatDialog({
           </DialogTitle>
           {match && kickoffLabel && (
             <p className="text-xs text-muted-foreground">{`${match.league} • ${kickoffLabel}`}</p>
+          )}
+          {limitReached && (
+            <p className="mt-2 text-xs font-semibold text-destructive">
+              You’ve reached your prompt limit for this fixture. Upgrade or buy credits to continue.
+            </p>
           )}
           <DialogClose className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
@@ -305,6 +328,7 @@ export default function ChatDialog({
                 </div>
               </div>
             )}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
 
