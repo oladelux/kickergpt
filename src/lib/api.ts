@@ -524,6 +524,10 @@ export const api = {
       analysis?: string;
       message?: string;
       tokens?: Record<string, unknown>;
+      followUpSuggestions: {
+        id: string;
+        question: string;
+      }[];
       [key: string]: unknown;
     }> => {
       const res = await apiRequest(`/analyze/${fixtureId}`, "POST", data);

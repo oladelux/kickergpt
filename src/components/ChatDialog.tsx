@@ -142,11 +142,17 @@ export default function ChatDialog({
         response.analysis ??
         response.message ??
         `I'm having trouble generating an analysis for ${match.homeTeam} vs ${match.awayTeam}.`;
+      const shouldAppendSuggestions = wasEmpty && response.followUpSuggestions.length > 0;
+      const appendedSuggestions = shouldAppendSuggestions
+        ? `\n\n---\n**Want to dig deeper into this match? These are some follow-up questions you can ask:**\n${response.followUpSuggestions
+            .map((s) => `- ${s.question}`)
+            .join("\n")}`
+        : "";
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: assistantContent,
+        content: `${assistantContent}${appendedSuggestions}`,
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, aiMessage]);
@@ -273,7 +279,9 @@ export default function ChatDialog({
                         disabled={isThinking}
                         onClick={() => handleSuggestionClick(prompt)}
                       >
-                        <span className="block whitespace-normal break-words leading-snug">{prompt}</span>
+                        <span className="block whitespace-normal break-words leading-snug">
+                          {prompt}
+                        </span>
                       </button>
                     ))}
                   </div>
