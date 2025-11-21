@@ -17,6 +17,8 @@ import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
+import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
 
 type Message = {
   id: string;
@@ -39,8 +41,8 @@ export default function ChatDialog({
   match,
   open,
   onOpenChange,
-  usage: _usage,
-  plan: _plan,
+  usage,
+  plan,
   onAnalysisComplete,
   onPromptLimitReached,
 }: ChatDialogProps) {
@@ -51,12 +53,17 @@ export default function ChatDialog({
   const [suggestionsOpen, setSuggestionsOpen] = useState(false);
   const [showSuggestionTip, setShowSuggestionTip] = useState(false);
   const [limitToastShown, setLimitToastShown] = useState(false);
+  const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
   const kickoffLabel = match?.kickoffTime
     ? match.kickoffTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
+  const promptUsagePercent = useMemo(() => {
+    if (!usage?.monthlyAllowance) return 0;
+    return Math.min(100, Math.round((usage.monthlyUsed / usage.monthlyAllowance) * 100));
+  }, [usage?.monthlyAllowance, usage?.monthlyUsed]);
 
   useEffect(() => {
     if (!match?.id) {
@@ -66,6 +73,7 @@ export default function ChatDialog({
       setLimitReached(false);
       setShowSuggestionTip(false);
       setLimitToastShown(false);
+      setFollowUpSuggestions([]);
       return;
     }
     const cached = conversationCache.current.get(match.id);
@@ -111,6 +119,36 @@ export default function ChatDialog({
     ];
   }, [match]);
 
+  const followUpPrompts = useMemo(() => {
+    if (!match) return [];
+    const matchup = `${match.homeTeam} vs ${match.awayTeam}`;
+    const defaults = [
+      `How likely is both teams to score in ${matchup}?`,
+      `What are the upset signals or volatility flags in ${matchup}?`,
+      `Which side fades late—who concedes after 75 minutes more often?`,
+      `What does the referee/weather do to ${matchup}'s goals or bookings profile?`,
+      `How do ${match.homeTeam} and ${match.awayTeam} perform after midweek fixtures?`,
+      `Which team handles pressing/high turnovers better in this matchup?`,
+    ];
+    const merged = [...followUpSuggestions, ...defaults];
+    const seen = new Set<string>();
+    return merged
+      .map((prompt) => prompt.trim())
+      .filter((prompt) => {
+        if (!prompt) return false;
+        const key = prompt.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 6);
+  }, [followUpSuggestions, match]);
+
+  const hasAssistantResponse = useMemo(
+    () => messages.some((message) => message.role === "assistant"),
+    [messages]
+  );
+
   const sendPrompt = async (promptText: string) => {
     if (!match || isThinking) return;
     const trimmed = promptText.trim();
@@ -137,15 +175,27 @@ export default function ChatDialog({
         tone: "concise",
       });
 
+      const rawFollowUps =
+        Array.isArray(response.followUpSuggestions) && response.followUpSuggestions.length > 0
+          ? response.followUpSuggestions
+              .map((s) => (typeof s?.question === "string" ? s.question.trim() : ""))
+              .filter(Boolean)
+          : [];
+      if (rawFollowUps.length) {
+        setFollowUpSuggestions(rawFollowUps);
+      } else {
+        setFollowUpSuggestions([]);
+      }
+
       const assistantContent =
         response.summary ??
         response.analysis ??
         response.message ??
         `I'm having trouble generating an analysis for ${match.homeTeam} vs ${match.awayTeam}.`;
-      const shouldAppendSuggestions = wasEmpty && response.followUpSuggestions.length > 0;
+      const shouldAppendSuggestions = wasEmpty && rawFollowUps.length > 0;
       const appendedSuggestions = shouldAppendSuggestions
-        ? `\n\n---\n**Want to dig deeper into this match? These are some follow-up questions you can ask:**\n${response.followUpSuggestions
-            .map((s) => `- ${s.question}`)
+        ? `\n\n---\n**Want to dig deeper into this match? These are some follow-up questions you can ask:**\n${rawFollowUps
+            .map((s) => `- ${s}`)
             .join("\n")}`
         : "";
 
@@ -221,6 +271,33 @@ export default function ChatDialog({
             <p className="mt-2 text-xs font-semibold text-destructive">
               You’ve reached your prompt limit for this fixture. Upgrade or buy credits to continue.
             </p>
+          )}
+          {usage && (
+            <div className="mt-3 w-full space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3 text-left">
+              <div className="flex items-center justify-between text-xs font-semibold text-foreground/80">
+                <span className="uppercase tracking-[0.24em] text-muted-foreground">
+                  {plan?.plan ?? "FREE"} plan
+                </span>
+                <span className="text-foreground">
+                  {usage.monthlyRemaining} left
+                  {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining} credits` : ""}
+                </span>
+              </div>
+              <Progress value={promptUsagePercent} className="h-2" />
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                <span>
+                  Used {usage.monthlyUsed} of {usage.monthlyAllowance} this month
+                </span>
+                {usage.addonCreditsRemaining > 0 && (
+                  <Badge variant="secondary" className="text-[11px] font-semibold">
+                    +{usage.addonCreditsRemaining} add-on credits
+                  </Badge>
+                )}
+                <Button asChild variant="outline" size="sm" className="ml-auto text-[11px]">
+                  <Link to="/plans">Upgrade</Link>
+                </Button>
+              </div>
+            </div>
           )}
           <DialogClose className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
@@ -324,6 +401,39 @@ export default function ChatDialog({
                 )}
               </div>
             ))}
+            {!limitReached && hasAssistantResponse && followUpPrompts.length > 0 && (
+              <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">Keep the run going</p>
+                      <p className="text-xs text-muted-foreground">
+                        Similar users asked these next—tap to send instantly.
+                      </p>
+                    </div>
+                  </div>
+                  {usage && (
+                    <Badge variant="outline" className="text-[11px] font-semibold">
+                      {usage.monthlyRemaining} prompts left
+                    </Badge>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {followUpPrompts.map((prompt) => (
+                    <button
+                      key={prompt}
+                      type="button"
+                      className="rounded-full border border-border/60 bg-secondary/60 px-4 py-2 text-left text-xs font-medium text-foreground/90 transition hover:border-primary/60 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-50"
+                      disabled={isThinking}
+                      onClick={() => handleSuggestionClick(prompt)}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             {isThinking && (
               <div className="flex gap-3 animate-fade-in justify-start">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
