@@ -257,25 +257,24 @@ export default function ChatDialog({
                     </p>
                   </div>
                 </div>
-                <div className="space-y-2 rounded-2xl border border-border/70 bg-card/70 p-4">
+                <div className="space-y-3 rounded-2xl border border-border/70 bg-card/70 p-4 w-full">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Quick suggestions</p>
                     <p className="text-xs text-muted-foreground">
                       Tap a question to instantly ask Kickergpt.
                     </p>
                   </div>
-                  <div className="flex flex-col gap-2">
+                  <div className="grid gap-2 grid-cols-1 min-[420px]:grid-cols-2 sm:grid-cols-2">
                     {suggestedPrompts.map((prompt) => (
-                      <Button
+                      <button
                         key={prompt}
                         type="button"
-                        variant="secondary"
-                        className="justify-start text-left w-full whitespace-normal break-words"
+                        className="rounded-2xl border border-border/70 bg-secondary/60 px-4 py-3 text-left text-sm font-medium text-foreground/90 transition hover:border-primary/60 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-50"
                         disabled={isThinking}
                         onClick={() => handleSuggestionClick(prompt)}
                       >
-                        {prompt}
-                      </Button>
+                        <span className="block whitespace-normal break-words leading-snug">{prompt}</span>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -353,7 +352,7 @@ export default function ChatDialog({
                   <span className="sr-only">Show suggested questions</span>
                 </Button>
               </PopoverTrigger>
-              <PopoverContent align="end" className="w-80 p-0">
+              <PopoverContent align="end" className="w-[min(20rem,90vw)] p-0">
                 <div className="px-4 py-3 border-b">
                   <p className="text-sm font-semibold">Suggested questions</p>
                   <p className="text-xs text-muted-foreground">
