@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { Send, Bot, User, Loader2, X } from "lucide-react";
+import { Send, Bot, User, Loader2, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,6 +15,7 @@ import { Match } from "@/services/matches.service";
 import { api, ClientError } from "@/lib/api";
 import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
 import { MarkdownContent } from "@/components/MarkdownContent";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 type Message = {
   id: string;
@@ -46,6 +47,8 @@ export default function ChatDialog({
   const [input, setInput] = useState("");
   const [isThinking, setIsThinking] = useState(false);
   const [limitReached, setLimitReached] = useState(false);
+  const [suggestionsOpen, setSuggestionsOpen] = useState(false);
+  const [showSuggestionTip, setShowSuggestionTip] = useState(false);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
   const kickoffLabel = match?.kickoffTime
     ? match.kickoffTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -57,6 +60,7 @@ export default function ChatDialog({
       setInput("");
       setIsThinking(false);
       setLimitReached(false);
+      setShowSuggestionTip(false);
       return;
     }
     const cached = conversationCache.current.get(match.id);
@@ -77,25 +81,49 @@ export default function ChatDialog({
     }
   }, [open]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !match || isThinking) return;
+  useEffect(() => {
+    if (suggestionsOpen) {
+      setShowSuggestionTip(false);
+    }
+  }, [suggestionsOpen]);
+
+  const suggestedPrompts = useMemo(() => {
+    if (!match) {
+      return ["Give me a quick match preview.", "What is each team's recent form?"];
+    }
+    const matchup = `${match.homeTeam} vs ${match.awayTeam}`;
+    return [
+      `Give me a quick tactical preview for ${matchup}.`,
+      `How does ${match.homeTeam} usually perform under this referee compared to ${match.awayTeam}`,
+      `How do these teams perform under similar weather and pitch conditions?`,
+      `How do both teams perform when labeled favorites versus underdogs?`,
+      "Which side has handled fixture congestion better in recent weeks?",
+    ];
+  }, [match]);
+
+  const sendPrompt = async (promptText: string) => {
+    if (!match || isThinking) return;
+    const trimmed = promptText.trim();
+    if (!trimmed) return;
     setLimitReached(false);
+    const wasEmpty = messages.length === 0;
+    if (wasEmpty) {
+      setShowSuggestionTip(true);
+    }
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input,
+      content: trimmed,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
-    setInput("");
     setIsThinking(true);
 
     try {
       const response = await api.fixtures.analyzeFixture(match.id, {
-        message: userMessage.content,
+        message: trimmed,
         tone: "concise",
       });
 
@@ -134,6 +162,19 @@ export default function ChatDialog({
     } finally {
       setIsThinking(false);
     }
+  };
+
+  const handleSuggestionClick = (prompt: string) => {
+    setSuggestionsOpen(false);
+    void sendPrompt(prompt);
+  };
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !match || isThinking) return;
+    const currentInput = input;
+    setInput("");
+    await sendPrompt(currentInput);
   };
 
   return (
@@ -181,17 +222,41 @@ export default function ChatDialog({
               </div>
             )}
             {messages.length === 0 && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
-                  <Bot className="h-4 w-4 text-primary-foreground" />
+              <>
+                <div className="flex gap-3">
+                  <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
+                    <Bot className="h-4 w-4 text-primary-foreground" />
+                  </div>
+                  <div className="rounded-2xl p-4 bg-card border border-border">
+                    <p className="text-sm text-muted-foreground">
+                      Kickergpt is live on this fixture. Ask for scenario breakdowns, tactical
+                      pivots, confidence swings, or anything else you need before the whistle.
+                    </p>
+                  </div>
                 </div>
-                <div className="rounded-2xl p-4 bg-card border border-border">
-                  <p className="text-sm text-muted-foreground">
-                    Kickergpt is live on this fixture. Ask for scenario breakdowns, tactical pivots,
-                    confidence swings, or anything else you need before the whistle.
-                  </p>
+                <div className="space-y-2 rounded-2xl border border-border/70 bg-card/70 p-4">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Quick suggestions</p>
+                    <p className="text-xs text-muted-foreground">
+                      Tap a question to instantly ask Kickergpt.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    {suggestedPrompts.map((prompt) => (
+                      <Button
+                        key={prompt}
+                        type="button"
+                        variant="secondary"
+                        className="justify-start text-left w-full whitespace-normal break-words"
+                        disabled={isThinking}
+                        onClick={() => handleSuggestionClick(prompt)}
+                      >
+                        {prompt}
+                      </Button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              </>
             )}
             {messages.map((message) => (
               <div
@@ -251,6 +316,43 @@ export default function ChatDialog({
               placeholder="Ask about the match..."
               className="flex-1"
             />
+            <Popover open={suggestionsOpen} onOpenChange={setSuggestionsOpen}>
+              <PopoverTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="border-border/70"
+                  disabled={isThinking}
+                >
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <span className="sr-only">Show suggested questions</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-80 p-0">
+                <div className="px-4 py-3 border-b">
+                  <p className="text-sm font-semibold">Suggested questions</p>
+                  <p className="text-xs text-muted-foreground">
+                    Click any option to send it immediately.
+                  </p>
+                </div>
+                <ScrollArea className="max-h-64">
+                  <div className="flex flex-col divide-y">
+                    {suggestedPrompts.map((prompt) => (
+                      <button
+                        key={prompt}
+                        type="button"
+                        className="w-full px-4 py-3 text-left text-sm whitespace-normal break-words hover:bg-muted/60 transition-colors"
+                        disabled={isThinking}
+                        onClick={() => handleSuggestionClick(prompt)}
+                      >
+                        {prompt}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </PopoverContent>
+            </Popover>
             <Button
               type="submit"
               size="icon"
@@ -264,6 +366,12 @@ export default function ChatDialog({
               )}
             </Button>
           </form>
+          {showSuggestionTip && (
+            <p className="mt-2 text-xs text-muted-foreground flex items-center gap-2">
+              <Sparkles className="h-3 w-3 text-primary" />
+              Need inspiration? Tap the sparkles icon to see suggested questions.
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>
