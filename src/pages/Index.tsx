@@ -1,13 +1,18 @@
 import { Link } from "react-router-dom";
 import {
-  Activity,
+  CalendarClock,
   ArrowRight,
+  CloudSun,
+  HeartPulse,
   LineChart,
+  MapPin,
   Radar,
   ShieldCheck,
   Sparkles,
   Target,
+  Trophy,
   Users,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -15,37 +20,100 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const featureHighlights = [
   {
-    icon: Sparkles,
-    title: "Scenario-aware brain",
+    icon: CalendarClock,
+    title: "Matchday context locked-in",
     description:
-      "Understands tactical match-ups, coaching patterns, and historic duels before suggesting an outcome.",
+      "Date, venue, referee crew, pricing drift, and weather are baked into every starting probability.",
+  },
+  {
+    icon: HeartPulse,
+    title: "Form plus availability",
+    description:
+      "Recent results, scoring trends, clean sheets, squad depth, injuries, and suspensions stitched together.",
   },
   {
     icon: Target,
-    title: "Condition tracking",
+    title: "Situational edges",
     description:
-      "Feeds injury news, pitch reports, weather, travel fatigue, morale, and officiating trends into one verdict.",
+      "Home vs away splits, weekday records, favorite vs underdog profiles, upset history, and referee bias.",
   },
   {
-    icon: LineChart,
-    title: "Live momentum radar",
+    icon: Sparkles,
+    title: "Texture the data",
     description:
-      "Reads in-game tempo, xG swings, substitutions, and form curves to reassess probabilities on the fly.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Audit-ready reasoning",
-    description:
-      "Every recommendation ships with transparent rationale so analysts can trust and act instantly.",
+      "News and sentiment, travel fatigue, weather-fit, and schedule congestion layered into one view.",
   },
 ];
 
 const coverageStack = [
-  "Squad availability, suspensions, and late fitness calls.",
-  "Coaching tactics, formations, and matchup-specific gameplans.",
-  "Stadium factors: pitch size, surface, altitude, weather, and travel.",
-  "Psychology levers such as rivalry pressure, contract noise, or morale.",
-  "Market signals, sharp money movement, and historical close-game data.",
+  "Basic match DNA: date, venue, weather, opening odds, and referee assignments.",
+  "Historical meetings, favorite vs underdog returns, upset history, and rivalry temperature.",
+  "Current form: recent matches, scoring trends, BTTS/over-under, clean sheets, home/away splits.",
+  "Squad reality: injuries, suspensions, bench depth, and how absences hit patterns of play.",
+  "Contextual edges: weekday tendencies, travel and rest days, fatigue risk, and referee impact.",
+];
+
+const signalBuckets = [
+  {
+    icon: CloudSun,
+    title: "Conditions & confidence",
+    description:
+      "Weather fit, pitch comfort, travel distance, and day-of-week tendencies for both clubs.",
+  },
+  {
+    icon: LineChart,
+    title: "Form in motion",
+    description:
+      "Recent streaks, goal flow, BTTS/over-under records, and how momentum shifts on similar opponents.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Availability reality",
+    description:
+      "Suspensions, injuries, late fitness calls, and how depth covers the gaps across positions.",
+  },
+  {
+    icon: Radar,
+    title: "Referee & matchup bias",
+    description:
+      "Officiating history, bookings profile, and head-to-head trends that tilt the risk surface.",
+  },
+];
+
+const dossierSnapshot = [
+  {
+    title: "Baseline read",
+    points: [
+      "Venue, surface, expected weather, kickoff timing, and referee crew mapped to historical results.",
+      "Performance by weekday plus rest-day deltas to flag fatigue or freshness edges.",
+    ],
+  },
+  {
+    title: "Team pulse",
+    points: [
+      "Recent form with scoring trends, clean sheets, and BTTS likelihoods for each side.",
+      "Injury/suspension impact on preferred XI, bench quality, and formation flexibility.",
+    ],
+  },
+  {
+    title: "Risk and edge",
+    points: [
+      "Favorite vs underdog behavior, upset history, and price drift versus implied strength.",
+      "Referee history with either club, card cadence, and potential influence on defensive setups.",
+    ],
+  },
+];
+
+const competitionBadges = [
+  "Premier League",
+  "LaLiga",
+  "Serie A",
+  "Bundesliga",
+  "Ligue 1",
+  "UCL / UEL / UECL",
+  "Eredivisie",
+  "Primeira Liga",
+  "MLS + additional European domestic leagues",
 ];
 
 export default function Index() {
@@ -85,19 +153,21 @@ export default function Index() {
               <Badge variant="outline" className="w-fit border-foreground/20 text-foreground/80">
                 Free forever · No credit card needed
               </Badge>
+              <Badge className="w-fit border border-accent/40 bg-accent/10 text-accent-foreground">
+                Most European competitions covered
+              </Badge>
             </div>
             <div className="space-y-6">
               <h1 className="text-4xl font-bold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-                kicker<span className="bold text-primary">GPT</span> delivers the{" "}
+                See the angles before the odds move —{" "}
                 <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                  most exhaustive football match analysis
-                </span>{" "}
-                on the planet.
+                  one pre-match read with every factor that bends the result.
+                </span>
               </h1>
               <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
-                Every scenario that can bend a match result, weather chaos, tired legs, bench depth,
-                referees, supporter morale is modeled before Kicker
-                <span className="bold text-primary">GPT</span> hands you an insight.
+                Kickergpt blends context, current form, officiating trends, and availability into
+                one shareable pre-match read—asked for in chat, answered with angles—so analysts,
+                writers, and edge-seekers move faster.
               </p>
             </div>
             <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -112,7 +182,7 @@ export default function Index() {
                 </Link>
               </Button>
               <Button asChild size="lg" variant="outline" className="border-dashed">
-                <Link to="/fixtures">See today's brief</Link>
+                <Link to="/fixtures">Ask about today's matches</Link>
               </Button>
             </div>
             <p className="text-sm font-medium text-foreground/80">
@@ -120,8 +190,8 @@ export default function Index() {
             </p>
             <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
               {[
-                { label: "Scenarios evaluated / match", value: "2,400+" },
-                { label: "Leagues modeled", value: "150+" },
+                { label: "Signals parsed / match", value: "2,400+" },
+                { label: "European + global comps", value: "150+" },
                 { label: "Analyst hours saved weekly", value: "~12" },
               ].map((stat) => (
                 <div key={stat.label} className="space-y-1">
@@ -135,10 +205,10 @@ export default function Index() {
           <section className="space-y-8">
             <div className="flex flex-col gap-3 text-center">
               <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
-                Trusted toolkit
+                Quietly obsessive toolkit
               </p>
               <h2 className="text-3xl font-semibold tracking-tight">
-                Everything a modern football desk expects
+                Built for people who need an edge without flashing it
               </h2>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
@@ -153,6 +223,35 @@ export default function Index() {
                   <CardContent className="pt-2 text-muted-foreground">
                     {feature.description}
                   </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-10">
+            <div className="flex flex-col gap-3 text-center">
+              <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                Coverage map
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight">Signals before the whistle</h2>
+              <p className="mx-auto max-w-3xl text-muted-foreground">
+                Built around the signals sharp readers look for: match fundamentals, historical
+                relationships, form, availability, and contextual edges that hint at where value may sit.
+              </p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              {signalBuckets.map((signal) => (
+                <Card
+                  key={signal.title}
+                  className="border-border/60 bg-gradient-to-br from-card/80 via-card to-card/90"
+                >
+                  <CardHeader className="flex flex-row items-center gap-3">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border/60 bg-primary/10 text-primary">
+                      <signal.icon className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-lg">{signal.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="text-muted-foreground">{signal.description}</CardContent>
                 </Card>
               ))}
             </div>
@@ -177,13 +276,90 @@ export default function Index() {
             </Card>
           </section>
 
+          <section className="space-y-8">
+            <div className="flex flex-col gap-3 text-center">
+              <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                Dossier snippet
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                What a pre-match read looks like
+              </h2>
+              <p className="mx-auto max-w-3xl text-muted-foreground">
+                A compact pre-match outline referencing historical meetings, current form, squad realities,
+                and officiating context—so you can spot storylines in seconds.
+              </p>
+            </div>
+            <div className="grid gap-6 md:grid-cols-3">
+              {dossierSnapshot.map((block) => (
+                <Card key={block.title} className="border-border/60 bg-card/80">
+                  <CardHeader className="flex flex-row items-center gap-3">
+                    <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border/60 bg-accent/10 text-accent-foreground">
+                      {block.title === "Baseline read" && <MapPin className="h-5 w-5" />}
+                      {block.title === "Team pulse" && <Users className="h-5 w-5" />}
+                      {block.title === "Risk and edge" && <Zap className="h-5 w-5" />}
+                    </div>
+                    <CardTitle className="text-lg">{block.title}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3 text-sm text-muted-foreground">
+                    {block.points.map((point) => (
+                      <div key={point} className="flex items-start gap-2">
+                        <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                        <p>{point}</p>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+
+          <section className="space-y-6">
+            <div className="flex flex-col gap-3 text-center">
+              <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                European coverage
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                Built for continental nights and weekend chaos
+              </h2>
+              <p className="mx-auto max-w-3xl text-muted-foreground">
+                From title races to relegation scraps, Kickergpt follows most European competitions
+                plus key global leagues so every match analysis starts with useful context.
+              </p>
+            </div>
+            <Card className="border-border/70 bg-card/80">
+              <CardHeader className="flex flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+                    <Trophy className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl">League coverage</CardTitle>
+                    <p className="text-sm text-muted-foreground">
+                      Deep data plus fast snapshots for over 150 competitions.
+                    </p>
+                  </div>
+                </div>
+                <Badge variant="secondary" className="border border-border/60 bg-primary/10 text-primary">
+                  European focus
+                </Badge>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-3">
+                {competitionBadges.map((item) => (
+                  <Badge key={item} variant="outline" className="border-border/60 text-foreground/80">
+                    {item}
+                  </Badge>
+                ))}
+              </CardContent>
+            </Card>
+          </section>
+
           <footer className="mt-16 rounded-3xl border border-border/60 bg-card/70 p-8 text-sm text-muted-foreground backdrop-blur">
             <div className="flex flex-col gap-8 md:flex-row md:items-center md:justify-between">
               <div className="space-y-2">
                 <p className="text-lg font-semibold text-foreground">
                   kicker<span className="bold text-primary">GPT</span>
                 </p>
-                <p>Scenario-perfect football intelligence for analysts and storytellers.</p>
+                <p>Scenario-perfect football intelligence for analysts, storytellers, and edge-hunters.</p>
               </div>
               <div className="flex flex-wrap gap-6 text-foreground/80">
                 <Link to="/fixtures" className="hover:text-primary">
