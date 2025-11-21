@@ -21,8 +21,31 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
 
-const LIVE_STATUS_CODES = new Set(["1H", "2H", "ET", "BT", "P", "LIVE", "HT"]);
-const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "AW", "WO"]);
+const LIVE_DEVELOPER_CODES = new Set([
+  "INPLAY_1ST_HALF",
+  "INPLAY_2ND_HALF",
+  "INPLAY_EXTRA_TIME",
+  "INPLAY_PENALTIES",
+  "INPLAY_BREAK",
+  "INPLAY_SUSPENSION",
+  "INPLAY_ABANDONED",
+  "INPLAY_AWARDED",
+  "INPLAY_TO_BE_DECIDED",
+]);
+const LIVE_SHORT_CODES = new Set([
+  "LIVE",
+  "1H",
+  "2H",
+  "ET",
+  "AET",
+  "PEN",
+  "1ST",
+  "2ND",
+  "1ST HALF",
+  "2ND HALF",
+]);
+const FINISHED_STATUS_CODES = new Set(["FT", "AET", "PEN", "AW", "WO", "FINISHED", "FULLTIME"]);
+const UPCOMING_STATUS_CODES = new Set(["NS", "NOTSTARTED", "NOT_STARTED"]);
 const STATUS_LABELS: Record<string, string> = {
   FT: "Full Time",
   HT: "Half Time",
@@ -38,6 +61,15 @@ const STATUS_LABELS: Record<string, string> = {
   AWD: "Awarded",
   TBD: "To Be Decided",
   LIVE: "Live",
+  INPLAY_1ST_HALF: "1st Half",
+  INPLAY_2ND_HALF: "2nd Half",
+  INPLAY_EXTRA_TIME: "Extra Time",
+  INPLAY_PENALTIES: "Penalties",
+  INPLAY_BREAK: "Break",
+  INPLAY_SUSPENSION: "Suspended",
+  INPLAY_ABANDONED: "Abandoned",
+  INPLAY_AWARDED: "Awarded",
+  INPLAY_TO_BE_DECIDED: "To Be Decided",
 };
 
 const PRIORITY_COUNTRIES = [
@@ -94,36 +126,79 @@ const getTimeUntilKickoff = (date: Date) => {
   return `in ${diffDays}d`;
 };
 
+const normalizeStatusCode = (value?: string | null) =>
+  (typeof value === "string" ? value.trim().toUpperCase() : null) ?? null;
+
+const getStatusCodes = (match: Match) => {
+  const developer = normalizeStatusCode(match.status?.developer_name);
+  const short = normalizeStatusCode(match.status?.short_name);
+  const state = normalizeStatusCode(match.status?.state);
+  const name = normalizeStatusCode(match.status?.name);
+  return { developer, short, state, name };
+};
+
+const getComparableStatusCodes = (match: Match) => {
+  const { developer, short, state, name } = getStatusCodes(match);
+  return [developer, short, state, name].filter(Boolean) as string[];
+};
+
 const isLiveMatch = (match: Match) => {
-  const short = match.status?.short?.toUpperCase();
-  if (!short) return false;
-  return LIVE_STATUS_CODES.has(short);
+  const codes = getComparableStatusCodes(match);
+  return codes.some(
+    (code) =>
+      LIVE_DEVELOPER_CODES.has(code) || LIVE_SHORT_CODES.has(code) || code.startsWith("INPLAY")
+  );
 };
 
 const isFinishedMatch = (match: Match) => {
-  const short = match.status?.short?.toUpperCase();
-  if (!short) return false;
-  return FINISHED_STATUS_CODES.has(short);
+  const codes = getComparableStatusCodes(match);
+  return codes.some((code) => FINISHED_STATUS_CODES.has(code));
+};
+
+const isUpcomingMatch = (match: Match) => {
+  const codes = getComparableStatusCodes(match);
+  if (!codes.length) return true;
+  if (codes.some((code) => UPCOMING_STATUS_CODES.has(code))) return true;
+  return !isLiveMatch(match) && !isFinishedMatch(match);
 };
 
 const getMatchStatusLabel = (match: Match) => {
-  const short = match.status?.short?.toUpperCase();
-  if (!short || short === "NS") {
+  const { developer, short, state } = getStatusCodes(match);
+  const codes = [short, developer, state].filter(Boolean) as string[];
+
+  if (!codes.length || codes.some((code) => UPCOMING_STATUS_CODES.has(code))) {
     return getTimeUntilKickoff(match.kickoffTime);
   }
 
-  if (STATUS_LABELS[short]) {
-    if (short === "LIVE" && typeof match.status?.elapsed === "number") {
-      return `${STATUS_LABELS[short]} ${match.status.elapsed}'`;
+  const labelFromMap = codes.map((code) => STATUS_LABELS[code]).find(Boolean);
+  const readableLabel = labelFromMap ?? match.status?.name ?? short ?? developer ?? state;
+
+  if (isLiveMatch(match)) {
+    const isHalfInPlay = codes.some((code) =>
+      [
+        "INPLAY_1ST_HALF",
+        "INPLAY_2ND_HALF",
+        "1ST",
+        "2ND",
+        "1ST HALF",
+        "2ND HALF",
+        "1H",
+        "2H",
+      ].includes(code)
+    );
+    if (isHalfInPlay) {
+      return readableLabel ?? "Live";
     }
-    return STATUS_LABELS[short];
+
+    const elapsedMinutes = Math.max(
+      0,
+      Math.round((Date.now() - match.kickoffTime.getTime()) / 60000)
+    );
+    const liveLabel = readableLabel ?? "Live";
+    return elapsedMinutes ? `${liveLabel} ${elapsedMinutes}'` : liveLabel;
   }
 
-  if (typeof match.status?.elapsed === "number") {
-    return `${match.status.elapsed}' ${match.status?.long ?? short}`.trim();
-  }
-
-  return match.status?.long ?? short;
+  return readableLabel ?? getTimeUntilKickoff(match.kickoffTime);
 };
 
 const getStatusBadgeClasses = (match: Match) => {
@@ -135,8 +210,6 @@ const getStatusBadgeClasses = (match: Match) => {
   }
   return "text-muted-foreground border-border/60";
 };
-
-const isUpcomingMatch = (match: Match) => !isLiveMatch(match) && !isFinishedMatch(match);
 
 export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();

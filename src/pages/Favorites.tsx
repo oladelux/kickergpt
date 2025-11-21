@@ -96,10 +96,10 @@ export default function Favorites() {
                     <div className="space-y-0.5">
                       <p>{match.country ?? "International"}</p>
                       {match.status?.short && (
-                        <p className="text-xs uppercase tracking-wide">
-                          Status: {match.status.short}
-                        </p>
-                      )}
+                      <p className="text-xs uppercase tracking-wide">
+                        Status: {match.status.short_name ?? match.status.name}
+                      </p>
+                    )}
                     </div>
                     <Button
                       variant="ghost"

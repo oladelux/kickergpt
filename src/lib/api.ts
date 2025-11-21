@@ -97,6 +97,14 @@ export type SportmonksScore = {
   scoreboard?: string | null;
 };
 
+export type SportmonksFixtureState = {
+  id: number;
+  state: string;
+  name: string;
+  short_name: string;
+  developer_name: string;
+};
+
 export type SportmonksFixture = {
   id: number;
   sport_id: number;
@@ -128,6 +136,7 @@ export type SportmonksFixture = {
   sidelined: SportmonksSidelined[];
   prematchnews: SportmonksPreMatchNews;
   scores: SportmonksScore[];
+  state: SportmonksFixtureState;
 };
 
 export type SportmonksPagination = {
@@ -473,8 +482,16 @@ export const api = {
   },
 
   matches: {
-    getTodayFixtures: async (): Promise<SportmonksFixturesResponse> => {
-      const res = await apiRequest(`/matches/today?date=2025-11-08&limit=100`, "GET");
+    getTodayFixtures: async (params?: { timezone?: string }): Promise<SportmonksFixturesResponse> => {
+      const searchParams = new URLSearchParams();
+      if (params?.timezone) {
+        searchParams.set("timezone", params.timezone);
+      }
+      const query = searchParams.toString();
+      const res = await apiRequest(
+        `/matches/today?${query ? `${query}&` : ""}date=2025-11-08&limit=100`,
+        "GET"
+      );
       return res.json();
     },
   },
@@ -494,8 +511,13 @@ export const api = {
       return res.json();
     },
 
-    getTodayFixtures: async (): Promise<SportmonksFixturesResponse> => {
-      const res = await apiRequest(`/matches/today`, "GET");
+    getTodayFixtures: async (params?: { timezone?: string }): Promise<SportmonksFixturesResponse> => {
+      const searchParams = new URLSearchParams();
+      if (params?.timezone) {
+        searchParams.set("timezone", params.timezone);
+      }
+      const query = searchParams.toString();
+      const res = await apiRequest(`/matches/today${query ? `?${query}` : ""}`, "GET");
       return res.json();
     },
 

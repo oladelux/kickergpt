@@ -1,6 +1,6 @@
 import { Observable, from, of, throwError } from "rxjs";
 import { map, catchError } from "rxjs/operators";
-import { api, SportmonksFixture, SportmonksFixturesRequestOptions } from "@/lib/api";
+import { api, SportmonksFixture, SportmonksFixtureState } from "@/lib/api";
 
 export interface Match {
   id: string;
@@ -13,11 +13,7 @@ export interface Match {
   country?: string;
   leagueIcon: string;
   kickoffTime: Date;
-  status?: {
-    short: string;
-    long: string;
-    elapsed: number | null;
-  };
+  status?: SportmonksFixtureState;
   isFavorite: boolean;
 }
 
@@ -32,7 +28,7 @@ class MatchesService {
   }
 
   getMatches(): Observable<Match[]> {
-    return from(api.fixtures.getTodayFixtures()).pipe(
+    return from(api.fixtures.getTodayFixtures({ timezone: this.getUserTimezone() })).pipe(
       map((response) => response.data.map((fixture) => this.mapFixture(fixture))),
       map((matches) => {
         const normalizedMatches = matches.map((match) => {
@@ -86,6 +82,7 @@ class MatchesService {
       country: fixture.league?.country?.name ?? undefined,
       leagueIcon: fixture.league?.image_path ?? "",
       kickoffTime,
+      status: this.normalizeState(fixture.state),
       isFavorite: this.favorites.has(id),
     };
   }
@@ -161,6 +158,23 @@ class MatchesService {
     return date;
   }
 
+  private normalizeState(
+    state?: SportmonksFixtureState | null
+  ): SportmonksFixtureState | undefined {
+    if (!state) return undefined;
+
+    return {
+      ...state,
+      state: typeof state.state === "string" ? state.state.trim() : state.state,
+      name: typeof state.name === "string" ? state.name.trim() : state.name,
+      short_name: typeof state.short_name === "string" ? state.short_name.trim() : state.short_name,
+      developer_name:
+        typeof state.developer_name === "string"
+          ? state.developer_name.trim()
+          : state.developer_name,
+    };
+  }
+
   private loadFavoritesFromStorage() {
     if (typeof window === "undefined") return;
     try {
@@ -186,6 +200,17 @@ class MatchesService {
       window.localStorage.setItem(FAVORITES_STORAGE_KEY, serialized);
     } catch (error) {
       console.warn("Failed to persist favorite fixtures:", error);
+    }
+  }
+
+  private getUserTimezone(): string | undefined {
+    if (typeof Intl === "undefined" || typeof Intl.DateTimeFormat !== "function") {
+      return undefined;
+    }
+    try {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    } catch {
+      return undefined;
     }
   }
 }
