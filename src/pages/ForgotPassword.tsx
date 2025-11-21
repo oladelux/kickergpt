@@ -27,14 +27,17 @@ export default function ForgotPassword() {
             Reset Password
           </h1>
           <p className="text-muted-foreground">
-            {submitted 
+            {submitted
               ? "Check your email for reset instructions"
               : "Enter your email to receive reset instructions"}
           </p>
         </div>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-xl border border-border shadow-lg">
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-6 bg-card p-8 rounded-xl border border-border shadow-lg"
+          >
             <div className="space-y-2">
               <Label htmlFor="email">Email Address</Label>
               <div className="relative">
@@ -51,12 +54,15 @@ export default function ForgotPassword() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity">
+            <Button
+              type="submit"
+              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+            >
               Send Reset Link
             </Button>
 
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -67,7 +73,7 @@ export default function ForgotPassword() {
           <div className="space-y-6 bg-card p-8 rounded-xl border border-border shadow-lg text-center">
             <div className="space-y-2">
               <p className="text-foreground">
-                If an account exists for <span className="font-medium text-primary">{email}</span>, 
+                If an account exists for <span className="font-medium text-primary">{email}</span>,
                 you will receive a password reset link shortly.
               </p>
               <p className="text-sm text-muted-foreground">
@@ -75,16 +81,12 @@ export default function ForgotPassword() {
               </p>
             </div>
 
-            <Button 
-              onClick={() => setSubmitted(false)} 
-              variant="outline"
-              className="w-full"
-            >
+            <Button onClick={() => setSubmitted(false)} variant="outline" className="w-full">
               Try Another Email
             </Button>
 
-            <Link 
-              to="/login" 
+            <Link
+              to="/login"
               className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="h-4 w-4" />

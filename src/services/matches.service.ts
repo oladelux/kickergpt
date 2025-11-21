@@ -1,11 +1,6 @@
 import { Observable, from, of, throwError } from "rxjs";
 import { map, catchError } from "rxjs/operators";
-import {
-  api,
-  ApiFootballFixture,
-  SportmonksFixture,
-  SportmonksFixturesRequestOptions,
-} from "@/lib/api";
+import { api, SportmonksFixture, SportmonksFixturesRequestOptions } from "@/lib/api";
 
 export interface Match {
   id: string;
@@ -38,7 +33,7 @@ class MatchesService {
 
   getMatches(): Observable<Match[]> {
     return from(api.fixtures.getTodayFixtures()).pipe(
-      map((response) => response.response.map((fixture) => this.mapFixture(fixture))),
+      map((response) => response.data.map((fixture) => this.mapFixture(fixture))),
       map((matches) => {
         const normalizedMatches = matches.map((match) => {
           const isFavorite = this.favorites.has(match.id);
@@ -75,25 +70,58 @@ class MatchesService {
     return of(updated);
   }
 
-  private mapFixture(fixture: ApiFootballFixture): Match {
-    const { home, away } = fixture.teams;
-    const id = String(fixture.fixture.id);
-    const kickoffTime = this.normalizeDate(fixture.fixture.date);
+  private mapFixture(fixture: SportmonksFixture): Match {
+    const id = String(fixture.id);
+    const kickoffTime = this.normalizeDate(fixture.starting_at);
+    const participants = this.resolveParticipants(fixture.participants, fixture.name);
 
     return {
       id,
-      homeTeam: home.name,
-      awayTeam: away.name,
-      homeTeamLogo: home.logo,
-      awayTeamLogo: away.logo,
-      league: fixture.league.name,
-      leagueId: fixture.league.id ? String(fixture.league.id) : undefined,
-      country: fixture.league.country ?? undefined,
-      leagueIcon: fixture.league.logo,
+      homeTeam: participants.home.name,
+      awayTeam: participants.away.name,
+      homeTeamLogo: participants.home.logo,
+      awayTeamLogo: participants.away.logo,
+      league: fixture.league?.name ?? "Unknown League",
+      leagueId: fixture.league?.id ? String(fixture.league.id) : undefined,
+      country: fixture.league?.country?.name ?? undefined,
+      leagueIcon: fixture.league?.image_path ?? "",
       kickoffTime,
-      status: fixture.fixture.status,
       isFavorite: this.favorites.has(id),
     };
+  }
+
+  private resolveParticipants(
+    participants: SportmonksFixture["participants"] = [],
+    fallbackName: string
+  ) {
+    const teamsFromName = this.extractTeams(fallbackName);
+    const home =
+      participants.find((participant) => this.getParticipantLocation(participant) === "home") ??
+      participants[0];
+    const away =
+      participants.find((participant) => this.getParticipantLocation(participant) === "away") ??
+      participants[1];
+
+    return {
+      home: {
+        name: home?.name ?? home?.meta?.name ?? teamsFromName.homeTeam,
+        logo: home?.image_path ?? "",
+      },
+      away: {
+        name: away?.name ?? away?.meta?.name ?? teamsFromName.awayTeam,
+        logo: away?.image_path ?? "",
+      },
+    };
+  }
+
+  private getParticipantLocation(
+    participant?: SportmonksFixture["participants"][number]
+  ): string | null {
+    const location = participant?.meta?.location;
+    if (typeof location === "string") {
+      return location.toLowerCase();
+    }
+    return null;
   }
 
   private extractTeams(name: string): { homeTeam: string; awayTeam: string } {
