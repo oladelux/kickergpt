@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
+import { Progress } from "@/components/ui/progress";
 
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
@@ -226,6 +227,9 @@ export default function Chat() {
   const [countryFilter, setCountryFilter] = useState("");
   const [matchSearch, setMatchSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const usagePercent = usage?.monthlyAllowance
+    ? Math.min(100, Math.round((usage.monthlyUsed / usage.monthlyAllowance) * 100))
+    : 0;
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -420,20 +424,31 @@ export default function Chat() {
 
           {usage && (
             <Card className="border-border/70 bg-card/80 backdrop-blur">
-              <CardContent className="flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+              <CardContent className="grid gap-4 p-4 sm:grid-cols-[1.3fr_1fr_auto] sm:items-center">
+                <div className="space-y-2">
+                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
                     {subscriptionPlan?.plan ?? "FREE"} plan
                   </p>
-                  <p className="text-sm text-foreground">
-                    {usage.monthlyRemaining}/{usage.monthlyAllowance} prompts left this month
-                  </p>
+                  <div className="flex items-baseline gap-2">
+                    <p className="text-2xl font-semibold text-foreground">
+                      {usage.monthlyRemaining}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      prompts left of {usage.monthlyAllowance}
+                    </p>
+                  </div>
+                  <Progress value={usagePercent} className="h-2" />
                 </div>
-                <div className="flex flex-col gap-1 text-sm text-muted-foreground sm:flex-row sm:items-center sm:gap-6">
-                  <span>Used: {usage.monthlyUsed}</span>
-                  <span>Add-on credits: {usage.addonCreditsRemaining ?? 0}</span>
+                <div className="space-y-1 text-sm text-muted-foreground">
+                  <p>Used {usage.monthlyUsed} this month</p>
+                  <p>Add-on credits: {usage.addonCreditsRemaining ?? 0}</p>
                 </div>
-                <Button asChild variant="outline" size="sm">
+                <Button
+                  asChild
+                  variant="default"
+                  size="sm"
+                  className="justify-self-start bg-gradient-to-r from-primary to-accent text-primary-foreground sm:justify-self-end"
+                >
                   <Link to="/plans">Manage plan</Link>
                 </Button>
               </CardContent>
