@@ -119,36 +119,6 @@ export default function ChatDialog({
     ];
   }, [match]);
 
-  const followUpPrompts = useMemo(() => {
-    if (!match) return [];
-    const matchup = `${match.homeTeam} vs ${match.awayTeam}`;
-    const defaults = [
-      `How likely is both teams to score in ${matchup}?`,
-      `What are the upset signals or volatility flags in ${matchup}?`,
-      `Which side fades late—who concedes after 75 minutes more often?`,
-      `What does the referee/weather do to ${matchup}'s goals or bookings profile?`,
-      `How do ${match.homeTeam} and ${match.awayTeam} perform after midweek fixtures?`,
-      `Which team handles pressing/high turnovers better in this matchup?`,
-    ];
-    const merged = [...followUpSuggestions, ...defaults];
-    const seen = new Set<string>();
-    return merged
-      .map((prompt) => prompt.trim())
-      .filter((prompt) => {
-        if (!prompt) return false;
-        const key = prompt.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .slice(0, 6);
-  }, [followUpSuggestions, match]);
-
-  const hasAssistantResponse = useMemo(
-    () => messages.some((message) => message.role === "assistant"),
-    [messages]
-  );
-
   const sendPrompt = async (promptText: string) => {
     if (!match || isThinking) return;
     const trimmed = promptText.trim();
@@ -401,39 +371,6 @@ export default function ChatDialog({
                 )}
               </div>
             ))}
-            {!limitReached && hasAssistantResponse && followUpPrompts.length > 0 && (
-              <div className="space-y-3 rounded-2xl border border-border/70 bg-card/80 p-4 shadow-sm">
-                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="h-4 w-4 text-primary" />
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">Keep the run going</p>
-                      <p className="text-xs text-muted-foreground">
-                        Similar users asked these next—tap to send instantly.
-                      </p>
-                    </div>
-                  </div>
-                  {usage && (
-                    <Badge variant="outline" className="text-[11px] font-semibold">
-                      {usage.monthlyRemaining} prompts left
-                    </Badge>
-                  )}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {followUpPrompts.map((prompt) => (
-                    <button
-                      key={prompt}
-                      type="button"
-                      className="rounded-full border border-border/60 bg-secondary/60 px-4 py-2 text-left text-xs font-medium text-foreground/90 transition hover:border-primary/60 hover:bg-primary/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 disabled:opacity-50"
-                      disabled={isThinking}
-                      onClick={() => handleSuggestionClick(prompt)}
-                    >
-                      {prompt}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
             {isThinking && (
               <div className="flex gap-3 animate-fade-in justify-start">
                 <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_hsl(var(--primary)/0.3)]">
