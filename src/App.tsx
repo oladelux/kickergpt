@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +20,18 @@ import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
 
 const queryClient = new QueryClient();
+
+const ExternalRedirect = ({ to }: { to: string }) => {
+  useEffect(() => {
+    window.location.replace(to);
+  }, [to]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <p className="text-sm text-muted-foreground">Redirecting...</p>
+    </div>
+  );
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -73,6 +86,10 @@ const App = () => (
                 <History />
               </SubscriptionRoute>
             }
+          />
+          <Route
+            path="/survey"
+            element={<ExternalRedirect to="https://form.typeform.com/to/VVskOTGX" />}
           />
           <Route path="*" element={<NotFound />} />
         </Routes>

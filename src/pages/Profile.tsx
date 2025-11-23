@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
+import { track } from "@vercel/analytics";
 import { User, Mail, CreditCard, Loader2, RefreshCw, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -242,6 +243,7 @@ export default function Profile() {
                   <Button
                     asChild
                     className="flex-1 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                    onClick={() => track("manage_plan_click_profile_primary")}
                   >
                     <Link to="/plans">Manage plan</Link>
                   </Button>
@@ -258,7 +260,12 @@ export default function Profile() {
                 <CardDescription>Quick links for common account tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
-                <Button asChild variant="outline" className="w-full justify-start">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => track("upgrade_click_profile_quicklink")}
+                >
                   <Link to="/plans">Upgrade or buy credits</Link>
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-start">

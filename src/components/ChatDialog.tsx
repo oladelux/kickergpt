@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { useToast } from "@/components/ui/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { track } from "@vercel/analytics";
 
 type Message = {
   id: string;
@@ -263,7 +264,13 @@ export default function ChatDialog({
                     +{usage.addonCreditsRemaining} add-on credits
                   </Badge>
                 )}
-                <Button asChild variant="outline" size="sm" className="ml-auto text-[11px]">
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto text-[11px]"
+                  onClick={() => track("upgrade_click_usage_card")}
+                >
                   <Link to="/plans">Upgrade</Link>
                 </Button>
               </div>
@@ -288,6 +295,7 @@ export default function ChatDialog({
                     asChild
                     size="sm"
                     className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                    onClick={() => track("upgrade_click_limit_reached")}
                   >
                     <Link to="/plans">Upgrade / Buy credits</Link>
                   </Button>

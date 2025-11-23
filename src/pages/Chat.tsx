@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
+import { track } from "@vercel/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -448,6 +449,7 @@ export default function Chat() {
                   variant="default"
                   size="sm"
                   className="justify-self-start bg-gradient-to-r from-primary to-accent text-primary-foreground sm:justify-self-end"
+                  onClick={() => track("manage_plan_click_dashboard")}
                 >
                   <Link to="/plans">Manage plan</Link>
                 </Button>

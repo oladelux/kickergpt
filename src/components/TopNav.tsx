@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, Clock, User, Heart, CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { track } from "@vercel/analytics";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
@@ -24,6 +25,7 @@ export default function TopNav() {
           <div className="hidden items-center gap-2 md:flex">
             {navItems.map((item) => {
               const isActive = location.pathname === item.path;
+              const isPlan = item.path === "/plans";
               return (
                 <Button
                   key={item.path}
@@ -32,7 +34,13 @@ export default function TopNav() {
                   variant={isActive ? "default" : "ghost"}
                   className="rounded-md"
                 >
-                  <Link to={item.path} className="flex items-center gap-2 text-sm font-medium">
+                  <Link
+                    to={item.path}
+                    className="flex items-center gap-2 text-sm font-medium"
+                    onClick={() => {
+                      if (isPlan) track("plan_button_topnav_click");
+                    }}
+                  >
                     <item.icon className="h-4 w-4" />
                     {item.label}
                   </Link>

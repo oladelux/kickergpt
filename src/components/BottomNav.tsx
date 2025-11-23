@@ -1,6 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, Clock, User, Heart, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { track } from "@vercel/analytics";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
@@ -26,6 +27,9 @@ export default function BottomNav() {
                 "flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors",
                 isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
               )}
+              onClick={() => {
+                if (item.path === "/plans") track("plan_button_bottomnav_click");
+              }}
             >
               <item.icon className={cn("h-5 w-5", isActive && "scale-110")} />
               <span className="text-xs font-medium">{item.label}</span>

@@ -10,6 +10,7 @@ import { Check, CreditCard, Loader2, Sparkles } from "lucide-react";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
+import { track } from "@vercel/analytics";
 
 type SelectPlanResponse = {
   checkoutUrl?: string | null;
@@ -79,6 +80,7 @@ export default function Plans() {
     setPendingAction(plan);
     setActionError(null);
     setError(null);
+    track("plan_select_click", { plan });
     try {
       const response = (await api.subscriptions.selectPlan({ plan })) as SelectPlanResponse | null;
       if (response?.checkoutUrl) {
@@ -112,8 +114,10 @@ export default function Plans() {
         title: "Upgrade required",
         description: "Switch to Pro before purchasing extra credits.",
       });
+      track("buy_addons_click_blocked_not_pro");
       return;
     }
+    track("buy_addons_click");
     setPendingAction("ADD_ON");
     try {
       const response = (await api.subscriptions.selectPlan({

@@ -482,7 +482,9 @@ export const api = {
   },
 
   matches: {
-    getTodayFixtures: async (params?: { timezone?: string }): Promise<SportmonksFixturesResponse> => {
+    getTodayFixtures: async (params?: {
+      timezone?: string;
+    }): Promise<SportmonksFixturesResponse> => {
       const searchParams = new URLSearchParams();
       if (params?.timezone) {
         searchParams.set("timezone", params.timezone);
@@ -511,7 +513,9 @@ export const api = {
       return res.json();
     },
 
-    getTodayFixtures: async (params?: { timezone?: string }): Promise<SportmonksFixturesResponse> => {
+    getTodayFixtures: async (params?: {
+      timezone?: string;
+    }): Promise<SportmonksFixturesResponse> => {
       const searchParams = new URLSearchParams();
       if (params?.timezone) {
         searchParams.set("timezone", params.timezone);
