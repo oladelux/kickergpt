@@ -18,6 +18,7 @@ import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
+import ControlRoom from "./pages/ControlRoom";
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,14 @@ const App = () => (
               <SubscriptionRoute>
                 <History />
               </SubscriptionRoute>
+            }
+          />
+          <Route
+            path="/control-room"
+            element={
+              <ProtectedRoute>
+                <ControlRoom />
+              </ProtectedRoute>
             }
           />
           <Route

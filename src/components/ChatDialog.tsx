@@ -55,6 +55,7 @@ export default function ChatDialog({
   const [showSuggestionTip, setShowSuggestionTip] = useState(false);
   const [limitToastShown, setLimitToastShown] = useState(false);
   const [followUpSuggestions, setFollowUpSuggestions] = useState<string[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
@@ -75,6 +76,7 @@ export default function ChatDialog({
       setShowSuggestionTip(false);
       setLimitToastShown(false);
       setFollowUpSuggestions([]);
+      setConversationId(null);
       return;
     }
     const cached = conversationCache.current.get(match.id);
@@ -143,8 +145,13 @@ export default function ChatDialog({
     try {
       const response = await api.fixtures.analyzeFixture(match.id, {
         message: trimmed,
+        conversationId: conversationId ?? undefined,
         tone: "concise",
       });
+
+      if (response.conversationId) {
+        setConversationId(response.conversationId);
+      }
 
       const rawFollowUps =
         Array.isArray(response.followUpSuggestions) && response.followUpSuggestions.length > 0

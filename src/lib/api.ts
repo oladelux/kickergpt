@@ -525,6 +525,44 @@ export const api = {
       return res.json();
     },
 
+    getControlRoomFixtures: async (params: {
+      date: string;
+      timezone?: string;
+      page?: number;
+      perPage?: number;
+    }): Promise<SportmonksFixturesResponse> => {
+      const searchParams = new URLSearchParams();
+      searchParams.set("date", params.date);
+      if (params.timezone) searchParams.set("timezone", params.timezone);
+      if (params.page) searchParams.set("page", String(params.page));
+      if (params.perPage) searchParams.set("per_page", String(params.perPage));
+      const query = searchParams.toString();
+      const res = await apiRequest(`/control-room${query ? `?${query}` : ""}`, "GET");
+      return res.json();
+    },
+
+    getControlRoomOutcome: async (
+      fixtureId: number | string,
+      date: string,
+      question?: string,
+      conversationId?: string
+    ): Promise<{
+      fixtureId: number;
+      homeTeam: string;
+      awayTeam: string;
+      finalScore: { home: number; away: number; winner: "home" | "away" | "draw" } | null;
+      analysis: string;
+      conversationId: string;
+    }> => {
+      const res = await apiRequest("/control-room/outcomes", "POST", {
+        fixtureId,
+        date,
+        question,
+        conversationId,
+      });
+      return res.json();
+    },
+
     getUserChats: async (params?: {
       limit?: number;
       offset?: number;
@@ -544,7 +582,7 @@ export const api = {
 
     analyzeFixture: async (
       fixtureId: string,
-      data: { message: string; tone?: string }
+      data: { message: string; tone?: string; conversationId?: string }
     ): Promise<{
       summary?: string;
       analysis?: string;
@@ -554,6 +592,7 @@ export const api = {
         id: string;
         question: string;
       }[];
+      conversationId?: string;
       [key: string]: unknown;
     }> => {
       const res = await apiRequest(`/analyze/${fixtureId}`, "POST", data);
