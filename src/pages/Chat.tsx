@@ -256,6 +256,7 @@ export default function Chat() {
 
   const handleDismissPromo = () => {
     localStorage.setItem(BLACK_FRIDAY_DISMISS_KEY, "1");
+    track("black_friday_promo_dismissed");
     setShowPromo(false);
   };
 
