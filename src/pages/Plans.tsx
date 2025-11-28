@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -72,9 +72,39 @@ const getErrorMessage = (error: unknown) => {
 export default function Plans() {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [geoCountryCode, setGeoCountryCode] = useState<string | undefined>(undefined);
   const { toast } = useToast();
   const { user } = useAuth();
   const { plan: subscription, usage, loading, error, refreshAll, setError } = useSubscriptionData();
+
+  useEffect(() => {
+    const locale = navigator.languages?.[0] ?? navigator.language;
+    const parts = (locale || "").split("-").filter(Boolean);
+    const region = parts.length > 1 ? parts[parts.length - 1] : undefined;
+    if (region) {
+      setGeoCountryCode(region.toUpperCase());
+      return;
+    }
+    const intlLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
+    const intlParts = intlLocale.split("-").filter(Boolean);
+    const intlRegion = intlParts.length > 1 ? intlParts[intlParts.length - 1] : undefined;
+    if (intlRegion) setGeoCountryCode(intlRegion.toUpperCase());
+  }, []);
+
+  const resolvedCountryCode = (geoCountryCode ?? "").toUpperCase();
+
+  const getPricingForCountry = (countryCode: string) => {
+    if (countryCode === "US") return { symbol: "$", pro: "15" };
+    if (countryCode === "GB" || countryCode === "UK") return { symbol: "£", pro: "15" };
+    if (countryCode === "NG") return { symbol: "₦", pro: "10,000" };
+    return { symbol: "€", pro: "15" };
+  };
+
+  const getPlanPrice = (tier: SubscriptionPlanName) => {
+    const { symbol, pro } = getPricingForCountry(resolvedCountryCode);
+    if (tier === "PRO") return `${symbol}${pro}`;
+    return `${symbol}0`;
+  };
 
   const handlePlanSelect = async (plan: SubscriptionPlanName) => {
     setPendingAction(plan);
@@ -82,7 +112,10 @@ export default function Plans() {
     setError(null);
     track("plan_select_click", { plan });
     try {
-      const response = (await api.subscriptions.selectPlan({ plan })) as SelectPlanResponse | null;
+      const response = (await api.subscriptions.selectPlan({
+        plan,
+        countryCode: resolvedCountryCode,
+      })) as SelectPlanResponse | null;
       if (response?.checkoutUrl) {
         toast({
           title: "Redirecting to checkout",
@@ -122,6 +155,7 @@ export default function Plans() {
     try {
       const response = (await api.subscriptions.selectPlan({
         plan: "PRO",
+        countryCode: geoCountryCode,
       })) as SelectPlanResponse | null;
       if (response?.checkoutUrl) {
         toast({
@@ -238,7 +272,7 @@ export default function Plans() {
                   </span>
                 </div>
                 <CardTitle className="text-2xl">
-                  {planMeta.name} plan — {planMeta.price} {planMeta.cadence}
+                  {planMeta.name} plan — {getPlanPrice(planMeta.tier)} {planMeta.cadence}
                 </CardTitle>
                 <p className="text-muted-foreground">
                   {monthlyAllowance} prompts refresh every month. Top up whenever you need more
@@ -316,7 +350,7 @@ export default function Plans() {
                     <CardHeader className="space-y-1 pt-12">
                       <CardTitle className="text-2xl">{plan.name}</CardTitle>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-semibold">{plan.price}</span>
+                        <span className="text-4xl font-semibold">{getPlanPrice(plan.tier)}</span>
                         <span className="text-muted-foreground text-sm">{plan.cadence}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">

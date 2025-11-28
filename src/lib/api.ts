@@ -643,7 +643,7 @@ export const api = {
       const res = await apiRequest("/subscriptions/usage", "GET");
       return res.status === 204 ? null : res.json();
     },
-    selectPlan: async (data: { plan: "FREE" | "PRO" }) => {
+    selectPlan: async (data: { plan: "FREE" | "PRO"; countryCode?: string }) => {
       const res = await apiRequest("/subscriptions/select-plan", "POST", data);
       return res.status === 204 ? null : res.json();
     },
