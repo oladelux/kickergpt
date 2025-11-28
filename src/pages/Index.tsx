@@ -129,8 +129,6 @@ const exampleQuestions = [
   "How are injuries affecting the squads?",
   "Is this likely to be high-scoring?",
   "Could the underdog cause an upset?",
-  "Why did Man United lose yesterday?",
-  "Was there a referee factor in the result?",
 ];
 
 const competitionBadges = [
