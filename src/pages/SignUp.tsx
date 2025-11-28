@@ -9,15 +9,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { Helmet } from "react-helmet-async";
 
 const onboardingPillars = [
   {
-    title: "Scenario coverage",
-    points: ["Injuries & suspensions", "Weather, travel, psychology", "Market + officiating intel"],
-  },
-  {
-    title: "Workflow fit",
-    points: ["Favorites synced", "Live insights feed"],
+    title: "Pre-match analysis",
+    points: [
+      "Form, injuries & squad availability",
+      "H2H history & day/time patterns",
+      "Weather, referee & venue impact",
+    ],
   },
 ] as const;
 
@@ -81,169 +82,182 @@ export default function SignUp() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-secondary/40">
-      <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12 md:py-16 lg:flex-row">
-        <section className="rounded-3xl border border-border/70 bg-card/70 p-8 backdrop-blur">
-          <Link to="/" className="text-xl font-semibold tracking-tight">
-            kicker<span className="bold text-primary">GPT</span>
-          </Link>
-          <div className="mt-6 space-y-4">
-            <Badge
-              variant="outline"
-              className="border-primary/40 text-xs uppercase tracking-[0.4em] text-muted-foreground"
-            >
-              Access request
-            </Badge>
-            <h1 className="text-3xl font-semibold tracking-tight text-balance">
-              Create your Kickergpt workspace login.
-            </h1>
-            <p className="text-muted-foreground">
-              Every subscription unlocks exhaustive match intelligence, favorite tracking, and
-              scenario-aware chat for 150+ competitions.
-            </p>
-          </div>
-
-          <div className="mt-8 space-y-4">
-            {onboardingPillars.map((pillar) => (
-              <div
-                key={pillar.title}
-                className="rounded-2xl border border-border/60 bg-background/40 p-4"
-              >
-                <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
-                  {pillar.title}
-                </p>
-                <ul className="mt-3 space-y-2 text-sm text-foreground/90">
-                  {pillar.points.map((point) => (
-                    <li key={point} className="flex items-center gap-2">
-                      <Check className="h-3.5 w-3.5 text-primary" />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="w-full rounded-3xl border border-border/70 bg-card/90 p-6 shadow-2xl shadow-primary/10 backdrop-blur lg:max-w-md">
-          <div className="mb-6 space-y-2 text-center lg:text-left">
-            <h2 className="text-2xl font-semibold tracking-tight">Create account</h2>
-            <p className="text-sm text-muted-foreground">
-              Fill in your details to start using Kickergpt.
-            </p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="firstName"
-                    type="text"
-                    placeholder="John"
-                    className="pl-10"
-                    value={formData.firstName}
-                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    id="lastName"
-                    type="text"
-                    placeholder="Doe"
-                    className="pl-10"
-                    value={formData.lastName}
-                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                    required
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  className="pl-10"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="••••••••"
-                  className="pl-10 pr-10"
-                  value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="terms"
-                checked={formData.agreeToTerms}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, agreeToTerms: Boolean(checked) })
-                }
-              />
-              <label htmlFor="terms" className="text-sm text-muted-foreground">
-                I agree to the{" "}
-                <Link to="#" className="text-primary hover:text-accent transition-colors">
-                  terms and conditions
-                </Link>
-              </label>
-            </div>
-
-            <Button
-              type="submit"
-              className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
-              disabled={loading}
-            >
-              {loading ? "Creating account..." : "Create account"}
-            </Button>
-
-            {error && <p className="text-sm text-destructive text-center">{error}</p>}
-          </form>
-
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              className="text-primary hover:text-accent transition-colors font-medium"
-            >
-              Sign in
+    <>
+      <Helmet>
+        <title>Create Account - KickerGPT</title>
+        <meta
+          name="description"
+          content="Create a free KickerGPT account to get AI-powered pre-match analysis for European football matches."
+        />
+        <meta property="og:title" content="Create Account - KickerGPT" />
+        <meta
+          property="og:description"
+          content="Start analyzing football matches for free. No credit card required."
+        />
+        <link rel="canonical" href="https://kickergpt.com/signup" />
+      </Helmet>
+      <div className="min-h-screen bg-gradient-to-b from-background via-background/95 to-secondary/40">
+        <div className="mx-auto flex max-w-5xl flex-col gap-8 px-4 py-12 md:py-16 lg:flex-row">
+          <section className="rounded-3xl border border-border/70 bg-card/70 p-8 backdrop-blur">
+            <Link to="/" className="text-xl font-semibold tracking-tight">
+              kicker<span className="bold text-primary">GPT</span>
             </Link>
-          </p>
-        </section>
+            <div className="mt-6 space-y-4">
+              <Badge
+                variant="outline"
+                className="border-primary/40 text-xs uppercase tracking-[0.4em] text-muted-foreground"
+              >
+                Free to start
+              </Badge>
+              <h1 className="text-3xl font-semibold tracking-tight text-balance">
+                Start analyzing matches in seconds.
+              </h1>
+              <p className="text-muted-foreground">
+                Get pre-match intelligence powered by historical data patterns. No credit card
+                required.
+              </p>
+            </div>
+
+            <div className="mt-8 space-y-4">
+              {onboardingPillars.map((pillar) => (
+                <div
+                  key={pillar.title}
+                  className="rounded-2xl border border-border/60 bg-background/40 p-4"
+                >
+                  <p className="text-sm uppercase tracking-[0.3em] text-muted-foreground">
+                    {pillar.title}
+                  </p>
+                  <ul className="mt-3 space-y-2 text-sm text-foreground/90">
+                    {pillar.points.map((point) => (
+                      <li key={point} className="flex items-center gap-2">
+                        <Check className="h-3.5 w-3.5 text-primary" />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="w-full rounded-3xl border border-border/70 bg-card/90 p-6 shadow-2xl shadow-primary/10 backdrop-blur lg:max-w-md">
+            <div className="mb-6 space-y-2 text-center lg:text-left">
+              <h2 className="text-2xl font-semibold tracking-tight">Create your account</h2>
+              <p className="text-sm text-muted-foreground">Start analyzing matches for free.</p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="firstName">First Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="firstName"
+                      type="text"
+                      placeholder="John"
+                      className="pl-10"
+                      value={formData.firstName}
+                      onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="lastName">Last Name</Label>
+                  <div className="relative">
+                    <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="lastName"
+                      type="text"
+                      placeholder="Doe"
+                      className="pl-10"
+                      value={formData.lastName}
+                      onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="you@example.com"
+                    className="pl-10"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    className="pl-10 pr-10"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="terms"
+                  checked={formData.agreeToTerms}
+                  onCheckedChange={(checked) =>
+                    setFormData({ ...formData, agreeToTerms: Boolean(checked) })
+                  }
+                />
+                <label htmlFor="terms" className="text-sm text-muted-foreground">
+                  I agree to the{" "}
+                  <Link to="#" className="text-primary hover:text-accent transition-colors">
+                    terms and conditions
+                  </Link>
+                </label>
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+                disabled={loading}
+              >
+                {loading ? "Creating account..." : "Create account"}
+              </Button>
+
+              {error && <p className="text-sm text-destructive text-center">{error}</p>}
+            </form>
+
+            <p className="text-center text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <Link
+                to="/login"
+                className="text-primary hover:text-accent transition-colors font-medium"
+              >
+                Sign in
+              </Link>
+            </p>
+          </section>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

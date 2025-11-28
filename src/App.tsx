@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -39,76 +40,78 @@ const ExternalRedirect = ({ to }: { to: string }) => {
 };
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Analytics />
-      <BrowserRouter>
-        <MetaManager />
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route
-            path="/plans"
-            element={
-              <ProtectedRoute>
-                <Plans />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/fixtures"
-            element={
-              <SubscriptionRoute>
-                <Chat />
-              </SubscriptionRoute>
-            }
-          />
-          <Route path="/chat" element={<Navigate to="/fixtures" replace />} />
-          <Route
-            path="/favorites"
-            element={
-              <SubscriptionRoute>
-                <Favorites />
-              </SubscriptionRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/history"
-            element={
-              <SubscriptionRoute>
-                <History />
-              </SubscriptionRoute>
-            }
-          />
-          <Route
-            path="/control-room"
-            element={
-              <ProtectedRoute>
-                <ControlRoom />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/survey"
-            element={<ExternalRedirect to="https://form.typeform.com/to/VVskOTGX" />}
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <Analytics />
+        <BrowserRouter>
+          <MetaManager />
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route
+              path="/plans"
+              element={
+                <ProtectedRoute>
+                  <Plans />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/fixtures"
+              element={
+                <SubscriptionRoute>
+                  <Chat />
+                </SubscriptionRoute>
+              }
+            />
+            <Route path="/chat" element={<Navigate to="/fixtures" replace />} />
+            <Route
+              path="/favorites"
+              element={
+                <SubscriptionRoute>
+                  <Favorites />
+                </SubscriptionRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <SubscriptionRoute>
+                  <History />
+                </SubscriptionRoute>
+              }
+            />
+            <Route
+              path="/control-room"
+              element={
+                <ProtectedRoute>
+                  <ControlRoom />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/survey"
+              element={<ExternalRedirect to="https://form.typeform.com/to/VVskOTGX" />}
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  </HelmetProvider>
 );
 
 export default App;
