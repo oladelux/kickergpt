@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
+import { Activity, Clock, Globe, Heart, MessageSquare, Search, Sparkles, Star } from "lucide-react";
 import { track } from "@vercel/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,14 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import ChatDialog from "@/components/ChatDialog";
@@ -22,6 +30,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
+import { useAuth } from "@/hooks/useAuth";
+
+const BLACK_FRIDAY_DISMISS_KEY = "kickerGPTBlackFridayPromoDismissed";
 
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
@@ -215,6 +226,7 @@ const getStatusBadgeClasses = (match: Match) => {
 
 export default function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
+  const { user, isAuthenticated } = useAuth();
   const {
     plan: subscriptionPlan,
     usage,
@@ -223,6 +235,7 @@ export default function Chat() {
     refreshUsage,
     refreshAll,
   } = useSubscriptionData();
+  const [showPromo, setShowPromo] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
@@ -231,6 +244,20 @@ export default function Chat() {
   const usagePercent = usage?.monthlyAllowance
     ? Math.min(100, Math.round((usage.monthlyUsed / usage.monthlyAllowance) * 100))
     : 0;
+
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const dismissed = localStorage.getItem(BLACK_FRIDAY_DISMISS_KEY);
+      if (!dismissed) setShowPromo(true);
+    } else {
+      setShowPromo(false);
+    }
+  }, [isAuthenticated, user]);
+
+  const handleDismissPromo = () => {
+    localStorage.setItem(BLACK_FRIDAY_DISMISS_KEY, "1");
+    setShowPromo(false);
+  };
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -381,326 +408,358 @@ export default function Chat() {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pt-16 pb-16 md:pb-0">
-      <TopNav />
-      <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
-        <div className="max-w-6xl mx-auto">
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            Today's Matches
-          </h1>
-          <p className="text-sm text-muted-foreground">Select a match to get AI-powered analysis</p>
-        </div>
-      </header>
+    <>
+      <Dialog open={showPromo} onOpenChange={(open) => (!open ? handleDismissPromo() : null)}>
+        <DialogContent className="sm:max-w-md space-y-4 mx-auto w-[90%]">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="flex items-center gap-2 text-primary mt-2">
+              <Sparkles className="h-4 w-4" />
+              Black Friday: 90% off Pro
+            </DialogTitle>
+            <DialogDescription className="text-foreground leading-relaxed pt-4">
+              Use code{" "}
+              <code className="rounded-md bg-muted px-2 py-1 font-mono text-sm text-primary">
+                KICKERGPTBLACKFRIDAY
+              </code>{" "}
+              at checkout to unlock the discount on your Pro subscription.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            Apply the code during checkout to redeem.
+          </p>
+          <DialogFooter className="flex justify-end">
+            <Button onClick={handleDismissPromo} className="w-full sm:w-auto">
+              Got it
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      <ScrollArea className="flex-1 p-4">
-        <div className="max-w-6xl mx-auto space-y-6 pb-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {summaryCards.map((card) => (
-              <Card key={card.label} className="border-border/70 bg-card/70 backdrop-blur">
-                <CardContent className="flex items-center justify-between p-5">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      {card.label}
-                    </p>
-                    <p className="text-2xl font-semibold text-foreground">{card.value}</p>
-                  </div>
-                  <div className={`rounded-2xl p-3 ${card.accent}`}>
-                    <card.icon className="h-5 w-5" />
-                  </div>
+      <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pt-16 pb-16 md:pb-0">
+        <TopNav />
+        <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
+          <div className="max-w-6xl mx-auto">
+            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Today's Matches
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Select a match to get AI-powered analysis
+            </p>
+          </div>
+        </header>
+
+        <ScrollArea className="flex-1 p-4">
+          <div className="max-w-6xl mx-auto space-y-6 pb-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {summaryCards.map((card) => (
+                <Card key={card.label} className="border-border/70 bg-card/70 backdrop-blur">
+                  <CardContent className="flex items-center justify-between p-5">
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                        {card.label}
+                      </p>
+                      <p className="text-2xl font-semibold text-foreground">{card.value}</p>
+                    </div>
+                    <div className={`rounded-2xl p-3 ${card.accent}`}>
+                      <card.icon className="h-5 w-5" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {subscriptionError && (
+              <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
+                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                  <span>{subscriptionError}</span>
+                  <Button variant="outline" size="sm" onClick={refreshAll}>
+                    Retry
+                  </Button>
                 </CardContent>
               </Card>
-            ))}
-          </div>
+            )}
 
-          {subscriptionError && (
-            <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <span>{subscriptionError}</span>
-                <Button variant="outline" size="sm" onClick={refreshAll}>
-                  Retry
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {usage && (
-            <Card className="border-border/70 bg-card/80 backdrop-blur">
-              <CardContent className="grid gap-4 p-4 sm:grid-cols-[1.3fr_1fr_auto] sm:items-center">
-                <div className="space-y-2">
-                  <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                    {subscriptionPlan?.plan ?? "FREE"} plan
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <p className="text-2xl font-semibold text-foreground">
-                      {usage.monthlyRemaining}
+            {usage && (
+              <Card className="border-border/70 bg-card/80 backdrop-blur">
+                <CardContent className="grid gap-4 p-4 sm:grid-cols-[1.3fr_1fr_auto] sm:items-center">
+                  <div className="space-y-2">
+                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                      {subscriptionPlan?.plan ?? "FREE"} plan
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      prompts left of {usage.monthlyAllowance}
-                    </p>
-                  </div>
-                  <Progress value={usagePercent} className="h-2" />
-                </div>
-                <div className="space-y-1 text-sm text-muted-foreground">
-                  <p>Used {usage.monthlyUsed} this month</p>
-                  <p>Add-on credits: {usage.addonCreditsRemaining ?? 0}</p>
-                </div>
-                <Button
-                  asChild
-                  variant="default"
-                  size="sm"
-                  className="justify-self-start bg-gradient-to-r from-primary to-accent text-primary-foreground sm:justify-self-end"
-                  onClick={() => track("manage_plan_click_dashboard")}
-                >
-                  <Link to="/plans">Manage plan</Link>
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          <div className="space-y-4 rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div className="relative w-full lg:max-w-lg">
-                <Search
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  size={16}
-                />
-                <Input
-                  className="pl-10"
-                  placeholder="Search clubs, leagues, or matchups..."
-                  value={matchSearch}
-                  onChange={(event) => setMatchSearch(event.target.value)}
-                />
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {statusOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    type="button"
-                    variant={statusFilter === option.value ? "default" : "outline"}
-                    size="sm"
-                    className={`rounded-full ${
-                      statusFilter === option.value ? "" : "border-border/60"
-                    }`}
-                    onClick={() => setStatusFilter(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div className="relative w-full md:max-w-sm">
-                <Globe
-                  className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                  size={16}
-                />
-                <Input
-                  className="pl-10"
-                  placeholder="Focus on a specific country..."
-                  value={countryFilter}
-                  onChange={(event) => setCountryFilter(event.target.value)}
-                />
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                {PRIORITY_COUNTRIES.map((country) => (
-                  <Button
-                    type="button"
-                    key={country}
-                    size="sm"
-                    variant={countryFilter === country ? "default" : "outline"}
-                    className="rounded-full"
-                    onClick={() => setCountryFilter((prev) => (prev === country ? "" : country))}
-                  >
-                    {country}
-                  </Button>
-                ))}
-                {filtersApplied && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="ml-auto text-xs text-muted-foreground hover:text-primary"
-                    onClick={handleResetFilters}
-                  >
-                    Reset filters
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          {countriesData.length === 0 ? (
-            <Card className="border border-dashed bg-card/40">
-              <CardContent className="py-8 text-center text-muted-foreground">
-                No matches fit your filters yet. Try adjusting your search or filters.
-              </CardContent>
-            </Card>
-          ) : (
-            <Accordion type="multiple" className="space-y-4">
-              {countriesData.map(({ country, leagues, matchCount }) => (
-                <AccordionItem
-                  key={country}
-                  value={country}
-                  className="rounded-2xl border bg-card/40 px-4"
-                >
-                  <AccordionTrigger className="text-lg font-semibold text-foreground">
-                    <div className="flex w-full items-center justify-between">
-                      <span>{country}</span>
-                      <Badge variant="secondary" className="text-xs font-semibold">
-                        {matchCount} {matchCount === 1 ? "Match" : "Matches"}
-                      </Badge>
+                    <div className="flex items-baseline gap-2">
+                      <p className="text-2xl font-semibold text-foreground">
+                        {usage.monthlyRemaining}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        prompts left of {usage.monthlyAllowance}
+                      </p>
                     </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-6 pt-2">
-                      {Object.entries(leagues)
-                        .sort(([leagueA], [leagueB]) => leagueA.localeCompare(leagueB))
-                        .map(([league, leagueMatches]) => (
-                          <div key={league} className="space-y-3">
-                            <div className="flex items-center gap-2">
-                              <Avatar className="size-8">
-                                <AvatarImage
-                                  src={leagueMatches[0].leagueIcon}
-                                  alt={league}
-                                  width={24}
-                                  height={24}
-                                />
-                                <AvatarFallback className="bg-primary/10">
-                                  {leagueMatches[0].leagueIcon?.split("/").pop()?.split(".")[0] ??
-                                    league
-                                      .split(" ")
-                                      .map((name) => name[0])
-                                      .join("")}
-                                </AvatarFallback>
-                              </Avatar>
-                              <h3 className="text-base font-semibold text-foreground">{league}</h3>
-                            </div>
-                            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                              {leagueMatches.map((match) => {
-                                const kickoffLabel = formatKickoffTime(match.kickoffTime);
-                                const statusLabel = getMatchStatusLabel(match);
-                                const statusBadgeClasses = getStatusBadgeClasses(match);
+                    <Progress value={usagePercent} className="h-2" />
+                  </div>
+                  <div className="space-y-1 text-sm text-muted-foreground">
+                    <p>Used {usage.monthlyUsed} this month</p>
+                    <p>Add-on credits: {usage.addonCreditsRemaining ?? 0}</p>
+                  </div>
+                  <Button
+                    asChild
+                    variant="default"
+                    size="sm"
+                    className="justify-self-start bg-gradient-to-r from-primary to-accent text-primary-foreground sm:justify-self-end"
+                    onClick={() => track("manage_plan_click_dashboard")}
+                  >
+                    <Link to="/plans">Manage plan</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
-                                return (
-                                  <Card
-                                    key={match.id}
-                                    className="group relative overflow-hidden border border-border/60 bg-card/70 backdrop-blur transition hover:border-primary/50"
-                                  >
-                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                                    <CardContent className="relative z-10 p-5 space-y-5">
-                                      <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-                                        <Badge
-                                          variant="secondary"
-                                          className="text-[11px] font-medium"
-                                        >
-                                          {kickoffLabel}
-                                        </Badge>
-                                        <Badge
-                                          variant="outline"
-                                          className={`text-[11px] font-semibold ${statusBadgeClasses}`}
-                                        >
-                                          {statusLabel}
-                                        </Badge>
-                                      </div>
+            <div className="space-y-4 rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="relative w-full lg:max-w-lg">
+                  <Search
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    size={16}
+                  />
+                  <Input
+                    className="pl-10"
+                    placeholder="Search clubs, leagues, or matchups..."
+                    value={matchSearch}
+                    onChange={(event) => setMatchSearch(event.target.value)}
+                  />
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {statusOptions.map((option) => (
+                    <Button
+                      key={option.value}
+                      type="button"
+                      variant={statusFilter === option.value ? "default" : "outline"}
+                      size="sm"
+                      className={`rounded-full ${
+                        statusFilter === option.value ? "" : "border-border/60"
+                      }`}
+                      onClick={() => setStatusFilter(option.value)}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
 
-                                      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                                        {renderTeam({
-                                          name: match.homeTeam,
-                                          logo: match.homeTeamLogo,
-                                          label: "Home",
-                                        })}
+              <div className="space-y-3">
+                <div className="relative w-full md:max-w-sm">
+                  <Globe
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    size={16}
+                  />
+                  <Input
+                    className="pl-10"
+                    placeholder="Focus on a specific country..."
+                    value={countryFilter}
+                    onChange={(event) => setCountryFilter(event.target.value)}
+                  />
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  {PRIORITY_COUNTRIES.map((country) => (
+                    <Button
+                      type="button"
+                      key={country}
+                      size="sm"
+                      variant={countryFilter === country ? "default" : "outline"}
+                      className="rounded-full"
+                      onClick={() => setCountryFilter((prev) => (prev === country ? "" : country))}
+                    >
+                      {country}
+                    </Button>
+                  ))}
+                  {filtersApplied && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto text-xs text-muted-foreground hover:text-primary"
+                      onClick={handleResetFilters}
+                    >
+                      Reset filters
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
 
-                                        <div className="flex flex-col items-center gap-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">
-                                          <span>vs</span>
-                                          <span className="text-lg font-semibold tracking-normal text-foreground">
-                                            {match.kickoffTime.toLocaleTimeString([], {
-                                              hour: "2-digit",
-                                              minute: "2-digit",
-                                            })}
-                                          </span>
-                                        </div>
+            {countriesData.length === 0 ? (
+              <Card className="border border-dashed bg-card/40">
+                <CardContent className="py-8 text-center text-muted-foreground">
+                  No matches fit your filters yet. Try adjusting your search or filters.
+                </CardContent>
+              </Card>
+            ) : (
+              <Accordion type="multiple" className="space-y-4">
+                {countriesData.map(({ country, leagues, matchCount }) => (
+                  <AccordionItem
+                    key={country}
+                    value={country}
+                    className="rounded-2xl border bg-card/40 px-4"
+                  >
+                    <AccordionTrigger className="text-lg font-semibold text-foreground">
+                      <div className="flex w-full items-center justify-between">
+                        <span>{country}</span>
+                        <Badge variant="secondary" className="text-xs font-semibold">
+                          {matchCount} {matchCount === 1 ? "Match" : "Matches"}
+                        </Badge>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-6 pt-2">
+                        {Object.entries(leagues)
+                          .sort(([leagueA], [leagueB]) => leagueA.localeCompare(leagueB))
+                          .map(([league, leagueMatches]) => (
+                            <div key={league} className="space-y-3">
+                              <div className="flex items-center gap-2">
+                                <Avatar className="size-8">
+                                  <AvatarImage
+                                    src={leagueMatches[0].leagueIcon}
+                                    alt={league}
+                                    width={24}
+                                    height={24}
+                                  />
+                                  <AvatarFallback className="bg-primary/10">
+                                    {leagueMatches[0].leagueIcon?.split("/").pop()?.split(".")[0] ??
+                                      league
+                                        .split(" ")
+                                        .map((name) => name[0])
+                                        .join("")}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <h3 className="text-base font-semibold text-foreground">
+                                  {league}
+                                </h3>
+                              </div>
+                              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                {leagueMatches.map((match) => {
+                                  const kickoffLabel = formatKickoffTime(match.kickoffTime);
+                                  const statusLabel = getMatchStatusLabel(match);
+                                  const statusBadgeClasses = getStatusBadgeClasses(match);
 
-                                        {renderTeam({
-                                          name: match.awayTeam,
-                                          logo: match.awayTeamLogo,
-                                          label: "Away",
-                                          alignRight: true,
-                                        })}
-                                      </div>
-
-                                      <div className="flex flex-wrap items-center gap-3">
-                                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                          {match.country && (
-                                            <Badge variant="outline" className="text-[11px]">
-                                              {match.country}
-                                            </Badge>
-                                          )}
-                                          <span className="font-medium text-foreground/80">
-                                            {match.league}
-                                          </span>
-                                        </div>
-
-                                        <div className="ml-auto flex items-center gap-2">
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            size="icon"
-                                            className={`rounded-full border border-border/60 text-muted-foreground transition-colors ${
-                                              match.isFavorite
-                                                ? "text-destructive border-destructive/40"
-                                                : ""
-                                            }`}
-                                            onClick={() => toggleFavorite(match.id)}
+                                  return (
+                                    <Card
+                                      key={match.id}
+                                      className="group relative overflow-hidden border border-border/60 bg-card/70 backdrop-blur transition hover:border-primary/50"
+                                    >
+                                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+                                      <CardContent className="relative z-10 p-5 space-y-5">
+                                        <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
+                                          <Badge
+                                            variant="secondary"
+                                            className="text-[11px] font-medium"
                                           >
-                                            <Heart
-                                              className={`h-4 w-4 ${
+                                            {kickoffLabel}
+                                          </Badge>
+                                          <Badge
+                                            variant="outline"
+                                            className={`text-[11px] font-semibold ${statusBadgeClasses}`}
+                                          >
+                                            {statusLabel}
+                                          </Badge>
+                                        </div>
+
+                                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+                                          {renderTeam({
+                                            name: match.homeTeam,
+                                            logo: match.homeTeamLogo,
+                                            label: "Home",
+                                          })}
+
+                                          <div className="flex flex-col items-center gap-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                                            <span>vs</span>
+                                            <span className="text-lg font-semibold tracking-normal text-foreground">
+                                              {match.kickoffTime.toLocaleTimeString([], {
+                                                hour: "2-digit",
+                                                minute: "2-digit",
+                                              })}
+                                            </span>
+                                          </div>
+
+                                          {renderTeam({
+                                            name: match.awayTeam,
+                                            logo: match.awayTeamLogo,
+                                            label: "Away",
+                                            alignRight: true,
+                                          })}
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-3">
+                                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                            {match.country && (
+                                              <Badge variant="outline" className="text-[11px]">
+                                                {match.country}
+                                              </Badge>
+                                            )}
+                                            <span className="font-medium text-foreground/80">
+                                              {match.league}
+                                            </span>
+                                          </div>
+
+                                          <div className="ml-auto flex items-center gap-2">
+                                            <Button
+                                              type="button"
+                                              variant="ghost"
+                                              size="icon"
+                                              className={`rounded-full border border-border/60 text-muted-foreground transition-colors ${
                                                 match.isFavorite
-                                                  ? "fill-current text-destructive"
+                                                  ? "text-destructive border-destructive/40"
                                                   : ""
                                               }`}
-                                            />
-                                          </Button>
-                                          {!isFinishedMatch(match) && (
-                                            <Button
-                                              variant="default"
-                                              size="sm"
-                                              className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 md:flex-none"
-                                              onClick={() => handleAnalysisClick(match)}
+                                              onClick={() => toggleFavorite(match.id)}
                                             >
-                                              <MessageSquare className="h-4 w-4" />
-                                              Match Insight
+                                              <Heart
+                                                className={`h-4 w-4 ${
+                                                  match.isFavorite
+                                                    ? "fill-current text-destructive"
+                                                    : ""
+                                                }`}
+                                              />
                                             </Button>
-                                          )}
+                                            {!isFinishedMatch(match) && (
+                                              <Button
+                                                variant="default"
+                                                size="sm"
+                                                className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 md:flex-none"
+                                                onClick={() => handleAnalysisClick(match)}
+                                              >
+                                                <MessageSquare className="h-4 w-4" />
+                                                Match Insight
+                                              </Button>
+                                            )}
+                                          </div>
                                         </div>
-                                      </div>
-                                    </CardContent>
-                                  </Card>
-                                );
-                              })}
+                                      </CardContent>
+                                    </Card>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          )}
-        </div>
-      </ScrollArea>
+                          ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            )}
+          </div>
+        </ScrollArea>
 
-      <ChatDialog
-        match={selectedMatch}
-        open={chatOpen}
-        onOpenChange={setChatOpen}
-        usage={usage}
-        plan={subscriptionPlan}
-        onAnalysisComplete={refreshUsage}
-        onPromptLimitReached={refreshUsage}
-      />
+        <ChatDialog
+          match={selectedMatch}
+          open={chatOpen}
+          onOpenChange={setChatOpen}
+          usage={usage}
+          plan={subscriptionPlan}
+          onAnalysisComplete={refreshUsage}
+          onPromptLimitReached={refreshUsage}
+        />
 
-      <BottomNav />
-    </div>
+        <BottomNav />
+      </div>
+    </>
   );
 }

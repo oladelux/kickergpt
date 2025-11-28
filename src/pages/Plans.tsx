@@ -188,8 +188,23 @@ export default function Plans() {
         ) : (
           <div className="mx-auto max-w-5xl space-y-10">
             {user && (
-              <div className="rounded-2xl border border-border/70 bg-card/70 px-4 py-3 text-sm text-muted-foreground">
-                Signed in as <span className="font-medium text-foreground">{user.email}</span>
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-border/70 bg-card/70 px-4 py-3 text-sm text-muted-foreground">
+                  Signed in as <span className="font-medium text-foreground">{user.email}</span>
+                </div>
+                <div className="flex flex-col gap-2 rounded-2xl border border-primary/50 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/20 px-4 py-3 text-left shadow-sm">
+                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Sparkles className="h-4 w-4" />
+                    Black Friday: 90% off Pro
+                  </div>
+                  <p className="text-sm text-foreground">
+                    Use code <span className="font-mono text-primary">KICKERGPTBLACKFRIDAY</span> at
+                    checkout to lock in the Black Friday savings on your Pro subscription.
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Apply the code during checkout to redeem.
+                  </p>
+                </div>
               </div>
             )}
             <div className="space-y-4 text-center">
