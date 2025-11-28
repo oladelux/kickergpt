@@ -19,6 +19,10 @@ import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
 import ControlRoom from "./pages/ControlRoom";
+import ls from "@livesession/browser";
+
+ls.init("d955c4e2.3d0acf18");
+ls.newPageView();
 
 const queryClient = new QueryClient();
 
