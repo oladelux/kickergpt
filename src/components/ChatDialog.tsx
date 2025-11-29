@@ -117,7 +117,7 @@ export default function ChatDialog({
       `Give me a quick tactical preview for ${matchup}.`,
       `How does ${match.homeTeam} usually perform under this referee compared to ${match.awayTeam}`,
       `How do these teams perform under similar weather and pitch conditions?`,
-      `How do both teams perform when labeled favorites versus underdogs?`,
+      `What does the player ratings system say about these teams?`,
       "Which side has handled fixture congestion better in recent weeks?",
     ];
   }, [match]);
