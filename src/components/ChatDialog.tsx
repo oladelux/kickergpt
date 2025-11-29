@@ -233,7 +233,7 @@ export default function ChatDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideClose
-        className="max-w-2xl h-[80vh] flex flex-col p-0 sm:rounded-3xl max-sm:left-0 max-sm:right-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-full max-sm:h-[min(97vh,760px)] max-sm:rounded-t-3xl max-sm:border-t max-sm:translate-x-0 max-sm:translate-y-0 max-sm:shadow-2xl"
+        className="max-w-2xl h-[80vh] flex flex-col p-0 sm:rounded-3xl max-sm:left-0 max-sm:right-0 max-sm:bottom-0 max-sm:top-auto max-sm:w-full max-sm:max-w-full max-sm:h-[min(94vh,700px)] max-sm:rounded-t-3xl max-sm:border-t max-sm:translate-x-0 max-sm:translate-y-0 max-sm:shadow-2xl"
       >
         <div className="sm:hidden flex justify-center pt-3">
           <span className="h-1.5 w-12 rounded-full bg-muted-foreground/40" />
