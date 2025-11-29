@@ -72,32 +72,95 @@ const getErrorMessage = (error: unknown) => {
 export default function Plans() {
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
   const [actionError, setActionError] = useState<string | null>(null);
-  const [geoCountryCode, setGeoCountryCode] = useState<string | undefined>(undefined);
+  const [geoCountryCode, setGeoCountryCode] = useState<string>("US");
+  const [geoLoading, setGeoLoading] = useState(true);
   const { toast } = useToast();
   const { user } = useAuth();
   const { plan: subscription, usage, loading, error, refreshAll, setError } = useSubscriptionData();
 
   useEffect(() => {
-    const locale = navigator.languages?.[0] ?? navigator.language;
-    const parts = (locale || "").split("-").filter(Boolean);
-    const region = parts.length > 1 ? parts[parts.length - 1] : undefined;
-    if (region) {
-      setGeoCountryCode(region.toUpperCase());
-      return;
-    }
-    const intlLocale = new Intl.DateTimeFormat().resolvedOptions().locale;
-    const intlParts = intlLocale.split("-").filter(Boolean);
-    const intlRegion = intlParts.length > 1 ? intlParts[intlParts.length - 1] : undefined;
-    if (intlRegion) setGeoCountryCode(intlRegion.toUpperCase());
+    const detectCountry = async () => {
+      setGeoLoading(true);
+
+      try {
+        // Primary: ipapi.co (free, no key needed)
+        const response = await fetch("https://ipapi.co/country/", {
+          signal: AbortSignal.timeout(3000), // 3 second timeout
+        });
+
+        if (response.ok) {
+          const countryCode = await response.text();
+          const trimmed = countryCode.trim().toUpperCase();
+          if (trimmed.length === 2) {
+            setGeoCountryCode(trimmed);
+            setGeoLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Primary geo detection failed:", error);
+      }
+
+      try {
+        // Fallback: ip-api.com
+        const response = await fetch("http://ip-api.com/json/?fields=countryCode", {
+          signal: AbortSignal.timeout(3000),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.countryCode) {
+            setGeoCountryCode(data.countryCode.toUpperCase());
+            setGeoLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.warn("Fallback geo detection failed:", error);
+      }
+
+      // Final fallback: browser locale (less reliable)
+      const locale = navigator.languages?.[0] ?? navigator.language;
+      const parts = (locale || "").split("-");
+      if (parts.length > 1) {
+        const region = parts[parts.length - 1]?.toUpperCase();
+        if (region && region.length === 2) {
+          setGeoCountryCode(region);
+        }
+      }
+
+      setGeoLoading(false);
+    };
+
+    detectCountry();
   }, []);
 
   const resolvedCountryCode = (geoCountryCode ?? "").toUpperCase();
 
   const getPricingForCountry = (countryCode: string) => {
-    if (countryCode === "US") return { symbol: "$", pro: "15" };
-    if (countryCode === "GB" || countryCode === "UK") return { symbol: "£", pro: "15" };
-    if (countryCode === "NG") return { symbol: "₦", pro: "10,000" };
-    return { symbol: "€", pro: "15" };
+    switch (countryCode) {
+      case "US":
+        return { symbol: "$", pro: "15" };
+      case "GB":
+      case "UK":
+        return { symbol: "£", pro: "15" };
+      case "NG":
+        return { symbol: "₦", pro: "10,000" };
+      case "DE":
+      case "FR":
+      case "ES":
+      case "IT":
+      case "NL":
+      case "BE":
+      case "AT":
+      case "IE":
+      case "PT":
+      case "FI":
+      case "GR":
+        return { symbol: "€", pro: "15" };
+      default:
+        return { symbol: "$", pro: "15" };
+    }
   };
 
   const getPlanPrice = (tier: SubscriptionPlanName) => {
@@ -215,7 +278,7 @@ export default function Plans() {
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-background via-background/95 to-secondary/40 pt-16 pb-16 md:pb-0">
       <TopNav />
       <main className="flex-1 overflow-y-auto px-4 py-6">
-        {loading ? (
+        {loading || geoLoading ? (
           <div className="flex min-h-[60vh] items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
