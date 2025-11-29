@@ -353,9 +353,17 @@ export class ClientError extends Error {
     public status: number,
     public responseBody: Record<string, unknown>
   ) {
-    super(
-      `Erroneous request to endpoint ${url}, status ${status}, code ${JSON.stringify(responseBody)}`
-    );
+    const responseErrors = (responseBody?.errors ?? {}) as Record<string, unknown>;
+    const responseMessage =
+      typeof responseBody?.message === "string" ? responseBody.message : undefined;
+    const emailError = responseErrors.email;
+    const isEmailExists = emailError === "emailAlreadyExists";
+
+    const friendlyMessage = isEmailExists
+      ? "That email is already registered. Try signing in instead."
+      : (responseMessage ?? "Request failed. Please try again.");
+
+    super(friendlyMessage);
     this.name = "ClientError";
   }
 }
