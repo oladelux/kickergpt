@@ -37,8 +37,10 @@ class AuthService {
       tap(({ user }) => this.currentUserSubject.next(user)),
       catchError((error) => {
         if (error instanceof UnauthorizedError && error.errorCode === "emailNotVerified") {
-          const emailNotVerifiedError = new Error("Email not verified");
-          (emailNotVerifiedError as any).code = "emailNotVerified";
+          const emailNotVerifiedError = new Error("Email not verified") as Error & {
+            code?: string;
+          };
+          emailNotVerifiedError.code = "emailNotVerified";
           throw emailNotVerifiedError;
         }
         throw error;
@@ -119,15 +121,20 @@ class AuthService {
     return !!getToken();
   }
 
-  private normalizeAuthResponse(data: any): AuthResponse {
-    const user = this.normalizeUser(data?.user ?? data);
+  private normalizeAuthResponse(data: unknown): AuthResponse {
+    const d = data as Record<string, unknown> | null | undefined;
+    const user = this.normalizeUser((d && (d.user ?? d)) || {});
     return {
       user,
-      token: data?.token ?? data?.accessToken ?? getToken() ?? "",
+      token:
+        (typeof d?.token === "string" && d.token) ||
+        (typeof d?.accessToken === "string" && d.accessToken) ||
+        getToken() ||
+        "",
     };
   }
 
-  private normalizeUser(data: any): User {
+  private normalizeUser(data): User {
     if (!data) {
       return {
         id: "",

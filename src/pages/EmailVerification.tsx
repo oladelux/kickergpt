@@ -16,6 +16,7 @@ export default function EmailVerification() {
   const [searchParams] = useSearchParams();
   const [resending, setResending] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [verificationAttempted, setVerificationAttempted] = useState(false);
 
   // Get email from location state or search params
   const email = (location.state as { email?: string })?.email ?? searchParams.get("email") ?? "";
@@ -23,7 +24,7 @@ export default function EmailVerification() {
   // Get hash from search params for email confirmation
   const hash = searchParams.get("hash");
 
-  // If already authenticated, redirect to fixtures
+  // If already authenticated, always redirect to fixtures (whether hash exists or not)
   useEffect(() => {
     if (isAuthenticated && user) {
       navigate("/fixtures", { replace: true });
@@ -32,7 +33,8 @@ export default function EmailVerification() {
 
   // Handle email confirmation from link
   useEffect(() => {
-    if (hash && !verifying) {
+    if (hash && !verifying && !isAuthenticated && !verificationAttempted) {
+      setVerificationAttempted(true);
       setVerifying(true);
       confirmEmail(hash)
         .then(() => {
@@ -92,7 +94,17 @@ export default function EmailVerification() {
           setVerifying(false);
         });
     }
-  }, [hash, confirmEmail, navigate, toast, verifying, login]);
+  }, [
+    hash,
+    confirmEmail,
+    navigate,
+    toast,
+    verifying,
+    verificationAttempted,
+    login,
+    isAuthenticated,
+    user,
+  ]);
 
   const handleResendEmail = async () => {
     if (!email) {
