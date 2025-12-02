@@ -1,6 +1,6 @@
-import { BehaviorSubject, Observable, of, from } from "rxjs";
+import { BehaviorSubject, Observable, of, from, throwError } from "rxjs";
 import { map, tap, catchError, switchMap, finalize, shareReplay } from "rxjs/operators";
-import { api, getToken, removeToken } from "@/lib/api";
+import { api, getToken, removeToken, UnauthorizedError } from "@/lib/api";
 
 export interface User {
   id: string;
@@ -34,7 +34,15 @@ class AuthService {
   login(email: string, password: string): Observable<AuthResponse> {
     return from(api.auth.login({ email, password })).pipe(
       map((response) => this.normalizeAuthResponse(response)),
-      tap(({ user }) => this.currentUserSubject.next(user))
+      tap(({ user }) => this.currentUserSubject.next(user)),
+      catchError((error) => {
+        if (error instanceof UnauthorizedError && error.errorCode === "emailNotVerified") {
+          const emailNotVerifiedError = new Error("Email not verified");
+          (emailNotVerifiedError as any).code = "emailNotVerified";
+          throw emailNotVerifiedError;
+        }
+        throw error;
+      })
     );
   }
 
@@ -54,6 +62,22 @@ class AuthService {
     return from(api.auth.forgotPassword({ email })).pipe(
       map((response) => ({
         message: response?.message ?? "Password reset email sent",
+      }))
+    );
+  }
+
+  resendVerificationEmail(email: string): Observable<{ message: string }> {
+    return from(api.auth.resendVerificationEmail({ email })).pipe(
+      map((response) => ({
+        message: response?.message ?? "Email sent if the account exists/unverified.",
+      }))
+    );
+  }
+
+  confirmEmail(hash: string): Observable<{ message: string }> {
+    return from(api.auth.confirmEmail(hash)).pipe(
+      map((response) => ({
+        message: response?.message ?? "Email verified successfully",
       }))
     );
   }

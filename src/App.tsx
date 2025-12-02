@@ -4,13 +4,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SubscriptionRoute } from "@/components/SubscriptionRoute";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import SignUp from "./pages/SignUp";
 import ForgotPassword from "./pages/ForgotPassword";
+import EmailVerification from "./pages/EmailVerification";
 import Chat from "./pages/Chat";
 import Favorites from "./pages/Favorites";
 import Profile from "./pages/Profile";
@@ -39,6 +40,29 @@ const ExternalRedirect = ({ to }: { to: string }) => {
   );
 };
 
+const ConfirmEmailRedirect = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get the current URL search params
+    const searchParams = new URLSearchParams(window.location.search);
+    const hash = searchParams.get("hash");
+
+    // Redirect to verify-email with the hash
+    if (hash) {
+      navigate(`/verify-email?hash=${hash}`, { replace: true });
+    } else {
+      navigate("/verify-email", { replace: true });
+    }
+  }, [navigate]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <p className="text-sm text-muted-foreground">Verifying...</p>
+    </div>
+  );
+};
+
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
@@ -53,6 +77,8 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-email" element={<EmailVerification />} />
+            <Route path="/confirm-email" element={<ConfirmEmailRedirect />} />
             <Route
               path="/plans"
               element={

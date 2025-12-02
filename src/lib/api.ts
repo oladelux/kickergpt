@@ -334,6 +334,8 @@ export class ApiError extends Error {
  * Error class for unauthorized requests (401).
  */
 export class UnauthorizedError extends Error {
+  public errorCode?: string;
+
   constructor(
     url: string,
     public status: number,
@@ -341,6 +343,7 @@ export class UnauthorizedError extends Error {
   ) {
     super(`Unauthorized request to ${url}, status ${status}`);
     this.name = "UnauthorizedError";
+    this.errorCode = typeof responseBody?.error === "string" ? responseBody.error : undefined;
   }
 }
 
@@ -473,6 +476,16 @@ export const api = {
 
     me: async () => {
       const res = await apiRequest("/auth/me", "GET");
+      return res.status === 204 ? null : res.json();
+    },
+
+    resendVerificationEmail: async (data: { email: string }) => {
+      const res = await apiRequest("/auth/email/resend", "POST", data);
+      return res.status === 204 ? null : res.json();
+    },
+
+    confirmEmail: async (hash: string) => {
+      const res = await apiRequest("/auth/email/confirm", "POST", { hash });
       return res.status === 204 ? null : res.json();
     },
   },

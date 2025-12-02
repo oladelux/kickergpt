@@ -24,11 +24,11 @@ const PLAN_OPTIONS = [
     name: "Free",
     price: "$0",
     cadence: "per month",
-    monthlyCredits: 10,
+    monthlyCredits: 5,
     popular: false,
     features: [
       "Live fixtures dashboard",
-      "10 AI prompts every month",
+      "5 AI prompts every month",
       "Favorites & history sync",
       "Upgrade required before buying add-ons",
     ],

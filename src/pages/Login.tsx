@@ -47,6 +47,20 @@ export default function Login() {
       });
       navigate(redirectTo, { replace: true });
     } catch (err) {
+      // Check if this is an email not verified error
+      if (err instanceof Error && "code" in err && err.code === "emailNotVerified") {
+        // Store credentials temporarily for auto-login after verification
+        sessionStorage.setItem(
+          "pendingVerification",
+          JSON.stringify({
+            email,
+            password,
+          })
+        );
+        navigate("/verify-email", { state: { email }, replace: true });
+        return;
+      }
+
       const message = err instanceof Error ? err.message : "Unable to sign in.";
       toast({
         variant: "destructive",

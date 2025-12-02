@@ -251,18 +251,33 @@ export default function ChatDialog({
             </p>
           )}
           {usage && (
-            <div className="mt-3 w-full space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3 text-left">
-              <div className="flex items-center justify-between text-xs font-semibold text-foreground/80">
-                <span className="uppercase tracking-[0.24em] text-muted-foreground">
+            <div className="mt-3 w-full space-y-2 rounded-2xl border border-border/60 bg-muted/20 p-3 text-left max-sm:mt-2 max-sm:p-2 max-sm:space-y-0">
+              <div className="flex items-center justify-between text-xs font-semibold text-foreground/80 max-sm:text-[11px]">
+                <span className="uppercase tracking-[0.24em] text-muted-foreground max-sm:hidden">
                   {plan?.plan ?? "FREE"} plan
                 </span>
-                <span className="text-foreground">
-                  {usage.monthlyRemaining} left
-                  {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining} credits` : ""}
+                <span className="text-foreground max-sm:flex-1">
+                  <span className="sm:hidden">
+                    {usage.monthlyRemaining} {usage.monthlyRemaining === 1 ? 'prompt' : 'prompts'} left
+                    {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining}` : ""}
+                  </span>
+                  <span className="max-sm:hidden">
+                    {usage.monthlyRemaining} left
+                    {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining}` : ""}
+                  </span>
                 </span>
+                <Button
+                  asChild
+                  variant="outline"
+                  size="sm"
+                  className="ml-auto text-[10px] h-6 px-2 sm:hidden"
+                  onClick={() => track("upgrade_click_usage_card")}
+                >
+                  <Link to="/plans">Upgrade</Link>
+                </Button>
               </div>
-              <Progress value={promptUsagePercent} className="h-2" />
-              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+              <Progress value={promptUsagePercent} className="h-2 max-sm:hidden" />
+              <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground max-sm:hidden">
                 <span>
                   Used {usage.monthlyUsed} of {usage.monthlyAllowance} this month
                 </span>

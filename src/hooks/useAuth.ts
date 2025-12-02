@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { authService, User, AuthResponse } from '@/services/auth.service';
+import { useState, useEffect } from "react";
+import { authService, User, AuthResponse } from "@/services/auth.service";
 
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -27,7 +27,7 @@ export const useAuth = () => {
     lastName: string,
     email: string,
     password: string,
-    planId?: string,
+    planId?: string
   ) => {
     setLoading(true);
     setError(null);
@@ -98,6 +98,44 @@ export const useAuth = () => {
     });
   };
 
+  const resendVerificationEmail = (email: string) => {
+    setLoading(true);
+    setError(null);
+
+    return new Promise<{ message: string }>((resolve, reject) => {
+      authService.resendVerificationEmail(email).subscribe({
+        next: (response) => {
+          setLoading(false);
+          resolve(response);
+        },
+        error: (err) => {
+          setLoading(false);
+          setError(err.message);
+          reject(err);
+        },
+      });
+    });
+  };
+
+  const confirmEmail = (hash: string) => {
+    setLoading(true);
+    setError(null);
+
+    return new Promise<{ message: string }>((resolve, reject) => {
+      authService.confirmEmail(hash).subscribe({
+        next: (response) => {
+          setLoading(false);
+          resolve(response);
+        },
+        error: (err) => {
+          setLoading(false);
+          setError(err.message);
+          reject(err);
+        },
+      });
+    });
+  };
+
   return {
     user,
     loading,
@@ -106,6 +144,8 @@ export const useAuth = () => {
     login,
     logout,
     forgotPassword,
+    resendVerificationEmail,
+    confirmEmail,
     isAuthenticated: authService.isAuthenticated(),
   };
 };

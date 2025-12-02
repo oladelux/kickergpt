@@ -72,6 +72,20 @@ export default function SignUp() {
       });
       navigate("/fixtures");
     } catch (err) {
+      // Check if this is an email not verified error
+      if (err instanceof Error && "code" in err && err.code === "emailNotVerified") {
+        // Store credentials temporarily for auto-login after verification
+        sessionStorage.setItem(
+          "pendingVerification",
+          JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          })
+        );
+        navigate("/verify-email", { state: { email: formData.email }, replace: true });
+        return;
+      }
+
       const message = err instanceof Error ? err.message : "Unable to complete sign up.";
       toast({
         variant: "destructive",
