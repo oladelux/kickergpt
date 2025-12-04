@@ -186,7 +186,7 @@ export default function Index() {
           </div>
 
           <div className="relative z-10 mx-auto max-w-6xl px-4 pb-24 pt-10 space-y-16">
-            <header className="flex items-center justify-between gap-4 rounded-full border border-border/60 bg-card/60 px-6 py-3 backdrop-blur">
+            <header className="flex items-center justify-between gap-2 rounded-full border border-border/60 bg-card/60 px-4 py-3 backdrop-blur">
               <Link to="/" className="text-lg font-semibold tracking-tight">
                 kicker<span className="bold text-primary">GPT</span>
               </Link>
@@ -211,7 +211,7 @@ export default function Index() {
                   size="sm"
                   className="bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20"
                 >
-                  <Link to="/signup">Request access</Link>
+                  <Link to="/signup">Sign up</Link>
                 </Button>
               </div>
             </header>
