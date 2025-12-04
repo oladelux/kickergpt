@@ -24,11 +24,11 @@ const PLAN_OPTIONS = [
     name: "Free",
     price: "$0",
     cadence: "per month",
-    monthlyCredits: 5,
+    monthlyCredits: 10,
     popular: false,
     features: [
       "Live fixtures dashboard",
-      "5 AI prompts every month",
+      "10 AI prompts every month",
       "Favorites & history sync",
       "Upgrade required before buying add-ons",
     ],
@@ -288,19 +288,6 @@ export default function Plans() {
               <div className="space-y-3">
                 <div className="rounded-2xl border border-border/70 bg-card/70 px-4 py-3 text-sm text-muted-foreground">
                   Signed in as <span className="font-medium text-foreground">{user.email}</span>
-                </div>
-                <div className="flex flex-col gap-2 rounded-2xl border border-primary/50 bg-gradient-to-r from-primary/10 via-accent/10 to-secondary/20 px-4 py-3 text-left shadow-sm">
-                  <div className="flex items-center gap-2 text-sm font-semibold text-primary">
-                    <Sparkles className="h-4 w-4" />
-                    Black Friday: 90% off Pro
-                  </div>
-                  <p className="text-sm text-foreground">
-                    Use code <span className="font-mono text-primary">KICKERGPTBLACKFRIDAY</span> at
-                    checkout to lock in the Black Friday savings on your Pro subscription.
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    Apply the code during checkout to redeem.
-                  </p>
                 </div>
               </div>
             )}

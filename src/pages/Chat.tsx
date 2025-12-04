@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Activity, Clock, Globe, Heart, MessageSquare, Search, Sparkles, Star } from "lucide-react";
+import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
 import { track } from "@vercel/analytics";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,14 +11,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import ChatDialog from "@/components/ChatDialog";
@@ -31,8 +23,6 @@ import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
-
-const BLACK_FRIDAY_DISMISS_KEY = "kickerGPTBlackFridayPromoDismissed";
 
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
@@ -235,7 +225,6 @@ export default function Chat() {
     refreshUsage,
     refreshAll,
   } = useSubscriptionData();
-  const [showPromo, setShowPromo] = useState(false);
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
@@ -247,18 +236,10 @@ export default function Chat() {
 
   useEffect(() => {
     if (isAuthenticated && user) {
-      const dismissed = localStorage.getItem(BLACK_FRIDAY_DISMISS_KEY);
-      if (!dismissed) setShowPromo(true);
-    } else {
-      setShowPromo(false);
+      // Ensure user data stays fresh when authenticated
+      refreshAll();
     }
-  }, [isAuthenticated, user]);
-
-  const handleDismissPromo = () => {
-    localStorage.setItem(BLACK_FRIDAY_DISMISS_KEY, "1");
-    track("black_friday_promo_dismissed");
-    setShowPromo(false);
-  };
+  }, [isAuthenticated, user, refreshAll]);
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -410,32 +391,6 @@ export default function Chat() {
 
   return (
     <>
-      <Dialog open={showPromo} onOpenChange={(open) => (!open ? handleDismissPromo() : null)}>
-        <DialogContent className="sm:max-w-md space-y-4 mx-auto w-[90%]">
-          <DialogHeader className="space-y-2">
-            <DialogTitle className="flex items-center gap-2 text-primary mt-2">
-              <Sparkles className="h-4 w-4" />
-              Black Friday: 90% off Pro
-            </DialogTitle>
-            <DialogDescription className="text-foreground leading-relaxed pt-4">
-              Use code{" "}
-              <code className="rounded-md bg-muted px-2 py-1 font-mono text-sm text-primary">
-                KICKERGPTBLACKFRIDAY
-              </code>{" "}
-              at checkout to unlock the discount on your Pro subscription.
-            </DialogDescription>
-          </DialogHeader>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            Apply the code during checkout to redeem.
-          </p>
-          <DialogFooter className="flex justify-end">
-            <Button onClick={handleDismissPromo} className="w-full sm:w-auto">
-              Got it
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pt-16 pb-16 md:pb-0">
         <TopNav />
         <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
