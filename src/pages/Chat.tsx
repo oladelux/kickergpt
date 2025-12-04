@@ -357,21 +357,21 @@ export default function Chat() {
     return (
       <div
         key={match.id}
-        className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 border-b border-border/50 hover:bg-card/50 transition-colors group"
+        className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-border/50 hover:bg-card/50 transition-colors group"
       >
         {/* Mobile: Top row with teams */}
-        <div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
-          <Avatar className="size-8 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0 w-full sm:w-auto">
+          <Avatar className="size-7 sm:size-8 flex-shrink-0">
             <AvatarImage src={match.homeTeamLogo} alt={match.homeTeam} />
             <AvatarFallback className="bg-primary/10 text-primary text-xs">
               {getInitials(match.homeTeam)}
             </AvatarFallback>
           </Avatar>
-          <span className="text-sm font-medium text-foreground truncate flex-1">
+          <span className="text-xs sm:text-sm font-medium text-foreground truncate flex-1 min-w-0">
             {match.homeTeam}
           </span>
-          <span className="text-xs text-muted-foreground sm:hidden">vs</span>
-          <span className="text-sm font-medium text-foreground truncate sm:hidden">
+          <span className="text-xs text-muted-foreground sm:hidden flex-shrink-0">vs</span>
+          <span className="text-xs sm:text-sm font-medium text-foreground truncate sm:hidden min-w-0 max-w-[100px]">
             {match.awayTeam}
           </span>
         </div>
@@ -387,36 +387,43 @@ export default function Chat() {
         </div>
 
         {/* Mobile: Status and time */}
-        <div className="flex sm:hidden items-center gap-2 w-full justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
+        <div className="flex sm:hidden items-center gap-1.5 w-full justify-between min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
+            <Badge
+              variant="outline"
+              className={`text-[10px] sm:text-xs font-semibold ${statusBadgeClasses} flex-shrink-0`}
+            >
               {statusLabel}
             </Badge>
-            <span className="text-xs text-muted-foreground font-mono">{kickoffTime}</span>
+            <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap flex-shrink-0">
+              {kickoffTime}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 flex-shrink-0">
             <Button
               type="button"
               variant="ghost"
               size="icon"
-              className={`h-8 w-8 rounded-full ${
+              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex-shrink-0 ${
                 match.isFavorite
                   ? "text-destructive"
                   : "text-muted-foreground hover:text-destructive"
               }`}
               onClick={() => toggleFavorite(match.id)}
             >
-              <Heart className={`h-4 w-4 ${match.isFavorite ? "fill-current" : ""}`} />
+              <Heart
+                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${match.isFavorite ? "fill-current" : ""}`}
+              />
             </Button>
             {!isFinishedMatch(match) && (
               <Button
                 variant="default"
                 size="sm"
-                className="h-8 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                className="h-7 sm:h-8 gap-1 px-2 sm:px-3 bg-gradient-to-r from-primary to-accent text-primary-foreground flex-shrink-0"
                 onClick={() => handleAnalysisClick(match)}
               >
                 <MessageSquare className="h-3 w-3" />
-                <span className="text-xs">Analyze</span>
+                <span className="text-[10px] sm:text-xs">Analyze</span>
               </Button>
             )}
           </div>
@@ -475,18 +482,21 @@ export default function Chat() {
         <TopNav />
 
         {/* Mobile: Filter buttons */}
-        <div className="lg:hidden flex items-center gap-2 px-4 py-2 border-b border-border bg-card">
+        <div className="lg:hidden flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 border-b border-border bg-card overflow-x-auto">
           <Button
             variant="outline"
             size="sm"
-            className="h-9 gap-2"
+            className="h-8 sm:h-9 gap-1.5 sm:gap-2 flex-shrink-0"
             onClick={() => setLeftSidebarOpen(true)}
           >
-            <Menu className="h-4 w-4" />
-            <span className="text-xs">Filters</span>
+            <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+            <span className="text-[10px] sm:text-xs">Filters</span>
           </Button>
           {selectedLeague && (
-            <Badge variant="secondary" className="text-xs">
+            <Badge
+              variant="secondary"
+              className="text-[10px] sm:text-xs flex-shrink-0 truncate max-w-[150px]"
+            >
               {selectedLeague}
             </Badge>
           )}
@@ -521,8 +531,8 @@ export default function Chat() {
           </Sheet>
 
           {/* Main Content */}
-          <ScrollArea className="flex-1 p-4">
-            <div className="max-w-full mx-auto space-y-6 pb-4">
+          <ScrollArea className="flex-1 p-2 sm:p-4">
+            <div className="max-w-full mx-auto space-y-4 sm:space-y-6 pb-4">
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {summaryCards.map((card) => (
                   <Card key={card.label} className="border-border bg-card">
@@ -552,27 +562,27 @@ export default function Chat() {
                 </Card>
               )}
 
-              <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
+              <div className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-border bg-card p-2 sm:p-3">
                 <div className="relative flex-1 min-w-0">
                   <Search
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={16}
+                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    size={14}
                   />
                   <Input
-                    className="pl-10 h-9 text-sm"
-                    placeholder="Search clubs, leagues, or matchups..."
+                    className="pl-8 sm:pl-10 h-8 sm:h-9 text-xs sm:text-sm"
+                    placeholder="Search clubs, leagues..."
                     value={matchSearch}
                     onChange={(event) => setMatchSearch(event.target.value)}
                   />
                 </div>
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
                   {statusOptions.map((option) => (
                     <Button
                       key={option.value}
                       type="button"
                       variant={statusFilter === option.value ? "default" : "outline"}
                       size="sm"
-                      className={`h-9 text-xs rounded-full flex-shrink-0 ${
+                      className={`h-8 sm:h-9 text-[10px] sm:text-xs rounded-full flex-shrink-0 px-2 sm:px-3 ${
                         statusFilter === option.value ? "" : "border-border/60"
                       }`}
                       onClick={() => setStatusFilter(option.value)}
@@ -585,7 +595,7 @@ export default function Chat() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-9 text-xs text-muted-foreground hover:text-primary flex-shrink-0"
+                      className="h-8 sm:h-9 text-[10px] sm:text-xs text-muted-foreground hover:text-primary flex-shrink-0 px-2"
                       onClick={handleResetFilters}
                     >
                       Reset
