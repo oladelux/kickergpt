@@ -13,11 +13,15 @@ import {
   Trophy,
   Users,
   Zap,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Helmet } from "react-helmet-async";
+import { useTheme } from "next-themes";
+import { useEffect, useState } from "react";
 
 const featureHighlights = [
   {
@@ -146,6 +150,13 @@ const competitionBadges = [
 ];
 
 export default function Index() {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
     <>
       <Helmet>
@@ -181,6 +192,17 @@ export default function Index() {
               </Link>
               <div className="hidden gap-6 text-sm text-muted-foreground md:flex"></div>
               <div className="flex items-center gap-3">
+                {mounted && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 w-9 rounded-md"
+                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+                    aria-label="Toggle theme"
+                  >
+                    {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+                  </Button>
+                )}
                 <Button asChild variant="ghost">
                   <Link to="/login">Sign in</Link>
                 </Button>
@@ -202,7 +224,7 @@ export default function Index() {
                 <Badge variant="outline" className="w-fit border-foreground/20 text-foreground/80">
                   Free forever · No credit card needed
                 </Badge>
-                <Badge className="w-fit border border-accent/40 bg-accent/10 text-accent-foreground">
+                <Badge className="w-fit border border-accent/40 bg-accent/10 text-accent">
                   Pre-match insights
                 </Badge>
               </div>

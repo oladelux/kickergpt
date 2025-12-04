@@ -1,19 +1,14 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star } from "lucide-react";
-import { track } from "@vercel/analytics";
+import { useEffect, useState, useMemo } from "react";
+import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import ChatDialog from "@/components/ChatDialog";
+import FixturesLeftSidebar from "@/components/FixturesLeftSidebar";
+import FixturesRightSidebar from "@/components/FixturesRightSidebar";
 import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/services/matches.service";
 import { LoadingPage } from "@/components/LoadingPage";
@@ -21,7 +16,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
-import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/hooks/useAuth";
 
 const LIVE_DEVELOPER_CODES = new Set([
@@ -75,20 +69,29 @@ const STATUS_LABELS: Record<string, string> = {
   INPLAY_TO_BE_DECIDED: "To Be Decided",
 };
 
-const PRIORITY_COUNTRIES = [
-  "England",
-  "Spain",
-  "France",
-  "Germany",
-  "Italy",
-  "Netherlands",
-  "Portugal",
-  "Turkey",
-] as const;
+// European league priorities (higher number = higher priority)
+const EUROPEAN_LEAGUE_PRIORITIES: Record<string, number> = {
+  "Premier League": 100,
+  "La Liga": 95,
+  "Serie A": 90,
+  Bundesliga: 85,
+  "Ligue 1": 80,
+  "Champions League": 75,
+  "Europa League": 70,
+  "Conference League": 65,
+  Eredivisie: 60,
+  "Primeira Liga": 55,
+  "Super Lig": 50,
+  Premiership: 45,
+  Championship: 40,
+  "La Liga 2": 35,
+  "Serie B": 30,
+  "2. Bundesliga": 25,
+};
 
-const PRIORITY_COUNTRY_RANK = new Map(
-  PRIORITY_COUNTRIES.map((country, index) => [country.toLowerCase(), index])
-);
+const getLeaguePriority = (league: string): number => {
+  return EUROPEAN_LEAGUE_PRIORITIES[league] ?? 0;
+};
 
 type StatusFilter = "all" | "live" | "upcoming" | "favorites";
 
@@ -230,9 +233,9 @@ export default function Chat() {
   const [countryFilter, setCountryFilter] = useState("");
   const [matchSearch, setMatchSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const usagePercent = usage?.monthlyAllowance
-    ? Math.min(100, Math.round((usage.monthlyUsed / usage.monthlyAllowance) * 100))
-    : 0;
+  const [selectedLeague, setSelectedLeague] = useState<string | null>(null);
+  const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
+  const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -240,6 +243,56 @@ export default function Chat() {
       refreshAll();
     }
   }, [isAuthenticated, user, refreshAll]);
+
+  const normalizedMatchQuery = matchSearch.trim().toLowerCase();
+
+  const filteredMatches = useMemo(() => {
+    return matches.filter((match) => {
+      if (statusFilter === "live" && !isLiveMatch(match)) return false;
+      if (statusFilter === "upcoming" && !isUpcomingMatch(match)) return false;
+      if (statusFilter === "favorites" && !match.isFavorite) return false;
+
+      if (selectedLeague && match.league !== selectedLeague) return false;
+
+      const normalizedCountryFilter = countryFilter.trim().toLowerCase();
+      if (normalizedCountryFilter && match.country?.toLowerCase() !== normalizedCountryFilter) {
+        return false;
+      }
+
+      if (normalizedMatchQuery) {
+        const haystack =
+          `${match.homeTeam} ${match.awayTeam} ${match.league ?? ""} ${match.country ?? ""}`.toLowerCase();
+        if (!haystack.includes(normalizedMatchQuery)) return false;
+      }
+
+      return true;
+    });
+  }, [matches, statusFilter, selectedLeague, countryFilter, normalizedMatchQuery]);
+
+  // Group matches by league, prioritizing European leagues
+  const matchesByLeague = useMemo(() => {
+    const grouped: Record<string, Match[]> = {};
+
+    filteredMatches.forEach((match) => {
+      const league = match.league ?? "Other";
+      if (!grouped[league]) {
+        grouped[league] = [];
+      }
+      grouped[league].push(match);
+    });
+
+    // Sort leagues by priority (European leagues first), then alphabetically
+    return Object.entries(grouped).sort(([leagueA, matchesA], [leagueB, matchesB]) => {
+      const priorityA = getLeaguePriority(leagueA);
+      const priorityB = getLeaguePriority(leagueB);
+
+      if (priorityA !== priorityB) {
+        return priorityB - priorityA; // Higher priority first
+      }
+
+      return leagueA.localeCompare(leagueB);
+    });
+  }, [filteredMatches]);
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -250,7 +303,7 @@ export default function Chat() {
 
   const summaryCards = [
     {
-      label: "Total fixtures",
+      label: "Today's fixtures",
       value: totalMatches,
       icon: Globe,
       accent: "bg-primary/10 text-primary",
@@ -282,107 +335,134 @@ export default function Chat() {
     { value: "favorites", label: "Favorites" },
   ];
 
-  const normalizedMatchQuery = matchSearch.trim().toLowerCase();
-
-  const filteredMatches = matches.filter((match) => {
-    if (statusFilter === "live" && !isLiveMatch(match)) return false;
-    if (statusFilter === "upcoming" && !isUpcomingMatch(match)) return false;
-    if (statusFilter === "favorites" && !match.isFavorite) return false;
-
-    if (normalizedMatchQuery) {
-      const haystack =
-        `${match.homeTeam} ${match.awayTeam} ${match.league ?? ""} ${match.country ?? ""}`.toLowerCase();
-      if (!haystack.includes(normalizedMatchQuery)) return false;
-    }
-
-    return true;
-  });
-
   const filtersApplied = Boolean(
-    normalizedMatchQuery || countryFilter.trim() || statusFilter !== "all"
+    normalizedMatchQuery || countryFilter.trim() || statusFilter !== "all" || selectedLeague
   );
 
   const handleResetFilters = () => {
     setMatchSearch("");
     setCountryFilter("");
     setStatusFilter("all");
+    setSelectedLeague(null);
   };
 
-  // Group matches by country, then by league
-  const matchesByCountry = filteredMatches.reduce(
-    (acc, match) => {
-      const country = match.country ?? "International";
-      const league = match.league ?? "Other";
-
-      if (!acc[country]) {
-        acc[country] = {};
-      }
-
-      if (!acc[country][league]) {
-        acc[country][league] = [];
-      }
-
-      acc[country][league].push(match);
-      return acc;
-    },
-    {} as Record<string, Record<string, Match[]>>
-  );
-
-  const normalizedFilter = countryFilter.trim().toLowerCase();
-  const countriesData = Object.entries(matchesByCountry)
-    .map(([country, leagues]) => {
-      const matchCount = Object.values(leagues).reduce(
-        (sum, leagueMatches) => sum + leagueMatches.length,
-        0
-      );
-      return {
-        country,
-        leagues,
-        matchCount,
-      };
-    })
-    .filter(({ country }) =>
-      normalizedFilter ? country.toLowerCase().includes(normalizedFilter) : true
-    )
-    .sort((countryA, countryB) => {
-      const rankA = PRIORITY_COUNTRY_RANK.get(countryA.country.toLowerCase());
-      const rankB = PRIORITY_COUNTRY_RANK.get(countryB.country.toLowerCase());
-
-      if (rankA !== undefined && rankB !== undefined) {
-        return rankA - rankB;
-      }
-      if (rankA !== undefined) {
-        return -1;
-      }
-      if (rankB !== undefined) {
-        return 1;
-      }
-      return countryA.country.localeCompare(countryB.country);
+  const renderCompactMatchRow = (match: Match) => {
+    const statusLabel = getMatchStatusLabel(match);
+    const statusBadgeClasses = getStatusBadgeClasses(match);
+    const kickoffTime = match.kickoffTime.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
     });
 
-  const renderTeam = (team: {
-    name: string;
-    logo: string;
-    label: string;
-    alignRight?: boolean;
-  }) => (
-    <div
-      className={`flex items-center gap-3 ${team.alignRight ? "flex-row-reverse text-right" : ""}`}
-    >
-      <Avatar className="size-11 border border-border/60 shadow-sm">
-        <AvatarImage src={team.logo} alt={team.name} />
-        <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
-          {getInitials(team.name)}
-        </AvatarFallback>
-      </Avatar>
-      <div className={`space-y-1 ${team.alignRight ? "text-right" : "text-left"}`}>
-        <p className="text-sm font-semibold text-foreground">{team.name}</p>
-        <Badge variant="outline" className="text-[10px] uppercase tracking-wide">
-          {team.label}
-        </Badge>
+    return (
+      <div
+        key={match.id}
+        className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 px-4 py-3 border-b border-border/50 hover:bg-card/50 transition-colors group"
+      >
+        {/* Mobile: Top row with teams */}
+        <div className="flex items-center gap-3 flex-1 min-w-0 w-full sm:w-auto">
+          <Avatar className="size-8 flex-shrink-0">
+            <AvatarImage src={match.homeTeamLogo} alt={match.homeTeam} />
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              {getInitials(match.homeTeam)}
+            </AvatarFallback>
+          </Avatar>
+          <span className="text-sm font-medium text-foreground truncate flex-1">
+            {match.homeTeam}
+          </span>
+          <span className="text-xs text-muted-foreground sm:hidden">vs</span>
+          <span className="text-sm font-medium text-foreground truncate sm:hidden">
+            {match.awayTeam}
+          </span>
+        </div>
+
+        {/* Desktop: Status and time */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
+            {statusLabel}
+          </Badge>
+          <span className="text-xs text-muted-foreground font-mono w-12 text-center">
+            {kickoffTime}
+          </span>
+        </div>
+
+        {/* Mobile: Status and time */}
+        <div className="flex sm:hidden items-center gap-2 w-full justify-between">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
+              {statusLabel}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono">{kickoffTime}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              className={`h-8 w-8 rounded-full ${
+                match.isFavorite
+                  ? "text-destructive"
+                  : "text-muted-foreground hover:text-destructive"
+              }`}
+              onClick={() => toggleFavorite(match.id)}
+            >
+              <Heart className={`h-4 w-4 ${match.isFavorite ? "fill-current" : ""}`} />
+            </Button>
+            {!isFinishedMatch(match) && (
+              <Button
+                variant="default"
+                size="sm"
+                className="h-8 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                onClick={() => handleAnalysisClick(match)}
+              >
+                <MessageSquare className="h-3 w-3" />
+                <span className="text-xs">Analyze</span>
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Desktop: Away team */}
+        <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0 justify-end">
+          <span className="text-sm font-medium text-foreground truncate text-right">
+            {match.awayTeam}
+          </span>
+          <Avatar className="size-8 flex-shrink-0">
+            <AvatarImage src={match.awayTeamLogo} alt={match.awayTeam} />
+            <AvatarFallback className="bg-primary/10 text-primary text-xs">
+              {getInitials(match.awayTeam)}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+
+        {/* Desktop: Actions */}
+        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className={`h-8 w-8 rounded-full ${
+              match.isFavorite ? "text-destructive" : "text-muted-foreground hover:text-destructive"
+            }`}
+            onClick={() => toggleFavorite(match.id)}
+          >
+            <Heart className={`h-4 w-4 ${match.isFavorite ? "fill-current" : ""}`} />
+          </Button>
+          {!isFinishedMatch(match) && (
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+              onClick={() => handleAnalysisClick(match)}
+            >
+              <MessageSquare className="h-3 w-3" />
+              <span className="text-xs">Analyze</span>
+            </Button>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const handleAnalysisClick = (match: Match) => {
     setSelectedMatch(match);
@@ -391,106 +471,108 @@ export default function Chat() {
 
   return (
     <>
-      <div className="h-screen flex flex-col bg-gradient-to-b from-background to-secondary pt-16 pb-16 md:pb-0">
+      <div className="h-screen flex flex-col bg-background pt-16 pb-16 md:pb-0">
         <TopNav />
-        <header className="border-b border-border bg-card/50 backdrop-blur-sm p-4">
-          <div className="max-w-6xl mx-auto">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Today's Matches
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Select a match to get AI-powered analysis
-            </p>
-          </div>
-        </header>
 
-        <ScrollArea className="flex-1 p-4">
-          <div className="max-w-6xl mx-auto space-y-6 pb-4">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {summaryCards.map((card) => (
-                <Card key={card.label} className="border-border/70 bg-card/70 backdrop-blur">
-                  <CardContent className="flex items-center justify-between p-5">
-                    <div>
-                      <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                        {card.label}
-                      </p>
-                      <p className="text-2xl font-semibold text-foreground">{card.value}</p>
-                    </div>
-                    <div className={`rounded-2xl p-3 ${card.accent}`}>
-                      <card.icon className="h-5 w-5" />
-                    </div>
+        {/* Mobile: Filter buttons */}
+        <div className="lg:hidden flex items-center gap-2 px-4 py-2 border-b border-border bg-card">
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-9 gap-2"
+            onClick={() => setLeftSidebarOpen(true)}
+          >
+            <Menu className="h-4 w-4" />
+            <span className="text-xs">Filters</span>
+          </Button>
+          {selectedLeague && (
+            <Badge variant="secondary" className="text-xs">
+              {selectedLeague}
+            </Badge>
+          )}
+        </div>
+
+        <div className="flex-1 flex overflow-hidden">
+          {/* Left Sidebar - Desktop */}
+          <div className="hidden lg:block flex-shrink-0">
+            <FixturesLeftSidebar
+              matches={matches}
+              selectedLeague={selectedLeague}
+              onLeagueSelect={setSelectedLeague}
+              countryFilter={countryFilter}
+              onCountryFilterChange={setCountryFilter}
+            />
+          </div>
+
+          {/* Left Sidebar - Mobile */}
+          <Sheet open={leftSidebarOpen} onOpenChange={setLeftSidebarOpen}>
+            <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+              <FixturesLeftSidebar
+                matches={matches}
+                selectedLeague={selectedLeague}
+                onLeagueSelect={(league) => {
+                  setSelectedLeague(league);
+                  setLeftSidebarOpen(false);
+                }}
+                countryFilter={countryFilter}
+                onCountryFilterChange={setCountryFilter}
+              />
+            </SheetContent>
+          </Sheet>
+
+          {/* Main Content */}
+          <ScrollArea className="flex-1 p-4">
+            <div className="max-w-full mx-auto space-y-6 pb-4">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {summaryCards.map((card) => (
+                  <Card key={card.label} className="border-border bg-card">
+                    <CardContent className="flex items-center justify-between p-5">
+                      <div>
+                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                          {card.label}
+                        </p>
+                        <p className="text-2xl font-semibold text-foreground">{card.value}</p>
+                      </div>
+                      <div className={`rounded-2xl p-3 ${card.accent}`}>
+                        <card.icon className="h-5 w-5" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {subscriptionError && (
+                <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
+                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <span>{subscriptionError}</span>
+                    <Button variant="outline" size="sm" onClick={refreshAll}>
+                      Retry
+                    </Button>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              )}
 
-            {subscriptionError && (
-              <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
-                <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                  <span>{subscriptionError}</span>
-                  <Button variant="outline" size="sm" onClick={refreshAll}>
-                    Retry
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {usage && (
-              <Card className="border-border/70 bg-card/80 backdrop-blur">
-                <CardContent className="grid gap-4 p-4 sm:grid-cols-[1.3fr_1fr_auto] sm:items-center">
-                  <div className="space-y-2">
-                    <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                      {subscriptionPlan?.plan ?? "FREE"} plan
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <p className="text-2xl font-semibold text-foreground">
-                        {usage.monthlyRemaining}
-                      </p>
-                      <p className="text-sm text-muted-foreground">
-                        prompts left of {usage.monthlyAllowance}
-                      </p>
-                    </div>
-                    <Progress value={usagePercent} className="h-2" />
-                  </div>
-                  <div className="space-y-1 text-sm text-muted-foreground">
-                    <p>Used {usage.monthlyUsed} this month</p>
-                    <p>Add-on credits: {usage.addonCreditsRemaining ?? 0}</p>
-                  </div>
-                  <Button
-                    asChild
-                    variant="default"
-                    size="sm"
-                    className="justify-self-start bg-gradient-to-r from-primary to-accent text-primary-foreground sm:justify-self-end"
-                    onClick={() => track("manage_plan_click_dashboard")}
-                  >
-                    <Link to="/plans">Manage plan</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="space-y-4 rounded-3xl border border-border/60 bg-card/60 p-4 backdrop-blur-sm">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="relative w-full lg:max-w-lg">
+              <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-3">
+                <div className="relative flex-1 min-w-0">
                   <Search
                     className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
                     size={16}
                   />
                   <Input
-                    className="pl-10"
+                    className="pl-10 h-9 text-sm"
                     placeholder="Search clubs, leagues, or matchups..."
                     value={matchSearch}
                     onChange={(event) => setMatchSearch(event.target.value)}
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   {statusOptions.map((option) => (
                     <Button
                       key={option.value}
                       type="button"
                       variant={statusFilter === option.value ? "default" : "outline"}
                       size="sm"
-                      className={`rounded-full ${
+                      className={`h-9 text-xs rounded-full flex-shrink-0 ${
                         statusFilter === option.value ? "" : "border-border/60"
                       }`}
                       onClick={() => setStatusFilter(option.value)}
@@ -498,211 +580,105 @@ export default function Chat() {
                       {option.label}
                     </Button>
                   ))}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="relative w-full md:max-w-sm">
-                  <Globe
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={16}
-                  />
-                  <Input
-                    className="pl-10"
-                    placeholder="Focus on a specific country..."
-                    value={countryFilter}
-                    onChange={(event) => setCountryFilter(event.target.value)}
-                  />
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {PRIORITY_COUNTRIES.map((country) => (
-                    <Button
-                      type="button"
-                      key={country}
-                      size="sm"
-                      variant={countryFilter === country ? "default" : "outline"}
-                      className="rounded-full"
-                      onClick={() => setCountryFilter((prev) => (prev === country ? "" : country))}
-                    >
-                      {country}
-                    </Button>
-                  ))}
                   {filtersApplied && (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="ml-auto text-xs text-muted-foreground hover:text-primary"
+                      className="h-9 text-xs text-muted-foreground hover:text-primary flex-shrink-0"
                       onClick={handleResetFilters}
                     >
-                      Reset filters
+                      Reset
                     </Button>
                   )}
                 </div>
               </div>
-            </div>
 
-            {countriesData.length === 0 ? (
-              <Card className="border border-dashed bg-card/40">
-                <CardContent className="py-8 text-center text-muted-foreground">
-                  No matches fit your filters yet. Try adjusting your search or filters.
-                </CardContent>
-              </Card>
-            ) : (
-              <Accordion type="multiple" className="space-y-4">
-                {countriesData.map(({ country, leagues, matchCount }) => (
-                  <AccordionItem
-                    key={country}
-                    value={country}
-                    className="rounded-2xl border bg-card/40 px-4"
-                  >
-                    <AccordionTrigger className="text-lg font-semibold text-foreground">
-                      <div className="flex w-full items-center justify-between">
-                        <span>{country}</span>
-                        <Badge variant="secondary" className="text-xs font-semibold">
-                          {matchCount} {matchCount === 1 ? "Match" : "Matches"}
-                        </Badge>
-                      </div>
-                    </AccordionTrigger>
-                    <AccordionContent>
-                      <div className="space-y-6 pt-2">
-                        {Object.entries(leagues)
-                          .sort(([leagueA], [leagueB]) => leagueA.localeCompare(leagueB))
-                          .map(([league, leagueMatches]) => (
-                            <div key={league} className="space-y-3">
-                              <div className="flex items-center gap-2">
-                                <Avatar className="size-8">
-                                  <AvatarImage
-                                    src={leagueMatches[0].leagueIcon}
-                                    alt={league}
-                                    width={24}
-                                    height={24}
-                                  />
-                                  <AvatarFallback className="bg-primary/10">
-                                    {leagueMatches[0].leagueIcon?.split("/").pop()?.split(".")[0] ??
-                                      league
-                                        .split(" ")
-                                        .map((name) => name[0])
-                                        .join("")}
-                                  </AvatarFallback>
-                                </Avatar>
-                                <h3 className="text-base font-semibold text-foreground">
-                                  {league}
-                                </h3>
-                              </div>
-                              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                                {leagueMatches.map((match) => {
-                                  const kickoffLabel = formatKickoffTime(match.kickoffTime);
-                                  const statusLabel = getMatchStatusLabel(match);
-                                  const statusBadgeClasses = getStatusBadgeClasses(match);
+              {matchesByLeague.length === 0 ? (
+                <Card className="border border-dashed bg-card">
+                  <CardContent className="py-8 text-center text-muted-foreground">
+                    No matches fit your filters yet. Try adjusting your search or filters.
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-6">
+                  {matchesByLeague.map(([league, leagueMatches]) => {
+                    const leaguePriority = getLeaguePriority(league);
+                    const isPriorityLeague = leaguePriority > 0;
 
-                                  return (
-                                    <Card
-                                      key={match.id}
-                                      className="group relative overflow-hidden border border-border/60 bg-card/70 backdrop-blur transition hover:border-primary/50"
-                                    >
-                                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/15 via-transparent to-accent/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                                      <CardContent className="relative z-10 p-5 space-y-5">
-                                        <div className="flex items-center justify-between gap-2 text-xs uppercase tracking-wide text-muted-foreground">
-                                          <Badge
-                                            variant="secondary"
-                                            className="text-[11px] font-medium"
-                                          >
-                                            {kickoffLabel}
-                                          </Badge>
-                                          <Badge
-                                            variant="outline"
-                                            className={`text-[11px] font-semibold ${statusBadgeClasses}`}
-                                          >
-                                            {statusLabel}
-                                          </Badge>
-                                        </div>
-
-                                        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-                                          {renderTeam({
-                                            name: match.homeTeam,
-                                            logo: match.homeTeamLogo,
-                                            label: "Home",
-                                          })}
-
-                                          <div className="flex flex-col items-center gap-1 text-xs uppercase tracking-[0.4em] text-muted-foreground">
-                                            <span>vs</span>
-                                            <span className="text-lg font-semibold tracking-normal text-foreground">
-                                              {match.kickoffTime.toLocaleTimeString([], {
-                                                hour: "2-digit",
-                                                minute: "2-digit",
-                                              })}
-                                            </span>
-                                          </div>
-
-                                          {renderTeam({
-                                            name: match.awayTeam,
-                                            logo: match.awayTeamLogo,
-                                            label: "Away",
-                                            alignRight: true,
-                                          })}
-                                        </div>
-
-                                        <div className="flex flex-wrap items-center gap-3">
-                                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                            {match.country && (
-                                              <Badge variant="outline" className="text-[11px]">
-                                                {match.country}
-                                              </Badge>
-                                            )}
-                                            <span className="font-medium text-foreground/80">
-                                              {match.league}
-                                            </span>
-                                          </div>
-
-                                          <div className="ml-auto flex items-center gap-2">
-                                            <Button
-                                              type="button"
-                                              variant="ghost"
-                                              size="icon"
-                                              className={`rounded-full border border-border/60 text-muted-foreground transition-colors ${
-                                                match.isFavorite
-                                                  ? "text-destructive border-destructive/40"
-                                                  : ""
-                                              }`}
-                                              onClick={() => toggleFavorite(match.id)}
-                                            >
-                                              <Heart
-                                                className={`h-4 w-4 ${
-                                                  match.isFavorite
-                                                    ? "fill-current text-destructive"
-                                                    : ""
-                                                }`}
-                                              />
-                                            </Button>
-                                            {!isFinishedMatch(match) && (
-                                              <Button
-                                                variant="default"
-                                                size="sm"
-                                                className="flex-1 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/20 md:flex-none"
-                                                onClick={() => handleAnalysisClick(match)}
-                                              >
-                                                <MessageSquare className="h-4 w-4" />
-                                                Match Insight
-                                              </Button>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  );
-                                })}
+                    return (
+                      <Card
+                        key={league}
+                        className={`border bg-card ${
+                          isPriorityLeague ? "border-primary/30" : "border-border"
+                        }`}
+                      >
+                        <CardContent className="p-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 px-4 py-3 border-b border-border bg-muted/50">
+                            <div className="flex items-center flex-1 min-w-0">
+                              <Avatar className="size-7 flex-shrink-0 mr-3">
+                                <AvatarImage src={leagueMatches[0]?.leagueIcon} alt={league} />
+                                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                  {league
+                                    .split(" ")
+                                    .map((name) => name[0])
+                                    .join("")
+                                    .slice(0, 2)
+                                    .toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <h3 className="text-sm font-bold text-foreground flex-1 min-w-0 truncate sm:mr-4">
+                                {league}
+                              </h3>
+                            </div>
+                            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                              {leagueMatches[0]?.country && (
+                                <div className="flex items-center gap-3 sm:mr-3">
+                                  <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
+                                  <Badge
+                                    variant="outline"
+                                    className="text-xs font-medium px-2.5 py-0.5 flex-shrink-0"
+                                  >
+                                    {leagueMatches[0].country}
+                                  </Badge>
+                                </div>
+                              )}
+                              <div className="flex items-center gap-3">
+                                <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
+                                <Badge
+                                  variant="secondary"
+                                  className="text-xs font-semibold px-2.5 py-0.5 flex-shrink-0 bg-muted text-muted-foreground"
+                                >
+                                  {leagueMatches.length}{" "}
+                                  {leagueMatches.length === 1 ? "match" : "matches"}
+                                </Badge>
                               </div>
                             </div>
-                          ))}
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            )}
+                          </div>
+                          <div className="divide-y divide-border/50">
+                            {leagueMatches.map((match) => renderCompactMatchRow(match))}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+
+          {/* Right Sidebar - Desktop */}
+          <div className="hidden xl:block flex-shrink-0">
+            <FixturesRightSidebar />
           </div>
-        </ScrollArea>
+
+          {/* Right Sidebar - Mobile */}
+          <Sheet open={rightSidebarOpen} onOpenChange={setRightSidebarOpen}>
+            <SheetContent side="right" className="w-[280px] sm:w-[320px] p-0">
+              <FixturesRightSidebar />
+            </SheetContent>
+          </Sheet>
+        </div>
 
         <ChatDialog
           match={selectedMatch}

@@ -258,7 +258,8 @@ export default function ChatDialog({
                 </span>
                 <span className="text-foreground max-sm:flex-1">
                   <span className="sm:hidden">
-                    {usage.monthlyRemaining} {usage.monthlyRemaining === 1 ? 'prompt' : 'prompts'} left
+                    {usage.monthlyRemaining} {usage.monthlyRemaining === 1 ? "prompt" : "prompts"}{" "}
+                    left
                     {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining}` : ""}
                   </span>
                   <span className="max-sm:hidden">
