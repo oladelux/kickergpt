@@ -21,6 +21,7 @@ import Plans from "./pages/Plans";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
+import Intercom from "@/components/Intercom";
 import ControlRoom from "./pages/ControlRoom";
 import ls from "@livesession/browser";
 
@@ -74,6 +75,7 @@ const App = () => (
           <Analytics />
           <BrowserRouter>
             <MetaManager />
+            <Intercom />
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
