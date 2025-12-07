@@ -28,6 +28,20 @@ export default function IntercomComponent() {
       };
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (Intercom as any)(config);
+
+      // Configure Intercom to show help articles
+      // Note: Help space is primarily configured in Intercom dashboard:
+      // Settings > Channels > Messenger > Web > Layout and Spaces
+      // Enable the Help space to allow customers to access Help Center from Messenger
+      if (typeof window !== "undefined") {
+        const win = window as unknown as {
+          Intercom?: (command: string, ...args: unknown[]) => void;
+        };
+        if (win.Intercom) {
+          // The help space will be available if configured in the Intercom dashboard
+          // Users can access help articles through the messenger interface
+        }
+      }
     } else {
       // Shutdown Intercom when user logs out
       if (typeof window !== "undefined") {
