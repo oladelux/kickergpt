@@ -24,15 +24,15 @@ class AuthService {
     lastName: string,
     email: string,
     password: string,
-    planId?: string
+    countryCode: string
   ): Observable<AuthResponse> {
-    return from(api.auth.signup({ firstName, lastName, email, password })).pipe(
-      switchMap(() => this.login(email, password))
+    return from(api.auth.signup({ firstName, lastName, email, password, countryCode })).pipe(
+      switchMap(() => this.login(email, password, countryCode))
     );
   }
 
-  login(email: string, password: string): Observable<AuthResponse> {
-    return from(api.auth.login({ email, password })).pipe(
+  login(email: string, password: string, countryCode: string): Observable<AuthResponse> {
+    return from(api.auth.login({ email, password, countryCode })).pipe(
       map((response) => this.normalizeAuthResponse(response)),
       tap(({ user }) => this.currentUserSubject.next(user)),
       catchError((error) => {

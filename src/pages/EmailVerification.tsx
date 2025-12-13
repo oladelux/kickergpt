@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 
 export default function EmailVerification() {
   const { resendVerificationEmail, confirmEmail, login, loading, user, isAuthenticated } =
@@ -17,6 +18,7 @@ export default function EmailVerification() {
   const [resending, setResending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [verificationAttempted, setVerificationAttempted] = useState(false);
+  const { resolvedCountryCode: geoCountryCode } = useGeoCountry();
 
   // Get email from location state or search params
   const email = (location.state as { email?: string })?.email ?? searchParams.get("email") ?? "";
@@ -53,7 +55,7 @@ export default function EmailVerification() {
               });
 
               // Auto-login the user
-              login(userEmail, password)
+              login(userEmail, password, geoCountryCode)
                 .then(() => {
                   toast({
                     title: "Welcome!",
@@ -102,6 +104,7 @@ export default function EmailVerification() {
     verifying,
     verificationAttempted,
     login,
+    geoCountryCode,
     isAuthenticated,
     user,
   ]);

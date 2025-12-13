@@ -27,13 +27,13 @@ export const useAuth = () => {
     lastName: string,
     email: string,
     password: string,
-    planId?: string
+    countryCode: string
   ) => {
     setLoading(true);
     setError(null);
 
     return new Promise<AuthResponse>((resolve, reject) => {
-      authService.signup(firstName, lastName, email, password, planId).subscribe({
+      authService.signup(firstName, lastName, email, password, countryCode).subscribe({
         next: (response) => {
           setLoading(false);
           resolve(response);
@@ -47,12 +47,12 @@ export const useAuth = () => {
     });
   };
 
-  const login = (email: string, password: string) => {
+  const login = (email: string, password: string, countryCode: string) => {
     setLoading(true);
     setError(null);
 
     return new Promise<AuthResponse>((resolve, reject) => {
-      authService.login(email, password).subscribe({
+      authService.login(email, password, countryCode).subscribe({
         next: (response) => {
           setLoading(false);
           resolve(response);

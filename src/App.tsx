@@ -18,6 +18,7 @@ import Favorites from "./pages/Favorites";
 import Profile from "./pages/Profile";
 import History from "./pages/History";
 import Plans from "./pages/Plans";
+import VerifyPayment from "./pages/VerifyPayment";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
@@ -90,6 +91,14 @@ const App = () => (
                 element={
                   <ProtectedRoute>
                     <Plans />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/verify-payment"
+                element={
+                  <ProtectedRoute>
+                    <VerifyPayment />
                   </ProtectedRoute>
                 }
               />

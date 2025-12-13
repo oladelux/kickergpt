@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 
 const onboardingPillars = [
   {
@@ -32,6 +33,7 @@ export default function SignUp() {
     return state?.from?.pathname ?? "/fixtures";
   }, [location.state]);
   const [showPassword, setShowPassword] = useState(false);
+  const { resolvedCountryCode: geoCountryCode } = useGeoCountry();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -64,7 +66,7 @@ export default function SignUp() {
         formData.lastName,
         formData.email,
         formData.password,
-        undefined
+        geoCountryCode
       );
       toast({
         title: "Account created",

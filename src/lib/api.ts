@@ -443,11 +443,12 @@ export const api = {
       lastName: string;
       email: string;
       password: string;
+      countryCode: string;
     }) => {
       await apiRequest("/auth/email/register", "POST", data);
     },
 
-    login: async (data: { email: string; password: string }) => {
+    login: async (data: { email: string; password: string; countryCode: string }) => {
       const res = await apiRequest("/auth/email/login", "POST", data);
       const json = res.status === 204 ? {} : await res.json();
       const token = json.token ?? json.accessToken;
@@ -666,6 +667,10 @@ export const api = {
     },
     selectPlan: async (data: { plan: "FREE" | "PRO"; countryCode?: string }) => {
       const res = await apiRequest("/subscriptions/select-plan", "POST", data);
+      return res.status === 204 ? null : res.json();
+    },
+    verify: async (data: { reference: string }) => {
+      const res = await apiRequest("/subscriptions/verify", "POST", data);
       return res.status === 204 ? null : res.json();
     },
   },

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 
 const loginFeatures = [
   "Access pre-match analysis for today's fixtures.",
@@ -28,6 +29,8 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const { resolvedCountryCode: geoCountryCode } = useGeoCountry();
+  console.log(geoCountryCode);
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -40,7 +43,7 @@ export default function Login() {
     if (loading) return;
 
     try {
-      await login(email, password);
+      await login(email, password, geoCountryCode);
       toast({
         title: "Signed in",
         description: "Welcome back!",

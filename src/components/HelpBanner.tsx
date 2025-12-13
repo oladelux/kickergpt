@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const HELP_ARTICLE_URL = "https://help.kickergpt.com/en/articles/13034068-how-to-get-the-best-out-of-kickergpt";
+const HELP_ARTICLE_URL =
+  "https://help.kickergpt.com/en/articles/13034068-how-to-get-the-best-out-of-kickergpt";
 const BANNER_DISMISSED_KEY = "help-banner-dismissed";
 
 export default function HelpBanner() {
@@ -49,4 +50,3 @@ export default function HelpBanner() {
     </div>
   );
 }
-
