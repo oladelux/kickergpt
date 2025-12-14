@@ -15,15 +15,15 @@ import { cn } from "@/lib/utils";
 
 interface FixturesLeftSidebarProps {
   matches: Match[];
-  selectedLeague?: string | null;
-  onLeagueSelect?: (league: string | null) => void;
+  selectedLeagueKey?: string | null;
+  onLeagueSelect?: (leagueKey: string | null) => void;
   countryFilter: string;
   onCountryFilterChange: (value: string) => void;
 }
 
 export default function FixturesLeftSidebar({
   matches,
-  selectedLeague,
+  selectedLeagueKey,
   onLeagueSelect,
   countryFilter,
   onCountryFilterChange,
@@ -35,7 +35,7 @@ export default function FixturesLeftSidebar({
 
     matches.forEach((match) => {
       const country = match.country ?? "International";
-      const league = match.league ?? "Other";
+      const leagueKey = match.leagueKey;
 
       // Filter by country search if provided
       if (normalizedFilter && !country.toLowerCase().includes(normalizedFilter)) {
@@ -46,11 +46,11 @@ export default function FixturesLeftSidebar({
         grouped[country] = {};
       }
 
-      if (!grouped[country][league]) {
-        grouped[country][league] = [];
+      if (!grouped[country][leagueKey]) {
+        grouped[country][leagueKey] = [];
       }
 
-      grouped[country][league].push(match);
+      grouped[country][leagueKey].push(match);
     });
 
     // Convert to array and sort countries alphabetically
@@ -58,12 +58,13 @@ export default function FixturesLeftSidebar({
       .map(([country, leagues]) => ({
         country,
         leagues: Object.entries(leagues)
-          .map(([league, leagueMatches]) => ({
-            league,
+          .map(([leagueKey, leagueMatches]) => ({
+            leagueKey,
+            leagueName: leagueMatches[0]?.league ?? "Other",
             matches: leagueMatches,
             count: leagueMatches.length,
           }))
-          .sort((a, b) => a.league.localeCompare(b.league)),
+          .sort((a, b) => a.leagueName.localeCompare(b.leagueName)),
       }))
       .sort((a, b) => a.country.localeCompare(b.country));
   }, [matches, countryFilter]);
@@ -102,12 +103,12 @@ export default function FixturesLeftSidebar({
                 </AccordionTrigger>
                 <AccordionContent className="pt-1 pb-2">
                   <div className="space-y-1 pl-2">
-                    {leagues.map(({ league, matches: leagueMatches, count }) => {
-                      const isSelected = selectedLeague === league;
+                    {leagues.map(({ leagueKey, leagueName, matches: leagueMatches, count }) => {
+                      const isSelected = selectedLeagueKey === leagueKey;
                       return (
                         <button
-                          key={league}
-                          onClick={() => onLeagueSelect?.(isSelected ? null : league)}
+                          key={leagueKey}
+                          onClick={() => onLeagueSelect?.(isSelected ? null : leagueKey)}
                           className={cn(
                             "w-full flex items-center gap-2 px-3 py-2 text-sm rounded-md transition-colors text-left",
                             isSelected
@@ -116,12 +117,9 @@ export default function FixturesLeftSidebar({
                           )}
                         >
                           <Avatar className="size-5">
-                            <AvatarImage
-                              src={leagueMatches[0]?.leagueIcon}
-                              alt={league}
-                            />
+                            <AvatarImage src={leagueMatches[0]?.leagueIcon} alt={leagueName} />
                             <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                              {league
+                              {leagueName
                                 .split(" ")
                                 .map((n) => n[0])
                                 .join("")
@@ -129,7 +127,7 @@ export default function FixturesLeftSidebar({
                                 .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          <span className="flex-1 truncate">{league}</span>
+                          <span className="flex-1 truncate">{leagueName}</span>
                           <Badge variant="outline" className="text-xs">
                             {count}
                           </Badge>
@@ -146,4 +144,3 @@ export default function FixturesLeftSidebar({
     </div>
   );
 }
-

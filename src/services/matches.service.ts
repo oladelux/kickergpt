@@ -10,12 +10,25 @@ export interface Match {
   awayTeamLogo: string;
   league: string;
   leagueId?: string;
+  leagueKey: string;
   country?: string;
   leagueIcon: string;
   kickoffTime: Date;
   status?: SportmonksFixtureState;
   isFavorite: boolean;
 }
+
+// Utility function to generate unique league keys
+const generateLeagueKey = (leagueId?: string, country?: string, leagueName?: string): string => {
+  // Use leagueId as the primary unique identifier when available
+  if (leagueId) {
+    return `id::${leagueId}`;
+  }
+  // Fall back to composite key using country and league name
+  const countryPart = country ?? "unknown";
+  const leaguePart = leagueName ?? "Unknown League";
+  return `${countryPart}::${leaguePart}`;
+};
 
 const FAVORITES_STORAGE_KEY = "boot-room:favorites";
 
@@ -70,6 +83,9 @@ class MatchesService {
     const id = String(fixture.id);
     const kickoffTime = this.normalizeDate(fixture.starting_at);
     const participants = this.resolveParticipants(fixture.participants, fixture.name);
+    const leagueName = fixture.league?.name ?? "Unknown League";
+    const leagueId = fixture.league?.id ? String(fixture.league.id) : undefined;
+    const country = fixture.league?.country?.name ?? undefined;
 
     return {
       id,
@@ -77,9 +93,10 @@ class MatchesService {
       awayTeam: participants.away.name,
       homeTeamLogo: participants.home.logo,
       awayTeamLogo: participants.away.logo,
-      league: fixture.league?.name ?? "Unknown League",
-      leagueId: fixture.league?.id ? String(fixture.league.id) : undefined,
-      country: fixture.league?.country?.name ?? undefined,
+      league: leagueName,
+      leagueId,
+      leagueKey: generateLeagueKey(leagueId, country, leagueName),
+      country,
       leagueIcon: fixture.league?.image_path ?? "",
       kickoffTime,
       status: this.normalizeState(fixture.state),

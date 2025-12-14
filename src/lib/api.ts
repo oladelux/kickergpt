@@ -543,7 +543,7 @@ export const api = {
         searchParams.set("timezone", params.timezone);
       }
       const query = searchParams.toString();
-      const res = await apiRequest(`/matches/today${query ? `?${query}` : ""}`, "GET");
+      const res = await apiRequest(`/matches/three-days${query ? `?${query}` : ""}`, "GET");
       return res.json();
     },
 
