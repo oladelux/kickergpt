@@ -673,5 +673,13 @@ export const api = {
       const res = await apiRequest("/subscriptions/verify", "POST", data);
       return res.status === 204 ? null : res.json();
     },
+    addonPurchase: async (data: { addonType: string }) => {
+      const res = await apiRequest("/subscriptions/addon-purchase", "POST", data);
+      return res.status === 204 ? null : res.json();
+    },
+    addonPurchaseVerify: async (data: { reference: string }) => {
+      const res = await apiRequest("/subscriptions/addon-purchase-verify", "POST", data);
+      return res.status === 204 ? null : res.json();
+    },
   },
 };

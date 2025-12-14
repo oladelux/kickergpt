@@ -7,6 +7,7 @@ export interface User {
   name: string;
   email: string;
   planId: string;
+  countryCode: string;
 }
 
 export interface AuthResponse {
@@ -141,6 +142,7 @@ class AuthService {
         name: "",
         email: "",
         planId: "",
+        countryCode: "",
       };
     }
 
@@ -153,6 +155,7 @@ class AuthService {
       name,
       email: data.email ?? "",
       planId: data.planId ?? data.plan_id ?? data.subscriptionPlanId ?? "",
+      countryCode: data.countryCode ?? data.country_code ?? "",
     };
   }
 }

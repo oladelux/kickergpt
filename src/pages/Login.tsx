@@ -30,7 +30,6 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const { resolvedCountryCode: geoCountryCode } = useGeoCountry();
-  console.log(geoCountryCode);
 
   useEffect(() => {
     if (isAuthenticated && user) {

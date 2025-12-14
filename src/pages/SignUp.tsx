@@ -1,16 +1,23 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import type { Location } from "react-router-dom";
-import { Check, Eye, EyeOff, Mail, Lock, User } from "lucide-react";
+import { Check, Eye, EyeOff, Mail, Lock, User, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
-import { useGeoCountry } from "@/hooks/useGeoCountry";
+import { COUNTRIES } from "@/constants/countries";
 
 const onboardingPillars = [
   {
@@ -33,12 +40,12 @@ export default function SignUp() {
     return state?.from?.pathname ?? "/fixtures";
   }, [location.state]);
   const [showPassword, setShowPassword] = useState(false);
-  const { resolvedCountryCode: geoCountryCode } = useGeoCountry();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     password: "",
+    countryCode: "",
     agreeToTerms: false,
   });
 
@@ -59,6 +66,14 @@ export default function SignUp() {
       });
       return;
     }
+    if (!formData.countryCode) {
+      toast({
+        variant: "destructive",
+        title: "Please select your country",
+        description: "Country is required to create an account.",
+      });
+      return;
+    }
 
     try {
       await signup(
@@ -66,7 +81,7 @@ export default function SignUp() {
         formData.lastName,
         formData.email,
         formData.password,
-        geoCountryCode
+        formData.countryCode
       );
       toast({
         title: "Account created",
@@ -209,6 +224,28 @@ export default function SignUp() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="country">Country</Label>
+                <div className="relative">
+                  <Globe className="absolute left-3 top-3 h-4 w-4 text-muted-foreground z-10 pointer-events-none" />
+                  <Select
+                    value={formData.countryCode}
+                    onValueChange={(value) => setFormData({ ...formData, countryCode: value })}
+                  >
+                    <SelectTrigger className="pl-10" id="country">
+                      <SelectValue placeholder="Select your country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {COUNTRIES.map((country) => (
+                        <SelectItem key={country.code} value={country.code}>
+                          {country.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 

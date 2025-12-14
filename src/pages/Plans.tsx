@@ -6,18 +6,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api, ClientError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { useSubscriptionData, SubscriptionPlanName } from "@/hooks/useSubscription";
-import { Check, CreditCard, Loader2, Sparkles } from "lucide-react";
+import { Check, CreditCard, Loader2, Sparkles, Zap } from "lucide-react";
 import TopNav from "@/components/TopNav";
 import BottomNav from "@/components/BottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { track } from "@vercel/analytics";
 import { useGeoCountry } from "@/hooks/useGeoCountry";
+import { AddonType, ADDON_PRICING, AddonPurchaseResponse } from "@/types/subscription";
 
 type SelectPlanResponse = {
   checkoutUrl?: string | null;
 };
 
-type PendingAction = SubscriptionPlanName | "ADD_ON" | null;
+type PendingAction = SubscriptionPlanName | AddonType | null;
 
 const PLAN_OPTIONS = [
   {
@@ -31,7 +32,7 @@ const PLAN_OPTIONS = [
       "Live fixtures dashboard",
       "10 AI prompts every month",
       "Favorites & history sync",
-      "Upgrade required before buying add-ons",
+      "Can purchase addon credits anytime",
     ],
   },
   {
@@ -52,8 +53,8 @@ const PLAN_OPTIONS = [
 
 const ADD_ON_NOTES = [
   "Each prompt consumes exactly one credit.",
-  "Pro users can purchase extra credits any time.",
-  "Free users must upgrade to Pro before buying add-ons.",
+  "All users can purchase extra credits any time.",
+  "Addon credits never expire and stack with your monthly allowance.",
 ] as const;
 
 const getErrorMessage = (error: unknown) => {
@@ -110,6 +111,33 @@ export default function Plans() {
     return `${symbol}0`;
   };
 
+  const getAddonPrice = (addonType: AddonType) => {
+    const addonInfo = ADDON_PRICING[addonType];
+    const countryCode = resolvedCountryCode;
+
+    switch (countryCode) {
+      case "NG":
+        return `₦${addonInfo.priceNGN.toLocaleString()}`;
+      case "GB":
+      case "UK":
+        return `£${addonInfo.priceGBP}`;
+      case "DE":
+      case "FR":
+      case "ES":
+      case "IT":
+      case "NL":
+      case "BE":
+      case "AT":
+      case "IE":
+      case "PT":
+      case "FI":
+      case "GR":
+        return `€${addonInfo.priceEUR}`;
+      default:
+        return `$${addonInfo.priceUSD}`;
+    }
+  };
+
   const handlePlanSelect = async (plan: SubscriptionPlanName) => {
     setPendingAction(plan);
     setActionError(null);
@@ -144,33 +172,25 @@ export default function Plans() {
     }
   };
 
-  const handleBuyCredits = async () => {
-    if ((subscription?.plan ?? "FREE") !== "PRO") {
-      toast({
-        variant: "destructive",
-        title: "Upgrade required",
-        description: "Switch to Pro before purchasing extra credits.",
-      });
-      track("buy_addons_click_blocked_not_pro");
-      return;
-    }
-    track("buy_addons_click");
-    setPendingAction("ADD_ON");
+  const handleAddonPurchase = async (addonType: AddonType) => {
+    track("buy_addon_click", { addonType });
+    setPendingAction(addonType);
+    setActionError(null);
+    setError(null);
     try {
-      const response = (await api.subscriptions.selectPlan({
-        plan: "PRO",
-        countryCode: geoCountryCode,
-      })) as SelectPlanResponse | null;
+      const response = (await api.subscriptions.addonPurchase({
+        addonType,
+      })) as AddonPurchaseResponse | null;
       if (response?.checkoutUrl) {
         toast({
           title: "Redirecting to checkout",
-          description: "Complete the add-on purchase to unlock more credits.",
+          description: "Complete the addon purchase to unlock more credits.",
         });
         window.location.href = response.checkoutUrl;
         return;
       }
       toast({
-        title: "Add-on request submitted",
+        title: "Addon request submitted",
         description: "Your credits will update once the payment completes.",
       });
       await refreshAll();
@@ -180,7 +200,7 @@ export default function Plans() {
       setError(message);
       toast({
         variant: "destructive",
-        title: "Unable to start add-on checkout",
+        title: "Unable to start addon checkout",
         description: message,
       });
     } finally {
@@ -290,29 +310,6 @@ export default function Plans() {
                   </div>
                 </div>
                 <p className="text-sm text-muted-foreground">Renews: {renewalDate}</p>
-                <div className="flex flex-col gap-3 text-center md:flex-row md:items-center md:justify-between md:text-left">
-                  <p className="text-sm text-muted-foreground">
-                    Need more AI prompts before the reset? Start an add-on checkout—Pro members
-                    only.
-                  </p>
-                  <Button
-                    type="button"
-                    onClick={handleBuyCredits}
-                    disabled={pendingAction === "ADD_ON" || activePlan !== "PRO"}
-                    className="bg-gradient-to-r from-primary to-accent text-primary-foreground"
-                  >
-                    {pendingAction === "ADD_ON" ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Redirecting…
-                      </>
-                    ) : activePlan !== "PRO" ? (
-                      "Upgrade to buy credits"
-                    ) : (
-                      "Buy extra credits"
-                    )}
-                  </Button>
-                </div>
               </CardContent>
             </Card>
 
@@ -387,29 +384,179 @@ export default function Plans() {
               })}
             </div>
 
-            <Card className="border-border/70 bg-card/80 backdrop-blur">
-              <CardHeader className="flex flex-col gap-2 text-center md:text-left">
-                <div className="flex items-center justify-center gap-2 text-primary md:justify-start">
+            <div className="space-y-4">
+              <div className="space-y-2 text-center">
+                <div className="flex items-center justify-center gap-2 text-primary">
                   <CreditCard className="h-4 w-4" />
                   <span className="text-xs uppercase tracking-[0.4em]">Add-on credits</span>
                 </div>
-                <CardTitle className="text-2xl">Need more than your monthly bucket?</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 text-muted-foreground">
-                <p>
-                  Trigger an add-on checkout whenever you need more prompts. Credits post
-                  immediately after payment so you can keep asking Kickergpt about the next match.
+                <h2 className="text-3xl font-bold tracking-tight">
+                  Need more than your monthly bucket?
+                </h2>
+                <p className="text-muted-foreground max-w-2xl mx-auto">
+                  Purchase extra credits anytime. Credits post immediately after payment so you can
+                  keep asking KickerGPT about the next match.
                 </p>
-                <ul className="space-y-2 text-sm text-foreground/90">
-                  {ADD_ON_NOTES.map((detail) => (
-                    <li key={detail} className="flex items-start gap-2">
-                      <Check className="mt-0.5 h-4 w-4 text-primary" />
-                      {detail}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+              </div>
+
+              <div className="grid gap-6 md:grid-cols-3">
+                <Card className="border-border/70 bg-card/80 backdrop-blur">
+                  <CardHeader className="space-y-1">
+                    <CardTitle className="text-xl">Starter Pack</CardTitle>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-semibold">
+                        {getAddonPrice(AddonType.TEN_PROMPT_CREDITS)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">10 extra prompts</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2 text-sm text-foreground/90">
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        10 AI prompts
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Never expires
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Instant delivery
+                      </li>
+                    </ul>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddonPurchase(AddonType.TEN_PROMPT_CREDITS)}
+                      disabled={pendingAction === AddonType.TEN_PROMPT_CREDITS}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {pendingAction === AddonType.TEN_PROMPT_CREDITS ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="mr-2 h-4 w-4" />
+                          Buy 10 credits
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/70 bg-card/80 backdrop-blur shadow-xl shadow-primary/10 ring-1 ring-primary/20 relative">
+                  <Badge className="absolute right-6 top-6 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30">
+                    Best Value
+                  </Badge>
+                  <CardHeader className="space-y-1 pt-12">
+                    <CardTitle className="text-xl">Power Pack</CardTitle>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-semibold">
+                        {getAddonPrice(AddonType.TWENTY_FIVE_PROMPT_CREDITS)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">25 extra prompts</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2 text-sm text-foreground/90">
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        25 AI prompts
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Never expires
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Instant delivery
+                      </li>
+                    </ul>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddonPurchase(AddonType.TWENTY_FIVE_PROMPT_CREDITS)}
+                      disabled={pendingAction === AddonType.TWENTY_FIVE_PROMPT_CREDITS}
+                      className="w-full bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                    >
+                      {pendingAction === AddonType.TWENTY_FIVE_PROMPT_CREDITS ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="mr-2 h-4 w-4" />
+                          Buy 25 credits
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-border/70 bg-card/80 backdrop-blur">
+                  <CardHeader className="space-y-1">
+                    <CardTitle className="text-xl">Premium Pack</CardTitle>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-semibold">
+                        {getAddonPrice(AddonType.FIFTY_PROMPT_CREDITS)}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">50 extra prompts</p>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <ul className="space-y-2 text-sm text-foreground/90">
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        50 AI prompts
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Never expires
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        Instant delivery
+                      </li>
+                    </ul>
+                    <Button
+                      type="button"
+                      onClick={() => handleAddonPurchase(AddonType.FIFTY_PROMPT_CREDITS)}
+                      disabled={pendingAction === AddonType.FIFTY_PROMPT_CREDITS}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      {pendingAction === AddonType.FIFTY_PROMPT_CREDITS ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Processing...
+                        </>
+                      ) : (
+                        <>
+                          <Zap className="mr-2 h-4 w-4" />
+                          Buy 50 credits
+                        </>
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+
+              <Card className="border-border/70 bg-card/80 backdrop-blur">
+                <CardContent className="pt-6">
+                  <ul className="space-y-2 text-sm text-foreground/90">
+                    {ADD_ON_NOTES.map((detail) => (
+                      <li key={detail} className="flex items-start gap-2">
+                        <Check className="mt-0.5 h-4 w-4 text-primary" />
+                        {detail}
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            </div>
 
             <div className="text-center text-sm text-muted-foreground">
               Need help with billing?{" "}

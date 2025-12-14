@@ -54,6 +54,7 @@ export const useAuth = () => {
     return new Promise<AuthResponse>((resolve, reject) => {
       authService.login(email, password, countryCode).subscribe({
         next: (response) => {
+          console.log("response", response);
           setLoading(false);
           resolve(response);
         },

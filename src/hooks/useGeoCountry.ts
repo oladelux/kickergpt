@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { useAuth } from "./useAuth";
 
 export function useGeoCountry() {
   const [geoCountryCode, setGeoCountryCode] = useState<string>("US");
   const [geoLoading, setGeoLoading] = useState(true);
+  const { user } = useAuth();
 
   useEffect(() => {
     const detectCountry = async () => {
@@ -61,6 +63,6 @@ export function useGeoCountry() {
     detectCountry();
   }, []);
 
-  const resolvedCountryCode = (geoCountryCode ?? "").toUpperCase();
+  const resolvedCountryCode = user?.countryCode ?? (geoCountryCode ?? "").toUpperCase();
   return { resolvedCountryCode, geoLoading, geoCountryCode };
 }

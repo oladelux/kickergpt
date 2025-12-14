@@ -19,7 +19,6 @@ export default function VerifyPayment() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const reference = searchParams.get("reference");
-  console.log("state", state);
 
   useEffect(() => {
     // Check if reference is missing
