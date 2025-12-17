@@ -20,6 +20,9 @@ type SelectPlanResponse = {
 
 type PendingAction = SubscriptionPlanName | AddonType | null;
 
+// Nigeria promo: ₦1,000 for PRO if FREE user exhausted prompts (24hr offer)
+const NIGERIA_PROMO_EXPIRY = new Date("2025-12-18T23:59:59Z");
+
 const PLAN_OPTIONS = [
   {
     tier: "FREE" as SubscriptionPlanName,
@@ -105,9 +108,25 @@ export default function Plans() {
     }
   };
 
+  const isNigeriaPromoActive = () => {
+    const now = new Date();
+    return (
+      resolvedCountryCode === "NG" &&
+      activePlan === "FREE" &&
+      monthlyRemaining === 0 &&
+      now < NIGERIA_PROMO_EXPIRY
+    );
+  };
+
   const getPlanPrice = (tier: SubscriptionPlanName) => {
     const { symbol, pro } = getPricingForCountry(resolvedCountryCode);
-    if (tier === "PRO") return `${symbol}${pro}`;
+    if (tier === "PRO") {
+      // Special Nigeria promo: ₦1,000 for exhausted FREE users
+      if (isNigeriaPromoActive()) {
+        return "₦1,000";
+      }
+      return `${symbol}${pro}`;
+    }
     return `${symbol}0`;
   };
 
@@ -324,7 +343,13 @@ export default function Plans() {
                       plan.popular ? "shadow-2xl shadow-primary/15 ring-1 ring-primary/20" : ""
                     }`}
                   >
-                    {plan.popular && (
+                    {plan.tier === "PRO" && isNigeriaPromoActive() && (
+                      <Badge className="absolute right-6 top-6 flex items-center gap-1 bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30 animate-pulse">
+                        <Sparkles className="h-3 w-3" />
+                        24hr Flash Sale! 90% OFF
+                      </Badge>
+                    )}
+                    {plan.popular && !isNigeriaPromoActive() && (
                       <Badge className="absolute right-6 top-6 flex items-center gap-1 bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg shadow-primary/30">
                         <Sparkles className="h-3 w-3" />
                         Most popular
@@ -338,7 +363,16 @@ export default function Plans() {
                     <CardHeader className="space-y-1 pt-12">
                       <CardTitle className="text-2xl">{plan.name}</CardTitle>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-semibold">{getPlanPrice(plan.tier)}</span>
+                        {plan.tier === "PRO" && isNigeriaPromoActive() ? (
+                          <>
+                            <span className="text-2xl font-semibold text-muted-foreground line-through">
+                              ₦10,000
+                            </span>
+                            <span className="text-4xl font-semibold text-primary">₦1,000</span>
+                          </>
+                        ) : (
+                          <span className="text-4xl font-semibold">{getPlanPrice(plan.tier)}</span>
+                        )}
                         <span className="text-muted-foreground text-sm">{plan.cadence}</span>
                       </div>
                       <p className="text-sm text-muted-foreground">
