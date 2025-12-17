@@ -23,7 +23,7 @@ import VerifyAddonPurchase from "./pages/VerifyAddonPurchase";
 import NotFound from "./pages/NotFound";
 import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
-import Intercom from "@/components/Intercom";
+// import Intercom from "@/components/Intercom";
 import HelpBanner from "@/components/HelpBanner";
 import ControlRoom from "./pages/ControlRoom";
 import ls from "@livesession/browser";
@@ -78,7 +78,7 @@ const App = () => (
           <Analytics />
           <BrowserRouter>
             <MetaManager />
-            <Intercom />
+            {/* <Intercom /> */}
             <HelpBanner />
             <Routes>
               <Route path="/" element={<Index />} />
