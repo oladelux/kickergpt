@@ -110,12 +110,7 @@ export default function Plans() {
 
   const isNigeriaPromoActive = () => {
     const now = new Date();
-    return (
-      resolvedCountryCode === "NG" &&
-      activePlan === "FREE" &&
-      monthlyRemaining === 0 &&
-      now < NIGERIA_PROMO_EXPIRY
-    );
+    return resolvedCountryCode === "NG" && activePlan === "FREE" && now < NIGERIA_PROMO_EXPIRY;
   };
 
   const getPlanPrice = (tier: SubscriptionPlanName) => {
@@ -346,7 +341,7 @@ export default function Plans() {
                     {plan.tier === "PRO" && isNigeriaPromoActive() && (
                       <Badge className="absolute right-6 top-6 flex items-center gap-1 bg-gradient-to-r from-red-500 to-orange-500 text-white shadow-lg shadow-red-500/30 animate-pulse">
                         <Sparkles className="h-3 w-3" />
-                        24hr Flash Sale! 90% OFF
+                        24hr Flash Sale! First Month
                       </Badge>
                     )}
                     {plan.popular && !isNigeriaPromoActive() && (
@@ -378,6 +373,11 @@ export default function Plans() {
                       <p className="text-sm text-muted-foreground">
                         {plan.monthlyCredits} prompts included
                       </p>
+                      {plan.tier === "PRO" && isNigeriaPromoActive() && (
+                        <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
+                          ₦1,000 first month, then ₦10,000/month
+                        </p>
+                      )}
                     </CardHeader>
                     <CardContent className="space-y-6">
                       <ul className="space-y-3 text-sm text-foreground/90">
