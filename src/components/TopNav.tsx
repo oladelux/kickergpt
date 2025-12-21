@@ -8,15 +8,13 @@ import {
   ChevronDown,
   Settings,
   LogOut,
-  Sun,
-  Moon,
+  Menu,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -24,10 +22,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { track } from "@vercel/analytics";
-import { useTheme } from "next-themes";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionData } from "@/hooks/useSubscription";
-import { useMemo, useEffect, useState } from "react";
+import { useMemo, memo } from "react";
+import { cn } from "@/lib/utils";
+import { isNativeMobile } from "@/lib/platform";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
@@ -35,16 +34,16 @@ const navItems = [
   { icon: Clock, label: "History", path: "/history" },
 ];
 
-export default function TopNav() {
+interface TopNavProps {
+  onFilterClick?: () => void;
+  selectedLeagueKey?: string | null;
+  leagueName?: string;
+}
+
+const TopNav = memo(function TopNav({ onFilterClick, selectedLeagueKey, leagueName }: TopNavProps) {
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { plan: subscriptionPlan, usage, loading: subscriptionLoading } = useSubscriptionData();
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   const usagePercent = useMemo(() => {
     if (!usage?.monthlyAllowance) return 0;
@@ -62,29 +61,46 @@ export default function TopNav() {
     window.location.href = "/";
   };
 
+  const isMobile = isNativeMobile();
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-card/95 backdrop-blur">
+    <nav
+      className={cn(
+        "fixed top-0 left-0 right-0 z-50 border-b border-border/70 bg-card/95",
+        !isMobile && "backdrop-blur"
+      )}
+    >
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="text-xl font-semibold tracking-tight">
             kicker<span className="bold text-primary">GPT</span>
           </Link>
 
-          <div className="flex items-center gap-2">
-            {/* Mobile theme toggle */}
-            {mounted && (
+          {/* Mobile: Filter button and badge - only on /fixtures route */}
+          {location.pathname === "/fixtures" && onFilterClick && (
+            <div className="flex items-center gap-2 lg:hidden">
+              {selectedLeagueKey && leagueName && (
+                <Badge
+                  variant="secondary"
+                  className="text-[10px] sm:text-xs flex-shrink-0 truncate max-w-[150px]"
+                >
+                  {leagueName}
+                </Badge>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                className="h-10 w-10 rounded-full md:hidden border-border hover:bg-accent/50"
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                aria-label="Toggle theme"
+                className="h-8 sm:h-9 gap-1.5 sm:gap-2 flex-shrink-0"
+                onClick={onFilterClick}
               >
-                {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+                <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <span className="text-[10px] sm:text-xs">Filters</span>
               </Button>
-            )}
+            </div>
+          )}
 
-            <div className="hidden items-center gap-2 md:flex">
+          <div className="hidden md:flex items-center gap-2">
+            <div className=" items-center gap-2 md:flex">
               {navItems.map((item) => {
                 const isActive = location.pathname === item.path;
                 return (
@@ -156,11 +172,30 @@ export default function TopNav() {
                               Used {usage.monthlyUsed} of {usage.monthlyAllowance}
                             </span>
                           </div>
-                          {usage.addonCreditsRemaining > 0 && (
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Add-on credits: {usage.addonCreditsRemaining}
-                            </p>
-                          )}
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {usage.adCreditsRemaining && usage.adCreditsRemaining > 0 ? (
+                              <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium">
+                                +{usage.adCreditsRemaining} ad 🎁
+                              </p>
+                            ) : (
+                              ""
+                            )}
+                            {usage.purchasedCreditsRemaining &&
+                            usage.purchasedCreditsRemaining > 0 ? (
+                              <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                                +{usage.purchasedCreditsRemaining} purchased
+                              </p>
+                            ) : (
+                              ""
+                            )}
+                            {usage.addonCreditsRemaining && usage.addonCreditsRemaining > 0 ? (
+                              <p className="text-xs text-purple-600 dark:text-purple-400 font-medium">
+                                +{usage.addonCreditsRemaining} addon
+                              </p>
+                            ) : (
+                              ""
+                            )}
+                          </div>
                         </div>
                       </>
                     )}
@@ -190,25 +225,6 @@ export default function TopNav() {
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      {mounted && (
-                        <DropdownMenuItem
-                          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                          className="cursor-pointer"
-                        >
-                          {theme === "dark" ? (
-                            <>
-                              <Sun className="h-4 w-4 mr-2" />
-                              <span>Light mode</span>
-                            </>
-                          ) : (
-                            <>
-                              <Moon className="h-4 w-4 mr-2" />
-                              <span>Dark mode</span>
-                            </>
-                          )}
-                        </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
                       <DropdownMenuItem
                         onClick={handleLogout}
                         className="text-destructive focus:text-destructive cursor-pointer"
@@ -223,21 +239,6 @@ export default function TopNav() {
 
               {!isAuthenticated && (
                 <div className="flex items-center gap-2">
-                  {mounted && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 rounded-md"
-                      onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                      aria-label="Toggle theme"
-                    >
-                      {theme === "dark" ? (
-                        <Sun className="h-4 w-4" />
-                      ) : (
-                        <Moon className="h-4 w-4" />
-                      )}
-                    </Button>
-                  )}
                   <Button asChild variant="ghost" size="sm">
                     <Link to="/login">Login</Link>
                   </Button>
@@ -252,4 +253,6 @@ export default function TopNav() {
       </div>
     </nav>
   );
-}
+});
+
+export default TopNav;

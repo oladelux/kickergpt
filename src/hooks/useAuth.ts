@@ -147,6 +147,6 @@ export const useAuth = () => {
     forgotPassword,
     resendVerificationEmail,
     confirmEmail,
-    isAuthenticated: authService.isAuthenticated(),
+    isAuthenticated: !!user,
   };
 };

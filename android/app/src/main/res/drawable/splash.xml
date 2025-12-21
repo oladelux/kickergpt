@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+    This file is kept for compatibility, but PNG splash images in 
+    drawable-port-* directories will be used based on device density.
+    The PNG files take precedence over this XML.
+-->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <color android:color="#000000" />
+    </item>
+</layer-list>
+

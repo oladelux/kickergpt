@@ -16,7 +16,10 @@ export type SubscriptionUsage = {
   monthlyAllowance: number;
   monthlyUsed: number;
   monthlyRemaining: number;
-  addonCreditsRemaining: number;
+  adCreditsRemaining?: number;
+  purchasedCreditsRemaining?: number;
+  addonCreditsRemaining?: number;
+  totalCreditsRemaining: number;
 };
 
 const parseErrorMessage = (error: unknown) => {

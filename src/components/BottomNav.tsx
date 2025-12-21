@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { MessageCircle, Clock, User, Heart, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { track } from "@vercel/analytics";
+import { memo } from "react";
+import { isNativeMobile } from "@/lib/platform";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
@@ -11,11 +13,15 @@ const navItems = [
   { icon: User, label: "Profile", path: "/profile" },
 ];
 
-export default function BottomNav() {
+const BottomNav = memo(function BottomNav() {
   const location = useLocation();
+  const isMobile = isNativeMobile();
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-sm border-t border-border md:hidden">
+    <nav className={cn(
+      "fixed bottom-0 left-0 right-0 z-50 bg-primary/95 border-t border-primary/30 md:hidden",
+      !isMobile && "backdrop-blur-sm"
+    )}>
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
@@ -25,7 +31,7 @@ export default function BottomNav() {
               to={item.path}
               className={cn(
                 "flex flex-col items-center justify-center flex-1 h-full space-y-1 transition-colors",
-                isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                isActive ? "text-white" : "text-white/70 hover:text-white"
               )}
               onClick={() => {
                 if (item.path === "/plans") track("plan_button_bottomnav_click");
@@ -42,4 +48,6 @@ export default function BottomNav() {
       </div>
     </nav>
   );
-}
+});
+
+export default BottomNav;

@@ -260,11 +260,27 @@ export default function ChatDialog({
                   <span className="sm:hidden">
                     {usage.monthlyRemaining} {usage.monthlyRemaining === 1 ? "prompt" : "prompts"}{" "}
                     left
-                    {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining}` : ""}
+                    {usage.adCreditsRemaining && usage.adCreditsRemaining > 0
+                      ? ` +${usage.adCreditsRemaining} 🎁`
+                      : ""}
+                    {usage.purchasedCreditsRemaining && usage.purchasedCreditsRemaining > 0
+                      ? ` +${usage.purchasedCreditsRemaining}`
+                      : ""}
+                    {usage.addonCreditsRemaining && usage.addonCreditsRemaining > 0
+                      ? ` +${usage.addonCreditsRemaining}`
+                      : ""}
                   </span>
                   <span className="max-sm:hidden">
                     {usage.monthlyRemaining} left
-                    {usage.addonCreditsRemaining ? ` + ${usage.addonCreditsRemaining}` : ""}
+                    {usage.adCreditsRemaining && usage.adCreditsRemaining > 0
+                      ? ` +${usage.adCreditsRemaining} 🎁`
+                      : ""}
+                    {usage.purchasedCreditsRemaining && usage.purchasedCreditsRemaining > 0
+                      ? ` +${usage.purchasedCreditsRemaining}`
+                      : ""}
+                    {usage.addonCreditsRemaining && usage.addonCreditsRemaining > 0
+                      ? ` +${usage.addonCreditsRemaining}`
+                      : ""}
                   </span>
                 </span>
                 <Button
@@ -282,9 +298,32 @@ export default function ChatDialog({
                 <span>
                   Used {usage.monthlyUsed} of {usage.monthlyAllowance} this month
                 </span>
-                {usage.addonCreditsRemaining > 0 && (
-                  <Badge variant="secondary" className="text-[11px] font-semibold">
-                    +{usage.addonCreditsRemaining} add-on credits
+                {usage.adCreditsRemaining && usage.adCreditsRemaining > 0 ? (
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  >
+                    +{usage.adCreditsRemaining} ad credits 🎁
+                  </Badge>
+                ) : (
+                  ""
+                )}
+                {usage.purchasedCreditsRemaining && usage.purchasedCreditsRemaining > 0 ? (
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] font-semibold bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400"
+                  >
+                    +{usage.purchasedCreditsRemaining} purchased
+                  </Badge>
+                ) : (
+                  ""
+                )}
+                {usage.addonCreditsRemaining && usage.addonCreditsRemaining > 0 && (
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] font-semibold bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400"
+                  >
+                    +{usage.addonCreditsRemaining} addon
                   </Badge>
                 )}
                 <Button

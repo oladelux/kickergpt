@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { track } from "@vercel/analytics";
 import { User, Mail, CreditCard, Loader2, RefreshCw, AlertTriangle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,35 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import BottomNav from "@/components/BottomNav";
 import TopNav from "@/components/TopNav";
 import { firstValueFrom } from "rxjs";
 import { profileService, type ProfileData } from "@/services/profile.service";
 import { useSubscriptionData } from "@/hooks/useSubscription";
+import { useAuth } from "@/hooks/useAuth";
+import { api } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Profile() {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const isMountedRef = useRef(true);
+  const navigate = useNavigate();
+  const { logout } = useAuth();
+  const { toast } = useToast();
   const {
     plan: subscription,
     usage,
@@ -70,7 +88,7 @@ export default function Profile() {
   const monthlyAllowance = usage?.monthlyAllowance ?? profile?.creditsTotal ?? 0;
   const monthlyUsed = usage?.monthlyUsed ?? profile?.creditsUsed ?? 0;
   const monthlyRemaining = usage?.monthlyRemaining ?? Math.max(monthlyAllowance - monthlyUsed, 0);
-  const addonCredits = usage?.addonCreditsRemaining ?? 0;
+  const adCredits = usage?.adCreditsRemaining ?? 0;
   const usageDisplay =
     monthlyAllowance > 0 ? `${monthlyUsed} / ${monthlyAllowance}` : `${monthlyUsed} prompts`;
   const usageHelper =
@@ -94,6 +112,30 @@ export default function Profile() {
     loadProfile();
     refreshSubscription();
   }, [loadProfile, refreshSubscription]);
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    try {
+      await api.auth.delete();
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted.",
+      });
+      await logout();
+      window.location.href = "/";
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to delete account. Please try again.";
+      toast({
+        variant: "destructive",
+        title: "Unable to delete account",
+        description: message,
+      });
+      setDeleteDialogOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-secondary p-4 pb-20 md:pb-4 md:pt-20">
@@ -195,7 +237,11 @@ export default function Profile() {
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
                   <span>Monthly allowance: {monthlyAllowance || "Included"}</span>
-                  <span>Add-on credits: {addonCredits}</span>
+                  {adCredits > 0 && (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+                      Ad credits: +{adCredits} 🎁
+                    </span>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -232,9 +278,17 @@ export default function Profile() {
                     <p className="text-foreground">{subscriptionStatusLabel}</p>
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-[0.4em]">Add-on credits</p>
-                    <p className="text-foreground">{addonCredits}</p>
+                    <p className="text-xs uppercase tracking-[0.4em]">Credits used</p>
+                    <p className="text-foreground">{monthlyUsed}</p>
                   </div>
+                  {adCredits > 0 && (
+                    <div>
+                      <p className="text-xs uppercase tracking-[0.4em]">Ad credits</p>
+                      <p className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        +{adCredits} 🎁
+                      </p>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -274,6 +328,7 @@ export default function Profile() {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-destructive hover:text-destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
                 >
                   Delete account
                 </Button>
@@ -283,6 +338,36 @@ export default function Profile() {
         )}
       </div>
       <BottomNav />
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Account</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete your account? This action cannot be undone. All your
+              data, including your subscription, prompts, and saved insights will be permanently
+              deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Account"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

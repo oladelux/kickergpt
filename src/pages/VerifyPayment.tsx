@@ -19,6 +19,7 @@ export default function VerifyPayment() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const reference = searchParams.get("reference");
+  const isNative = searchParams.get("isNative") === "true";
 
   useEffect(() => {
     // Check if reference is missing
@@ -44,10 +45,13 @@ export default function VerifyPayment() {
           description: "Your payment has been successfully verified!",
         });
 
-        // Redirect to plans page after 2 seconds
-        setTimeout(() => {
-          navigate("/plans", { replace: true });
-        }, 2000);
+        // Only redirect if not native app (native apps should close tab and return to app)
+        if (!isNative) {
+          // Redirect to plans page after 2 seconds
+          setTimeout(() => {
+            navigate("/plans", { replace: true });
+          }, 2000);
+        }
       } catch (err) {
         const message =
           err instanceof ClientError
@@ -68,7 +72,7 @@ export default function VerifyPayment() {
     };
 
     verifyPayment();
-  }, [reference, navigate, toast, verificationAttempted]);
+  }, [reference, navigate, toast, verificationAttempted, isNative]);
 
   const handleRetry = () => {
     setVerificationAttempted(false);
@@ -138,12 +142,20 @@ export default function VerifyPayment() {
               <h1 className="text-2xl font-semibold tracking-tight mb-2">
                 Payment verified successfully!
               </h1>
-              <p className="text-muted-foreground mb-6">
-                Your payment has been confirmed. Redirecting you to your subscription page...
-              </p>
-              <Button asChild className="w-full">
-                <Link to="/plans">Go to Plans</Link>
-              </Button>
+              {isNative ? (
+                <p className="text-muted-foreground mb-6">
+                  Payment successful, close this tab and return to the app.
+                </p>
+              ) : (
+                <>
+                  <p className="text-muted-foreground mb-6">
+                    Your payment has been confirmed. Redirecting you to your subscription page...
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link to="/plans">Go to Plans</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>
