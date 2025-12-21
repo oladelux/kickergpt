@@ -20,7 +20,19 @@
     <link rel="icon" type="image/png" href="/favicon.ico" sizes="32x32" />
     <link rel="apple-touch-icon" href="/favicon.ico" />
     <link rel="canonical" href="https://www.kickergpt.com" />
-    <meta name="theme-color" content="#09090b" />
+    <meta name="theme-color" content="#ffffff" />
+    <script>
+      // Force light mode - remove dark class immediately
+      (function() {
+        document.documentElement.classList.remove('dark');
+        document.documentElement.setAttribute('data-theme', 'light');
+        // Clear theme storage
+        try {
+          localStorage.removeItem('theme');
+          localStorage.removeItem('vite-ui-theme');
+        } catch(e) {}
+      })();
+    </script>
 
     <meta property="og:title" content="KickerGPT | Scenario-Perfect Football Intelligence" />
     <meta
@@ -98,7 +110,47 @@
       ></iframe
     ></noscript>
     <!-- End Google Tag Manager (noscript) -->
+    
+    <!-- Loading screen for native app only -->
+    <div id="loading-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000000; display: none; align-items: center; justify-content: center; z-index: 9999; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+      <div style="text-align: center;">
+        <div style="font-size: 2.5rem; font-weight: 600; letter-spacing: -0.02em;">
+          <span style="color: #ffffff;">kicker</span><span style="color: #2ecb73; font-weight: 700;">GPT</span>
+        </div>
+      </div>
+    </div>
+    
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Only show loading screen on native mobile platforms
+      // This will be properly detected once Capacitor loads, but we hide by default for web
+      (function() {
+        // By default, hide the loading screen (for web)
+        // It will be shown by the React app if running on native mobile
+        var loadingScreen = document.getElementById('loading-screen');
+        if (loadingScreen) {
+          // Check if we're likely on native by looking for Capacitor indicators
+          // If Capacitor isn't loaded yet, we'll hide it and let the React app handle it
+          var isLikelyNative = false;
+          try {
+            // Check for common native app indicators
+            if (window.Capacitor) {
+              isLikelyNative = true;
+            } else if (window.Android || window.webkit?.messageHandlers) {
+              // Android WebView or iOS WKWebView
+              isLikelyNative = true;
+            }
+          } catch(e) {
+            // Ignore errors
+          }
+          
+          // Only show if we're confident it's native, otherwise hide
+          if (!isLikelyNative) {
+            loadingScreen.style.display = 'none';
+          }
+        }
+      })();
+    </script>
   </body>
 </html>

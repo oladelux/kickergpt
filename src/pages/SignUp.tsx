@@ -272,20 +272,30 @@ export default function SignUp() {
                 </div>
               </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="terms"
-                  checked={formData.agreeToTerms}
-                  onCheckedChange={(checked) =>
-                    setFormData({ ...formData, agreeToTerms: Boolean(checked) })
-                  }
-                />
-                <label htmlFor="terms" className="text-sm text-muted-foreground">
-                  I agree to the{" "}
-                  <Link to="#" className="text-primary hover:text-accent transition-colors">
-                    terms and conditions
-                  </Link>
-                </label>
+              <div className="space-y-3">
+                <div className="flex items-start space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={formData.agreeToTerms}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, agreeToTerms: Boolean(checked) })
+                    }
+                    className="mt-1"
+                  />
+                  <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
+                    I agree to the{" "}
+                    <Link to="/terms" className="text-primary hover:text-accent transition-colors underline">
+                      Terms and Conditions
+                    </Link>{" "}
+                    and{" "}
+                    <Link to="/privacy" className="text-primary hover:text-accent transition-colors underline">
+                      Privacy Policy
+                    </Link>
+                  </label>
+                </div>
+                <p className="text-xs text-muted-foreground pl-6">
+                  <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data analysis only. We do not provide betting advice. Any use of our analysis for betting purposes is at your own discretion and risk.
+                </p>
               </div>
 
               <Button

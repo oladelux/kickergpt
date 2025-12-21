@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportHeight="108"
+    android:viewportWidth="108">
+    <!-- Bold white K letter - centered and prominent -->
+    <group
+        android:translateX="54"
+        android:translateY="54">
+        <!-- Left vertical bar (thicker for boldness) -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-30,-38 L-30,38 L-16,38 L-16,-38 Z" />
+        <!-- Top diagonal (upper part of K) - thicker -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-16,-26 L-16,-6 L12,18 L12,30 L-4,10 L-16,-6 Z" />
+        <!-- Bottom diagonal (lower part of K) - thicker -->
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M-16,6 L-16,26 L12,-2 L12,-14 L-4,6 L-16,6 Z" />
+    </group>
+</vector>

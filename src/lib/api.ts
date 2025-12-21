@@ -489,6 +489,12 @@ export const api = {
       const res = await apiRequest("/auth/email/confirm", "POST", { hash });
       return res.status === 204 ? null : res.json();
     },
+
+    delete: async () => {
+      const res = await apiRequest("/auth/me", "DELETE");
+      removeToken();
+      return res.status === 204 ? null : res.json();
+    },
   },
 
   chat: {
@@ -665,7 +671,11 @@ export const api = {
       const res = await apiRequest("/subscriptions/usage", "GET");
       return res.status === 204 ? null : res.json();
     },
-    selectPlan: async (data: { plan: "FREE" | "PRO"; countryCode?: string }) => {
+    selectPlan: async (data: {
+      plan: "FREE" | "PRO";
+      countryCode?: string;
+      isNativeUser: boolean;
+    }) => {
       const res = await apiRequest("/subscriptions/select-plan", "POST", data);
       return res.status === 204 ? null : res.json();
     },
@@ -673,13 +683,25 @@ export const api = {
       const res = await apiRequest("/subscriptions/verify", "POST", data);
       return res.status === 204 ? null : res.json();
     },
-    addonPurchase: async (data: { addonType: string }) => {
+    cancel: async () => {
+      const res = await apiRequest("/subscriptions/cancel", "POST");
+      return res.status === 204 ? null : res.json();
+    },
+    addonPurchase: async (data: { addonType: string; isNativeUser: boolean }) => {
       const res = await apiRequest("/subscriptions/addon-purchase", "POST", data);
       return res.status === 204 ? null : res.json();
     },
     addonPurchaseVerify: async (data: { reference: string }) => {
       const res = await apiRequest("/subscriptions/addon-purchase-verify", "POST", data);
       return res.status === 204 ? null : res.json();
+    },
+  },
+
+  // Ads API
+  ads: {
+    claimReward: async (data: { creditsEarned: number }) => {
+      const res = await apiRequest("/ads/reward", "POST", data);
+      return res.json();
     },
   },
 };

@@ -1,4 +1,5 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, memo, useCallback, startTransition } from "react";
+import { Link } from "react-router-dom";
 import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -257,7 +258,7 @@ const getStatusBadgeClasses = (match: Match) => {
   return "text-muted-foreground border-border/60";
 };
 
-export default function Chat() {
+const Chat = memo(function Chat() {
   const { matches, loading, toggleFavorite } = useMatches();
   const { user, isAuthenticated } = useAuth();
   const {
@@ -384,6 +385,22 @@ export default function Chat() {
       selectedDay ||
       selectedLeagueKey
   );
+
+  const handleMobileLeagueSelect = useCallback((leagueKey: string | null) => {
+    setSelectedLeagueKey(leagueKey);
+    setLeftSidebarOpen(false);
+  }, []);
+
+  const handleFilterClick = useCallback(() => {
+    startTransition(() => {
+      setLeftSidebarOpen(true);
+    });
+  }, []);
+
+  const selectedLeagueName = useMemo(() => {
+    if (!selectedLeagueKey) return undefined;
+    return matches.find((m) => m.leagueKey === selectedLeagueKey)?.league;
+  }, [selectedLeagueKey, matches]);
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -585,28 +602,11 @@ export default function Chat() {
   return (
     <>
       <div className="h-screen flex flex-col bg-background pt-16 pb-16 md:pb-0">
-        <TopNav />
-
-        {/* Mobile: Filter buttons */}
-        <div className="lg:hidden flex items-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 border-b border-border bg-card overflow-x-auto">
-          <Button
-            variant="outline"
-            size="sm"
-            className="h-8 sm:h-9 gap-1.5 sm:gap-2 flex-shrink-0"
-            onClick={() => setLeftSidebarOpen(true)}
-          >
-            <Menu className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-            <span className="text-[10px] sm:text-xs">Filters</span>
-          </Button>
-          {selectedLeagueKey && (
-            <Badge
-              variant="secondary"
-              className="text-[10px] sm:text-xs flex-shrink-0 truncate max-w-[150px]"
-            >
-              {matches.find((m) => m.leagueKey === selectedLeagueKey)?.league ?? ""}
-            </Badge>
-          )}
-        </div>
+        <TopNav
+          onFilterClick={handleFilterClick}
+          selectedLeagueKey={selectedLeagueKey}
+          leagueName={selectedLeagueName}
+        />
 
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar - Desktop */}
@@ -626,10 +626,7 @@ export default function Chat() {
               <FixturesLeftSidebar
                 matches={matches}
                 selectedLeagueKey={selectedLeagueKey}
-                onLeagueSelect={(leagueKey) => {
-                  setSelectedLeagueKey(leagueKey);
-                  setLeftSidebarOpen(false);
-                }}
+                onLeagueSelect={handleMobileLeagueSelect}
                 countryFilter={countryFilter}
                 onCountryFilterChange={setCountryFilter}
               />
@@ -667,6 +664,20 @@ export default function Chat() {
                   </CardContent>
                 </Card>
               )}
+
+              <Card className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
+                <CardContent className="p-3 sm:p-4">
+                  <p className="text-xs sm:text-sm text-foreground">
+                    <strong className="font-semibold">Disclaimer:</strong> KickerGPT provides data
+                    analysis and informational content only. We do not provide betting advice,
+                    predictions, or guarantees. Any use of our analysis for betting purposes is at
+                    your own discretion and risk.{" "}
+                    <Link to="/terms" className="text-primary hover:underline font-medium">
+                      View Terms
+                    </Link>
+                  </p>
+                </CardContent>
+              </Card>
 
               <div className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-border bg-card p-2 sm:p-3">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 sm:gap-3 lg:gap-2">
@@ -859,4 +870,6 @@ export default function Chat() {
       </div>
     </>
   );
-}
+});
+
+export default Chat;

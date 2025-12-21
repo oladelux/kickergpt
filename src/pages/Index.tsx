@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarClock,
   ArrowRight,
@@ -13,15 +13,15 @@ import {
   Trophy,
   Users,
   Zap,
-  Sun,
-  Moon,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Helmet } from "react-helmet-async";
-import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { isNativeMobile } from "@/lib/platform";
+import { useAuth } from "@/hooks/useAuth";
 
 const featureHighlights = [
   {
@@ -150,12 +150,28 @@ const competitionBadges = [
 ];
 
 export default function Index() {
-  const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
+  // Redirect mobile users to login or fixtures
   useEffect(() => {
-    setMounted(true);
-  }, []);
+    if (isNativeMobile()) {
+      if (user) {
+        navigate("/fixtures", { replace: true });
+      } else {
+        navigate("/login", { replace: true });
+      }
+    }
+  }, [user, navigate]);
+
+  // Show loading screen for mobile while redirecting
+  if (isNativeMobile()) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -192,17 +208,6 @@ export default function Index() {
               </Link>
               <div className="hidden gap-6 text-sm text-muted-foreground md:flex"></div>
               <div className="flex items-center gap-3">
-                {mounted && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-9 w-9 rounded-md"
-                    onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                    aria-label="Toggle theme"
-                  >
-                    {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-                  </Button>
-                )}
                 <Button asChild variant="ghost">
                   <Link to="/login">Sign in</Link>
                 </Button>
@@ -258,6 +263,9 @@ export default function Index() {
               </div>
               <p className="text-sm font-medium text-foreground/80">
                 Free tier available. No credit card required to get started.
+              </p>
+              <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
+                <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data analysis only. We do not provide betting advice, predictions, or guarantees. Any use of our analysis for betting purposes is at your own discretion and risk.
               </p>
               <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
                 {[

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, memo } from "react";
 import { Match } from "@/services/matches.service";
 import {
   Accordion,
@@ -21,7 +21,7 @@ interface FixturesLeftSidebarProps {
   onCountryFilterChange: (value: string) => void;
 }
 
-export default function FixturesLeftSidebar({
+const FixturesLeftSidebar = memo(function FixturesLeftSidebar({
   matches,
   selectedLeagueKey,
   onLeagueSelect,
@@ -143,4 +143,6 @@ export default function FixturesLeftSidebar({
       </ScrollArea>
     </div>
   );
-}
+});
+
+export default FixturesLeftSidebar;

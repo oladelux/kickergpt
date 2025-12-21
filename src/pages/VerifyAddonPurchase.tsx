@@ -19,6 +19,7 @@ export default function VerifyAddonPurchase() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const reference = searchParams.get("reference");
+  const isNative = searchParams.get("isNative") === "true";
 
   useEffect(() => {
     // Check if reference is missing
@@ -44,10 +45,13 @@ export default function VerifyAddonPurchase() {
           description: "Your addon credits have been successfully added!",
         });
 
-        // Redirect to plans page after 2 seconds
-        setTimeout(() => {
-          navigate("/plans", { replace: true });
-        }, 2000);
+        // Only redirect if not native app (native apps should close tab and return to app)
+        if (!isNative) {
+          // Redirect to plans page after 2 seconds
+          setTimeout(() => {
+            navigate("/plans", { replace: true });
+          }, 2000);
+        }
       } catch (err) {
         const message =
           err instanceof ClientError
@@ -68,7 +72,7 @@ export default function VerifyAddonPurchase() {
     };
 
     verifyPayment();
-  }, [reference, navigate, toast, verificationAttempted]);
+  }, [reference, navigate, toast, verificationAttempted, isNative]);
 
   const handleRetry = () => {
     setVerificationAttempted(false);
@@ -142,13 +146,21 @@ export default function VerifyAddonPurchase() {
               <h1 className="text-2xl font-semibold tracking-tight mb-2">
                 Addon credits added successfully!
               </h1>
-              <p className="text-muted-foreground mb-6">
-                Your addon credits have been confirmed and are now available. Redirecting you to
-                your plans page...
-              </p>
-              <Button asChild className="w-full">
-                <Link to="/plans">Go to Plans</Link>
-              </Button>
+              {isNative ? (
+                <p className="text-muted-foreground mb-6">
+                  Addon credits added successfully, close this tab and return to the app.
+                </p>
+              ) : (
+                <>
+                  <p className="text-muted-foreground mb-6">
+                    Your addon credits have been confirmed and are now available. Redirecting you to
+                    your plans page...
+                  </p>
+                  <Button asChild className="w-full">
+                    <Link to="/plans">Go to Plans</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </div>

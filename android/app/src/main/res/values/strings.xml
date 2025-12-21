@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">KickerGPT</string>
+    <string name="title_activity_main">KickerGPT</string>
+    <string name="package_name">com.kickergpt.app</string>
+    <string name="custom_url_scheme">com.kickergpt.app</string>
+</resources>
