@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.kickergpt.app",
+      "sha256_cert_fingerprints": [
+        "EFBCBAC0F3818FE427EF0ED60296B4DDF45F8F6428F0E06C136B589DDEA41B96"
+      ]
+    }
+  }
+]

@@ -24,6 +24,7 @@ import { track } from "@vercel/analytics";
 import { useGeoCountry } from "@/hooks/useGeoCountry";
 import { isNativeMobile } from "@/lib/platform";
 import { WatchAdButton } from "@/components/WatchAdButton";
+import { Browser } from "@capacitor/browser";
 import { MobileWrapper } from "@/components/MobileWrapper";
 import { MobileHeader } from "@/components/MobileHeader";
 import { AddonType, ADDON_PRICING, AddonPurchaseResponse } from "@/types/subscription";
@@ -144,7 +145,11 @@ export default function Plans() {
           title: "Redirecting to checkout",
           description: "Complete the addon purchase to unlock more credits.",
         });
-        window.location.href = response.checkoutUrl;
+        if (isNativeMobile()) {
+          await Browser.open({ url: response.checkoutUrl });
+        } else {
+          window.location.href = response.checkoutUrl;
+        }
         return;
       }
       toast({
@@ -428,7 +433,11 @@ export default function Plans() {
           title: "Redirecting to checkout",
           description: "Finish your upgrade in the secure payment window.",
         });
-        window.location.href = response.checkoutUrl;
+        if (isNativeMobile()) {
+          await Browser.open({ url: response.checkoutUrl });
+        } else {
+          window.location.href = response.checkoutUrl;
+        }
         return;
       }
       await refreshAll();

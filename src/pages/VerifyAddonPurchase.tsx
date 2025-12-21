@@ -45,13 +45,11 @@ export default function VerifyAddonPurchase() {
           description: "Your addon credits have been successfully added!",
         });
 
-        // Only redirect if not native app (native apps should close tab and return to app)
-        if (!isNative) {
-          // Redirect to plans page after 2 seconds
-          setTimeout(() => {
-            navigate("/plans", { replace: true });
-          }, 2000);
-        }
+        // Redirect to plans page after 2 seconds
+        // For native apps opened via deep link, navigate directly
+        setTimeout(() => {
+          navigate("/plans", { replace: true });
+        }, 2000);
       } catch (err) {
         const message =
           err instanceof ClientError
@@ -146,21 +144,13 @@ export default function VerifyAddonPurchase() {
               <h1 className="text-2xl font-semibold tracking-tight mb-2">
                 Addon credits added successfully!
               </h1>
-              {isNative ? (
-                <p className="text-muted-foreground mb-6">
-                  Addon credits added successfully, close this tab and return to the app.
-                </p>
-              ) : (
-                <>
-                  <p className="text-muted-foreground mb-6">
-                    Your addon credits have been confirmed and are now available. Redirecting you to
-                    your plans page...
-                  </p>
-                  <Button asChild className="w-full">
-                    <Link to="/plans">Go to Plans</Link>
-                  </Button>
-                </>
-              )}
+              <p className="text-muted-foreground mb-6">
+                Your addon credits have been confirmed and are now available. Redirecting you to
+                your plans page...
+              </p>
+              <Button asChild className="w-full">
+                <Link to="/plans">Go to Plans</Link>
+              </Button>
             </div>
           </div>
         </div>

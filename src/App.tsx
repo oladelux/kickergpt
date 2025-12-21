@@ -5,7 +5,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "next-themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { SubscriptionRoute } from "@/components/SubscriptionRoute";
 import { LoadingPage } from "@/components/LoadingPage";
@@ -145,6 +145,34 @@ const AppContent = () => {
             }
           });
 
+          // Handle Universal/App Links for payment verification
+          CapacitorApp.addListener("appUrlOpen", (data) => {
+            try {
+              // Parse Universal/App Link URL (format: https://www.kickergpt.com/verify-payment?reference=xxx)
+              const urlString = data.url;
+              const url = new URL(urlString);
+              const path = url.pathname;
+              const params = new URLSearchParams(url.search);
+
+              // Handle payment verification links
+              if (path === "/verify-payment" || path === "verify-payment") {
+                const reference = params.get("reference");
+                if (reference) {
+                  // Navigate to verification page with reference
+                  window.location.href = `/verify-payment?reference=${encodeURIComponent(reference)}&isNative=true`;
+                }
+              } else if (path === "/verify-addon-purchase" || path === "verify-addon-purchase") {
+                const reference = params.get("reference");
+                if (reference) {
+                  // Navigate to addon verification page with reference
+                  window.location.href = `/verify-addon-purchase?reference=${encodeURIComponent(reference)}&isNative=true`;
+                }
+              }
+            } catch (error) {
+              console.error("Error handling Universal/App Link:", error);
+            }
+          });
+
           console.log("Mobile plugins initialized successfully");
         } catch (error) {
           console.error("Failed to initialize mobile plugins:", error);
@@ -184,22 +212,8 @@ const AppContent = () => {
               </ProtectedRoute>
             }
           />
-          <Route
-            path="/verify-payment"
-            element={
-              <ProtectedRoute>
-                <VerifyPayment />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/verify-addon-purchase"
-            element={
-              <ProtectedRoute>
-                <VerifyAddonPurchase />
-              </ProtectedRoute>
-            }
-          />
+          <Route path="/verify-payment" element={<VerifyPayment />} />
+          <Route path="/verify-addon-purchase" element={<VerifyAddonPurchase />} />
           <Route path="/payment-successful" element={<PaymentSuccessful />} />
           <Route
             path="/fixtures"
