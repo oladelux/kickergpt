@@ -8,7 +8,7 @@ import { api, ClientError } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 
-type VerificationState = "loading" | "success" | "error" | "missing-reference";
+type VerificationState = "loading" | "success" | "error" | "missing-reference" | "missing-key-mt";
 
 export default function VerifyAddonPurchase() {
   const [searchParams] = useSearchParams();
@@ -20,11 +20,17 @@ export default function VerifyAddonPurchase() {
 
   const reference = searchParams.get("reference");
   const isNative = searchParams.get("isNative") === "true";
+  const keyMt = searchParams.get("token");
 
   useEffect(() => {
     // Check if reference is missing
     if (!reference) {
       setState("missing-reference");
+      return;
+    }
+
+    if (!keyMt) {
+      setState("missing-key-mt");
       return;
     }
 
@@ -38,7 +44,7 @@ export default function VerifyAddonPurchase() {
 
     const verifyPayment = async () => {
       try {
-        await api.subscriptions.addonPurchaseVerify({ reference });
+        await api.subscriptions.addonPurchaseVerify({ reference, token: keyMt });
         setState("success");
         toast({
           title: "Addon purchase verified",
@@ -48,7 +54,11 @@ export default function VerifyAddonPurchase() {
         // Redirect to plans page after 2 seconds
         // For native apps opened via deep link, navigate directly
         setTimeout(() => {
-          navigate("/plans", { replace: true });
+          if (isNative) {
+            navigate("/payment-successful", { replace: true });
+          } else {
+            navigate("/plans", { replace: true });
+          }
         }, 2000);
       } catch (err) {
         const message =
@@ -70,7 +80,7 @@ export default function VerifyAddonPurchase() {
     };
 
     verifyPayment();
-  }, [reference, navigate, toast, verificationAttempted, isNative]);
+  }, [reference, navigate, toast, verificationAttempted, isNative, keyMt]);
 
   const handleRetry = () => {
     setVerificationAttempted(false);

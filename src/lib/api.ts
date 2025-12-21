@@ -679,7 +679,7 @@ export const api = {
       const res = await apiRequest("/subscriptions/select-plan", "POST", data);
       return res.status === 204 ? null : res.json();
     },
-    verify: async (data: { reference: string }) => {
+    verify: async (data: { reference: string; token: string }) => {
       const res = await apiRequest("/subscriptions/verify", "POST", data);
       return res.status === 204 ? null : res.json();
     },
@@ -691,7 +691,7 @@ export const api = {
       const res = await apiRequest("/subscriptions/addon-purchase", "POST", data);
       return res.status === 204 ? null : res.json();
     },
-    addonPurchaseVerify: async (data: { reference: string }) => {
+    addonPurchaseVerify: async (data: { reference: string; token: string }) => {
       const res = await apiRequest("/subscriptions/addon-purchase-verify", "POST", data);
       return res.status === 204 ? null : res.json();
     },

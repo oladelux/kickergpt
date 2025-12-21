@@ -25,9 +25,11 @@ import { useGeoCountry } from "@/hooks/useGeoCountry";
 import { isNativeMobile } from "@/lib/platform";
 import { WatchAdButton } from "@/components/WatchAdButton";
 import { Browser } from "@capacitor/browser";
+import { App as CapacitorApp } from "@capacitor/app";
 import { MobileWrapper } from "@/components/MobileWrapper";
 import { MobileHeader } from "@/components/MobileHeader";
 import { AddonType, ADDON_PRICING, AddonPurchaseResponse } from "@/types/subscription";
+import { PluginListenerHandle } from "@capacitor/core";
 
 type SelectPlanResponse = {
   checkoutUrl?: string | null;
@@ -98,6 +100,55 @@ export default function Plans() {
   const { plan: subscription, usage, loading, error, refreshAll, setError } = useSubscriptionData();
   const { geoLoading, resolvedCountryCode, geoCountryCode } = useGeoCountry();
   const isMobile = isNativeMobile();
+
+  // Listen for browser close and app state changes to refresh subscription data
+  useEffect(() => {
+    if (!isNativeMobile()) {
+      return; // Only for native apps
+    }
+
+    let browserListener: PluginListenerHandle | null = null;
+    let appStateListener: PluginListenerHandle | null = null;
+
+    const setupListeners = async () => {
+      // Listen for browser finished event (when browser closes)
+      browserListener = await Browser.addListener("browserFinished", () => {
+        console.log("Browser closed, refreshing subscription data");
+        refreshAll();
+      });
+
+      // Listen for app state changes (when app comes to foreground)
+      appStateListener = await CapacitorApp.addListener("appStateChange", (state) => {
+        if (state.isActive) {
+          console.log("App came to foreground, refreshing subscription data");
+          refreshAll();
+        }
+      });
+    };
+
+    setupListeners();
+
+    // Also refresh when page becomes visible (handles navigation back to Plans)
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        console.log("Plans page became visible, refreshing subscription data");
+        refreshAll();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // Cleanup listeners on unmount
+    return () => {
+      if (browserListener) {
+        browserListener.remove();
+      }
+      if (appStateListener) {
+        appStateListener.remove();
+      }
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [refreshAll, isMobile]);
 
   const getPricingForCountry = (countryCode: string) => {
     switch (countryCode) {
