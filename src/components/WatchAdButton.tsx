@@ -1,32 +1,26 @@
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { useAds } from '@/hooks/useAds';
-import { Loader2, Play, Clock } from 'lucide-react';
-import { ADMOB_CONFIG } from '@/lib/config';
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { useAds } from "@/hooks/useAds";
+import { Loader2, Play, Clock } from "lucide-react";
+import { ADMOB_CONFIG } from "@/lib/config";
 
 interface WatchAdButtonProps {
   onAdWatched?: (credits: number) => void;
-  variant?: 'default' | 'outline' | 'secondary';
-  size?: 'default' | 'sm' | 'lg';
+  variant?: "default" | "outline" | "secondary";
+  size?: "default" | "sm" | "lg";
   className?: string;
 }
 
 export const WatchAdButton = ({
   onAdWatched,
-  variant = 'default',
-  size = 'default',
+  variant = "default",
+  size = "default",
   className,
 }: WatchAdButtonProps) => {
-  const {
-    watchAd,
-    isWatchingAd,
-    canWatchAd,
-    nextAdAvailableIn,
-    adsWatchedToday,
-    areAdsAvailable,
-  } = useAds();
+  const { watchAd, isWatchingAd, canWatchAd, nextAdAvailableIn, adsWatchedToday, areAdsAvailable } =
+    useAds();
 
-  const [cooldownText, setCooldownText] = useState<string>('');
+  const [cooldownText, setCooldownText] = useState<string>("");
 
   // Update cooldown text
   useEffect(() => {
@@ -41,7 +35,7 @@ export const WatchAdButton = ({
 
       return () => clearInterval(interval);
     } else {
-      setCooldownText('');
+      setCooldownText("");
     }
   }, [canWatchAd, nextAdAvailableIn]);
 
@@ -86,13 +80,13 @@ export const WatchAdButton = ({
           </>
         )}
       </Button>
-      
+
       {remainingAds > 0 && remainingAds < dailyLimit && (
         <p className="text-xs text-muted-foreground text-center">
-          {remainingAds} ad{remainingAds !== 1 ? 's' : ''} remaining today
+          {remainingAds} ad{remainingAds !== 1 ? "s" : ""} remaining today
         </p>
       )}
-      
+
       {remainingAds === 0 && (
         <p className="text-xs text-muted-foreground text-center">
           Daily limit reached. Come back tomorrow!
@@ -101,4 +95,3 @@ export const WatchAdButton = ({
     </div>
   );
 };
-

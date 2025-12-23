@@ -265,7 +265,12 @@ export default function Index() {
                 Free tier available. No credit card required to get started.
               </p>
               <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-                <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data analysis only. We do not provide betting advice, predictions, or guarantees. Any use of our analysis for betting purposes is at your own discretion and risk.
+                <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data
+                analysis, statistical insights, and probability estimates based on historical data
+                and algorithms. Our predictions are for informational purposes only and are not
+                betting advice or guarantees. Past performance does not guarantee future results.
+                Any use of our analysis for betting purposes is at your own discretion and risk. We
+                are not responsible for any losses incurred from betting decisions.
               </p>
               <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
                 {[

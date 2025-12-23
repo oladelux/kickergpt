@@ -284,17 +284,28 @@ export default function SignUp() {
                   />
                   <label htmlFor="terms" className="text-sm text-muted-foreground leading-relaxed">
                     I agree to the{" "}
-                    <Link to="/terms" className="text-primary hover:text-accent transition-colors underline">
+                    <Link
+                      to="/terms"
+                      className="text-primary hover:text-accent transition-colors underline"
+                    >
                       Terms and Conditions
                     </Link>{" "}
                     and{" "}
-                    <Link to="/privacy" className="text-primary hover:text-accent transition-colors underline">
+                    <Link
+                      to="/privacy"
+                      className="text-primary hover:text-accent transition-colors underline"
+                    >
                       Privacy Policy
                     </Link>
                   </label>
                 </div>
                 <p className="text-xs text-muted-foreground pl-6">
-                  <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data analysis only. We do not provide betting advice. Any use of our analysis for betting purposes is at your own discretion and risk.
+                  <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data
+                  analysis, statistical insights, and probability estimates based on historical data
+                  and algorithms. Our predictions are for informational purposes only and are not
+                  betting advice or guarantees. Past performance does not guarantee future results.
+                  Any use of our analysis for betting purposes is at your own discretion and risk.
+                  We are not responsible for any losses incurred from betting decisions.
                 </p>
               </div>
 

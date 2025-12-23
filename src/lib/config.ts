@@ -8,16 +8,16 @@ import { isAndroid, isIOS, isWeb } from "./platform";
 export const ADMOB_CONFIG = {
   // Test IDs for development - replace with your actual AdMob IDs in production
   APP_ID: {
-    android: "ca-app-pub-3940256099942544~3347511713", // Test App ID
+    android: "ca-app-pub-3625004979166724~8542529874", // Test App ID
     ios: "ca-app-pub-3940256099942544~1458002511", // Test App ID
   },
   REWARDED_VIDEO_ID: {
-    android: "ca-app-pub-3940256099942544/5224354917", // Test Rewarded Video
+    android: "ca-app-pub-3625004979166724/5942796005", // Test Rewarded Video
     ios: "ca-app-pub-3940256099942544/1712485313", // Test Rewarded Video
   },
   // Ad settings
-  AD_COOLDOWN_MINUTES: 5, // Minimum time between ads
-  CREDITS_PER_AD: 5, // Credits earned per completed ad
+  AD_COOLDOWN_MINUTES: 3, // Minimum time between ads
+  CREDITS_PER_AD: 2, // Credits earned per completed ad
   MAX_ADS_PER_DAY: 20, // Maximum ads a user can watch per day
 };
 

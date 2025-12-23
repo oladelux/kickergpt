@@ -664,21 +664,6 @@ const Chat = memo(function Chat() {
                   </CardContent>
                 </Card>
               )}
-
-              <Card className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                <CardContent className="p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-foreground">
-                    <strong className="font-semibold">Disclaimer:</strong> KickerGPT provides data
-                    analysis and informational content only. We do not provide betting advice,
-                    predictions, or guarantees. Any use of our analysis for betting purposes is at
-                    your own discretion and risk.{" "}
-                    <Link to="/terms" className="text-primary hover:underline font-medium">
-                      View Terms
-                    </Link>
-                  </p>
-                </CardContent>
-              </Card>
-
               <div className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-border bg-card p-2 sm:p-3">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 sm:gap-3 lg:gap-2">
                   {availableDays.length > 0 && (
