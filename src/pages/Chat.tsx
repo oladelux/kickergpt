@@ -25,6 +25,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePredictions } from "@/hooks/usePredictions";
 
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
@@ -269,6 +270,7 @@ const Chat = memo(function Chat() {
     refreshUsage,
     refreshAll,
   } = useSubscriptionData();
+  const { predictions, getPredictionForFixture, loading: predictionsLoading } = usePredictions();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
   const [countryFilter, setCountryFilter] = useState("");
@@ -454,13 +456,18 @@ const Chat = memo(function Chat() {
     setSelectedLeagueKey(null);
   };
 
-  const renderCompactMatchRow = (match: Match) => {
+  const renderCompactMatchRow = (match: Match, predictionIndex: number) => {
     const statusLabel = getMatchStatusLabel(match);
     const statusBadgeClasses = getStatusBadgeClasses(match);
     const kickoffTime = match.kickoffTime.toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
     });
+
+    // Get prediction for this match
+    const prediction = getPredictionForFixture(match.id);
+    const isPro = subscriptionPlan?.plan === "PRO";
+    const isBlurred = predictionIndex >= 5 && !isPro;
 
     return (
       <div
@@ -500,27 +507,85 @@ const Chat = memo(function Chat() {
         </div>
 
         {/* Desktop: Status and time */}
-        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-          <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
-            {statusLabel}
-          </Badge>
-          <span className="text-xs text-muted-foreground font-mono w-12 text-center">
-            {kickoffTime}
-          </span>
+        <div className="hidden sm:flex flex-col gap-1 items-end flex-shrink-0">
+          <div className="flex items-center gap-2">
+            <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
+              {statusLabel}
+            </Badge>
+            <span className="text-xs text-muted-foreground font-mono w-12 text-center">
+              {kickoffTime}
+            </span>
+          </div>
+          {prediction && !isBlurred && prediction.predictions.length > 0 && (
+            <div className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1">
+              <div className="flex items-center gap-1.5 text-[11px] leading-tight text-primary font-medium">
+                <span className="font-bold">
+                  {prediction.predictions[0].result === "home"
+                    ? match.homeTeam
+                    : prediction.predictions[0].result === "away"
+                      ? match.awayTeam
+                      : "Draw"}
+                </span>
+                <span>•</span>
+                <span className="font-bold">
+                  {Math.round(prediction.predictions[0].probability)}%
+                </span>
+                <span>•</span>
+                <span className="capitalize">{prediction.predictions[0].confidence}</span>
+              </div>
+            </div>
+          )}
+          {isBlurred && !isPro && (
+            <div className="rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 blur-[2px]">
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+                <span className="font-bold">Team Name</span>
+                <span>• XX% • High</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Mobile: Status and time */}
         <div className="flex sm:hidden items-center gap-1.5 w-full justify-between min-w-0">
-          <div className="flex items-center gap-1.5 min-w-0 flex-shrink">
-            <Badge
-              variant="outline"
-              className={`text-[10px] sm:text-xs font-semibold ${statusBadgeClasses} flex-shrink-0`}
-            >
-              {statusLabel}
-            </Badge>
-            <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap flex-shrink-0">
-              {kickoffTime}
-            </span>
+          <div className="flex flex-col gap-1 min-w-0 flex-shrink">
+            <div className="flex items-center gap-1.5">
+              <Badge
+                variant="outline"
+                className={`text-[10px] sm:text-xs font-semibold ${statusBadgeClasses} flex-shrink-0`}
+              >
+                {statusLabel}
+              </Badge>
+              <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap flex-shrink-0">
+                {kickoffTime}
+              </span>
+            </div>
+            {prediction && !isBlurred && prediction.predictions.length > 0 && (
+              <div className="rounded-md border border-primary/30 bg-primary/5 px-2 py-1">
+                <div className="flex items-center gap-1 text-[10px] leading-tight text-primary font-medium">
+                  <span className="font-bold">
+                    {prediction.predictions[0].result === "home"
+                      ? match.homeTeam
+                      : prediction.predictions[0].result === "away"
+                        ? match.awayTeam
+                        : "Draw"}
+                  </span>
+                  <span>•</span>
+                  <span className="font-bold">
+                    {Math.round(prediction.predictions[0].probability)}%
+                  </span>
+                  <span>•</span>
+                  <span className="capitalize">{prediction.predictions[0].confidence}</span>
+                </div>
+              </div>
+            )}
+            {isBlurred && !isPro && (
+              <div className="rounded-md border border-border/40 bg-muted/30 px-2 py-1 blur-[2px]">
+                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
+                  <span className="font-bold">Team Name</span>
+                  <span>• XX% • High</span>
+                </div>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button
@@ -815,7 +880,13 @@ const Chat = memo(function Chat() {
                                 </div>
                               </div>
                               <div className="divide-y divide-border/50">
-                                {leagueMatches.map((match) => renderCompactMatchRow(match))}
+                                {leagueMatches.map((match, idx) => {
+                                  // Calculate global prediction index across all matches
+                                  const globalIndex = filteredMatches.findIndex(
+                                    (m) => m.id === match.id
+                                  );
+                                  return renderCompactMatchRow(match, globalIndex);
+                                })}
                               </div>
                             </CardContent>
                           </Card>
@@ -847,6 +918,7 @@ const Chat = memo(function Chat() {
           onOpenChange={setChatOpen}
           usage={usage}
           plan={subscriptionPlan}
+          prediction={selectedMatch ? getPredictionForFixture(selectedMatch.id) : null}
           onAnalysisComplete={refreshUsage}
           onPromptLimitReached={refreshUsage}
         />

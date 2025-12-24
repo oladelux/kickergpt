@@ -316,6 +316,43 @@ export type KickerGPTInjuryPlayerFlag = {
   expectedReturnDate?: string;
 };
 
+// Predictions types
+export type PredictionTeam = {
+  id: number;
+  name: string;
+  logo: string;
+};
+
+export type PredictionLeague = {
+  id: number;
+  name: string;
+  country: string;
+};
+
+export type PredictionResult = {
+  type: string;
+  result: "home" | "away" | "draw";
+  probability: number;
+  confidence: "high" | "medium" | "low";
+};
+
+export type FixturePrediction = {
+  fixtureId: number;
+  homeTeam: PredictionTeam;
+  awayTeam: PredictionTeam;
+  startingAt: string;
+  league: PredictionLeague;
+  predictions: PredictionResult[];
+  generatedAt: string;
+};
+
+export type PredictionsResponse = {
+  date: string;
+  predictions: FixturePrediction[];
+  totalFixturesAnalyzed: number;
+  generatedAt: string;
+};
+
 /**
  * Error class for API requests resulting in a 5xx status code.
  */
@@ -701,6 +738,14 @@ export const api = {
   ads: {
     claimReward: async (data: { creditsEarned: number }) => {
       const res = await apiRequest("/ads/reward", "POST", data);
+      return res.json();
+    },
+  },
+
+  // Predictions API
+  predictions: {
+    get: async (): Promise<PredictionsResponse> => {
+      const res = await apiRequest("/predictions", "GET");
       return res.json();
     },
   },
