@@ -14,11 +14,11 @@ export const BASE_URL = "https://www.kickergpt.com";
 const OG_IMAGE = "https://www.kickergpt.com/twitter-header.png";
 
 export const DEFAULT_SEO: SeoConfig = {
-  title: "KickerGPT | Scenario-Perfect Football Intelligence",
+  title: "KickerGPT | AI Football Predictions & Match Intelligence",
   description:
-    "KickerGPT surfaces officiating trends, tactical shifts, and weather context so football bettors can research every market responsibly—never a pick or guaranteed outcome.",
+    "KickerGPT provides AI-powered match predictions and surfaces officiating trends, tactical shifts, and weather context so football bettors can research every market responsibly—probability-based forecasts, not guaranteed outcomes.",
   keywords:
-    "football betting tips research, soccer picks context, market intelligence, injury tracking, bettor workflow, matchday briefing",
+    "AI football predictions, match outcome predictions, probability-based predictions, football betting tips research, soccer picks context, market intelligence, injury tracking, bettor workflow, matchday briefing, data-driven match predictions",
   ogImage: OG_IMAGE,
   canonical: BASE_URL,
   robots: "index,follow,max-snippet:-1,max-image-preview:large,max-video-preview:-1",
@@ -39,17 +39,17 @@ export const DEFAULT_SEO: SeoConfig = {
 
 export const seoConfig: Record<string, Partial<SeoConfig>> = {
   "/": {
-    title: "KickerGPT | Scenario-Perfect Football Intelligence",
+    title: "KickerGPT | AI Football Predictions & Match Intelligence",
     description:
-      "Scan fixtures for lineup news, pitch conditions, and officiating context so your betting research stays grounded in facts—not guaranteed picks.",
+      "Get AI-powered match predictions and scan fixtures for lineup news, pitch conditions, and officiating context so your betting research stays grounded in facts—probability-based forecasts, not guaranteed picks.",
     keywords:
-      "premier league betting tips research, la liga picks context, champions league bettor intel, football research app",
+      "AI football predictions, match outcome predictions, premier league betting tips research, la liga picks context, champions league bettor intel, football research app, probability-based predictions, data-driven match predictions",
     schema: {
       "@context": "https://schema.org",
       "@type": "WebPage",
       name: "KickerGPT Betting Dashboard",
       url: BASE_URL,
-      about: ["Football odds", "Betting intelligence", "Sports trading"],
+      about: ["Football odds", "Betting intelligence", "Sports trading", "AI match predictions", "Probability-based forecasts"],
     },
   },
   "/plans": {

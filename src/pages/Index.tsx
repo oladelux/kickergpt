@@ -11,6 +11,7 @@ import {
   Sparkles,
   Target,
   Trophy,
+  TrendingUp,
   Users,
   Zap,
   Loader2,
@@ -41,6 +42,12 @@ const featureHighlights = [
     title: "Pattern recognition",
     description:
       "Day-of-week performance, kickoff time trends, home/away splits, H2H history, and referee tendencies surfaced automatically.",
+  },
+  {
+    icon: TrendingUp,
+    title: "AI-powered predictions",
+    description:
+      "Get probability-based match predictions with confidence levels. Data-driven outcome forecasts powered by historical patterns and current form analysis.",
   },
 ];
 
@@ -128,11 +135,13 @@ const howItWorks = [
 
 const exampleQuestions = [
   "Who's likely to win and why?",
+  "What's the predicted match outcome?",
   "How do both teams perform on Saturdays?",
   "What's the head-to-head history?",
   "How are injuries affecting the squads?",
   "Is this likely to be high-scoring?",
   "Could the underdog cause an upset?",
+  "What's the probability of a draw?",
 ];
 
 const competitionBadges = [
@@ -176,19 +185,19 @@ export default function Index() {
   return (
     <>
       <Helmet>
-        <title>KickerGPT - AI Football Match Analysis</title>
+        <title>KickerGPT - AI Football Match Analysis & Predictions</title>
         <meta
           name="description"
-          content="Pre-match intelligence powered by historical data patterns. Analyze form, injuries, H2H, weather, and day/time patterns for European football."
+          content="Pre-match intelligence and AI-powered match predictions powered by historical data patterns. Analyze form, injuries, H2H, weather, and day/time patterns for European football with probability-based outcome forecasts."
         />
         <meta
           name="keywords"
-          content="football analysis, match prediction, pre-match analysis, Premier League, LaLiga, Serie A, Bundesliga"
+          content="football analysis, match prediction, AI football predictions, probability-based predictions, match outcome predictions, pre-match analysis, data-driven predictions, Premier League, LaLiga, Serie A, Bundesliga"
         />
-        <meta property="og:title" content="KickerGPT | AI Football Match Analysis" />
+        <meta property="og:title" content="KickerGPT | AI Football Match Analysis & Predictions" />
         <meta
           property="og:description"
-          content="Pre-match intelligence explanations powered by data patterns, not opinions."
+          content="Pre-match intelligence and AI-powered match predictions powered by data patterns, not opinions. Get probability-based forecasts with confidence levels."
         />
         <meta property="og:type" content="website" />
         <meta property="og:url" content="https://kickergpt.com" />
@@ -230,7 +239,7 @@ export default function Index() {
                   Free forever · No credit card needed
                 </Badge>
                 <Badge className="w-fit border border-accent/40 bg-accent/10 text-accent">
-                  Pre-match insights
+                  AI predictions
                 </Badge>
               </div>
               <div className="space-y-6">
@@ -242,8 +251,9 @@ export default function Index() {
                 </h1>
                 <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
                   KickerGPT combines match context, current form, head-to-head history, injuries,
-                  and day/time patterns into conversational pre-match analysis. Ask questions, get
-                  follow-ups, and dig deeper into the data.
+                  and day/time patterns into conversational pre-match analysis and AI-powered
+                  predictions. Ask questions, get follow-ups, and dig deeper into the data with
+                  probability-based match forecasts.
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
