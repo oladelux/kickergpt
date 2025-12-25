@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePredictions } from "@/hooks/usePredictions";
+import { getConfidenceColorClasses } from "@/lib/utils";
 
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
@@ -531,7 +532,11 @@ const Chat = memo(function Chat() {
                   {Math.round(prediction.predictions[0].probability)}%
                 </span>
                 <span>•</span>
-                <span className="capitalize">{prediction.predictions[0].confidence}</span>
+                <span
+                  className={`capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
+                >
+                  {prediction.predictions[0].confidence}
+                </span>
               </div>
             </div>
           )}
@@ -574,7 +579,11 @@ const Chat = memo(function Chat() {
                     {Math.round(prediction.predictions[0].probability)}%
                   </span>
                   <span>•</span>
-                  <span className="capitalize">{prediction.predictions[0].confidence}</span>
+                  <span
+                    className={`capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
+                  >
+                    {prediction.predictions[0].confidence}
+                  </span>
                 </div>
               </div>
             )}

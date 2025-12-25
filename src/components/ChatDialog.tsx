@@ -14,6 +14,7 @@ import {
 import { Match } from "@/services/matches.service";
 import { api, ClientError, FixturePrediction } from "@/lib/api";
 import { SubscriptionRecord, SubscriptionUsage } from "@/hooks/useSubscription";
+import { getConfidenceColorClasses } from "@/lib/utils";
 import { MarkdownContent } from "@/components/MarkdownContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
@@ -265,7 +266,9 @@ export default function ChatDialog({
                   {Math.round(prediction.predictions[0].probability)}%
                 </span>
                 <span className="text-xs text-muted-foreground">•</span>
-                <span className="text-xs capitalize text-muted-foreground font-medium">
+                <span
+                  className={`text-xs capitalize font-medium ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
+                >
                   {prediction.predictions[0].confidence} confidence
                 </span>
               </div>

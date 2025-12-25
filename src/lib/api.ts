@@ -333,7 +333,7 @@ export type PredictionResult = {
   type: string;
   result: "home" | "away" | "draw";
   probability: number;
-  confidence: "high" | "medium" | "low";
+  confidence: "very high" | "high" | "medium" | "low";
 };
 
 export type FixturePrediction = {

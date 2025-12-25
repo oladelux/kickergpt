@@ -3,12 +3,8 @@ import { TrendingUp, Lock, Star, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FixturePrediction } from "@/lib/api";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { getConfidenceColorClasses } from "@/lib/utils";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PredictionBadgeProps {
   prediction: FixturePrediction | undefined;
@@ -18,13 +14,15 @@ interface PredictionBadgeProps {
 }
 
 const getConfidenceIcon = (confidence: string) => {
-  switch (confidence) {
+  switch (confidence.toLowerCase()) {
+    case "very high":
+      return <Star className="h-3 w-3 fill-current text-emerald-500" />;
     case "high":
       return <Star className="h-3 w-3 fill-current text-amber-500" />;
     case "medium":
-      return <AlertCircle className="h-3 w-3 text-blue-500" />;
+      return <AlertCircle className="h-3 w-3 text-orange-500" />;
     case "low":
-      return <TrendingUp className="h-3 w-3 text-muted-foreground" />;
+      return <TrendingUp className="h-3 w-3 text-red-500" />;
     default:
       return null;
   }
@@ -106,12 +104,14 @@ export default function PredictionBadge({
             </TooltipTrigger>
             <TooltipContent>
               <div className="text-xs space-y-1">
-                <p className="font-semibold">
-                  {getResultLabel(primaryPrediction.result)} Win
-                </p>
-                <p className="text-muted-foreground">
-                  {Math.round(primaryPrediction.probability)}% •{" "}
-                  {primaryPrediction.confidence} confidence
+                <p className="font-semibold">{getResultLabel(primaryPrediction.result)} Win</p>
+                <p>
+                  <span className="text-muted-foreground">
+                    {Math.round(primaryPrediction.probability)}% •{" "}
+                  </span>
+                  <span className={getConfidenceColorClasses(primaryPrediction.confidence)}>
+                    {primaryPrediction.confidence} confidence
+                  </span>
                 </p>
               </div>
             </TooltipContent>
@@ -138,4 +138,3 @@ export default function PredictionBadge({
 
   return null;
 }
-
