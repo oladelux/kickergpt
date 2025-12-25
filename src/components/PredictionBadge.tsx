@@ -60,16 +60,15 @@ export default function PredictionBadge({
           <TooltipTrigger asChild>
             <div className="relative inline-flex items-center">
               <div className="backdrop-blur-sm bg-muted/50 rounded-md px-2 py-1 flex items-center gap-1.5 border border-border/50">
-                <Lock className="h-3 w-3 text-muted-foreground" />
                 <span className="text-xs font-medium text-muted-foreground blur-[3px] select-none">
                   XX% High
                 </span>
-                <Badge
-                  variant="secondary"
-                  className="text-[9px] px-1.5 py-0 h-4 bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 font-bold"
-                >
-                  PRO
-                </Badge>
+                <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
+                  <Lock className="h-3 w-3 text-muted-foreground" />
+                  <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                    PRO
+                  </span>
+                </div>
               </div>
             </div>
           </TooltipTrigger>

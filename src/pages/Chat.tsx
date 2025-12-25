@@ -1,6 +1,17 @@
 import { useEffect, useState, useMemo, memo, useCallback, startTransition } from "react";
 import { Link } from "react-router-dom";
-import { Activity, Clock, Globe, Heart, MessageSquare, Search, Star, Menu, X } from "lucide-react";
+import {
+  Activity,
+  Clock,
+  Globe,
+  Heart,
+  MessageSquare,
+  Search,
+  Star,
+  Menu,
+  X,
+  Lock,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -541,10 +552,16 @@ const Chat = memo(function Chat() {
             </div>
           )}
           {isBlurred && !isPro && (
-            <div className="rounded-md border border-border/40 bg-muted/30 px-2.5 py-1 blur-[2px]">
+            <div className="rounded-md border border-border/40 bg-muted/30 px-2.5 py-1">
               <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <span className="font-bold">Team Name</span>
-                <span>• XX% • High</span>
+                <span className="font-bold blur-[2px]">Team Name</span>
+                <span className="blur-[2px]">• XX% • High</span>
+                <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
+                  <Lock className="h-3 w-3" />
+                  <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                    PRO
+                  </span>
+                </div>
               </div>
             </div>
           )}
@@ -588,10 +605,16 @@ const Chat = memo(function Chat() {
               </div>
             )}
             {isBlurred && !isPro && (
-              <div className="rounded-md border border-border/40 bg-muted/30 px-2 py-1 blur-[2px]">
+              <div className="rounded-md border border-border/40 bg-muted/30 px-2 py-1">
                 <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                  <span className="font-bold">Team Name</span>
-                  <span>• XX% • High</span>
+                  <span className="font-bold blur-[2px]">Team Name</span>
+                  <span className="blur-[2px]">• XX% • High</span>
+                  <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
+                    <Lock className="h-2.5 w-2.5" />
+                    <span className="text-[8px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 py-0.5 rounded">
+                      PRO
+                    </span>
+                  </div>
                 </div>
               </div>
             )}
