@@ -285,6 +285,7 @@ export default function ChatDialog({
               target="_blank"
               rel="noopener noreferrer"
               className="mt-2 inline-block text-sm font-semibold text-primary hover:underline max-sm:text-xs"
+              onClick={() => track("signup_afropari")}
             >
               Sign up here
             </a>
