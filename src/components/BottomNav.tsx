@@ -18,10 +18,12 @@ const BottomNav = memo(function BottomNav() {
   const isMobile = isNativeMobile();
 
   return (
-    <nav className={cn(
-      "fixed bottom-0 left-0 right-0 z-50 bg-primary/95 border-t border-primary/30 md:hidden",
-      !isMobile && "backdrop-blur-sm"
-    )}>
+    <nav
+      className={cn(
+        "fixed bottom-0 left-0 right-0 z-50 bg-primary/95 border-t border-primary/30 md:hidden",
+        !isMobile && "backdrop-blur-sm"
+      )}
+    >
       <div className="flex items-center justify-around h-16">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;

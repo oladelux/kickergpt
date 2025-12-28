@@ -31,6 +31,7 @@ import { Analytics } from "@vercel/analytics/react";
 import MetaManager from "@/components/MetaManager";
 // import Intercom from "@/components/Intercom";
 import HelpBanner from "@/components/HelpBanner";
+import AfropariPromoBanner from "@/components/AfropariPromoBanner";
 import ls from "@livesession/browser";
 import { App as CapacitorApp } from "@capacitor/app";
 import { SplashScreen } from "@capacitor/splash-screen";
@@ -196,6 +197,7 @@ const AppContent = () => {
       <MetaManager />
       {/* <Intercom /> */}
       <HelpBanner />
+      <AfropariPromoBanner />
       <Suspense fallback={<LoadingPage />}>
         <Routes>
           <Route path="/" element={<Index />} />

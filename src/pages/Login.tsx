@@ -43,6 +43,8 @@ export default function Login() {
 
     try {
       await login(email, password, geoCountryCode);
+      // Set flag to show promo banner on first page load after login
+      sessionStorage.setItem("just-logged-in", "true");
       toast({
         title: "Signed in",
         description: "Welcome back!",

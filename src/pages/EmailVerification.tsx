@@ -57,6 +57,8 @@ export default function EmailVerification() {
               // Auto-login the user
               login(userEmail, password, geoCountryCode)
                 .then(() => {
+                  // Set flag to show promo banner on first page load after login
+                  sessionStorage.setItem("just-logged-in", "true");
                   toast({
                     title: "Welcome!",
                     description: "You're all set. Redirecting to your fixtures...",
