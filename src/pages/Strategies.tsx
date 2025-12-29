@@ -12,6 +12,7 @@ import { StrategyFormDialog } from "@/components/StrategyFormDialog";
 import { useStrategies } from "@/hooks/useStrategies";
 import { useToast } from "@/hooks/use-toast";
 import { Strategy, StrategyCondition } from "@/types/strategy";
+import { track } from "@vercel/analytics";
 
 export default function Strategies() {
   const { strategies, loading, error, createStrategy, updateStrategy, deleteStrategy } =
@@ -22,6 +23,7 @@ export default function Strategies() {
   const [editingStrategy, setEditingStrategy] = useState<Strategy | null>(null);
 
   const handleCreateClick = () => {
+    track("create_strategy_button_click");
     setEditingStrategy(null);
     setFormDialogOpen(true);
   };

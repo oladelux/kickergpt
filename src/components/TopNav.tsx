@@ -112,7 +112,13 @@ const TopNav = memo(function TopNav({ onFilterClick, selectedLeagueKey, leagueNa
                     variant={isActive ? "default" : "ghost"}
                     className="rounded-md"
                   >
-                    <Link to={item.path} className="flex items-center gap-2 text-sm font-medium">
+                    <Link
+                      to={item.path}
+                      className="flex items-center gap-2 text-sm font-medium"
+                      onClick={() => {
+                        if (item.path === "/strategies") track("strategies_nav_click");
+                      }}
+                    >
                       <item.icon className="h-4 w-4" />
                       {item.label}
                     </Link>

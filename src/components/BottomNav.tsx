@@ -37,6 +37,7 @@ const BottomNav = memo(function BottomNav() {
               )}
               onClick={() => {
                 if (item.path === "/plans") track("plan_button_bottomnav_click");
+                if (item.path === "/strategies") track("strategies_nav_click");
               }}
             >
               <item.icon className={cn("h-5 w-5", isActive && "scale-110")} />
