@@ -90,10 +90,11 @@ export function StrategyCard({ strategy, onEdit, onDelete, onToggle }: StrategyC
     <>
       <Card className="border border-border/60 bg-card/60 backdrop-blur hover:border-primary/50 transition-colors">
         <CardHeader className="pb-3">
-          {/* Compact header with name, toggle, and actions in one line */}
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 flex-1 min-w-0">
-              <CardTitle className="text-base truncate">{strategy.name}</CardTitle>
+          {/* Header with responsive layout */}
+          <div className="flex flex-col gap-3">
+            {/* Title and toggle row */}
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base truncate flex-1 min-w-0">{strategy.name}</CardTitle>
               <div className="flex items-center gap-2 flex-shrink-0">
                 <Switch
                   id={`active-${strategy.id}`}
@@ -110,23 +111,25 @@ export function StrategyCard({ strategy, onEdit, onDelete, onToggle }: StrategyC
                 </Label>
               </div>
             </div>
-            {/* Action buttons inline */}
-            <div className="flex items-center gap-1 flex-shrink-0">
+
+            {/* Action buttons row - responsive */}
+            <div className="flex items-center gap-2 flex-wrap">
               <Button
                 variant="default"
                 size="sm"
                 onClick={() => navigate(`/strategies/${strategy.id}/matches`)}
-                className="h-8"
+                className="h-8 flex-1 sm:flex-none"
                 disabled={!strategy.isActive}
               >
                 <Target className="h-3 w-3 mr-1" />
-                Find Matches
+                <span className="hidden xs:inline">Find Matches</span>
+                <span className="xs:hidden">Find</span>
               </Button>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => onEdit(strategy)}
-                className="h-8 w-8 p-0"
+                className="h-8 w-8 p-0 flex-shrink-0"
               >
                 <Edit className="h-3 w-3" />
               </Button>
@@ -134,7 +137,7 @@ export function StrategyCard({ strategy, onEdit, onDelete, onToggle }: StrategyC
                 variant="outline"
                 size="sm"
                 onClick={() => setDeleteDialogOpen(true)}
-                className="text-destructive hover:text-destructive h-8 w-8 p-0"
+                className="text-destructive hover:text-destructive h-8 w-8 p-0 flex-shrink-0"
               >
                 <Trash2 className="h-3 w-3" />
               </Button>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Target } from "lucide-react";
+import { Plus, Target, BookOpen, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -81,6 +81,39 @@ export default function Strategies() {
             </Button>
           </div>
 
+          {/* Help Article Banner */}
+          <Card className="bg-gradient-to-r from-primary/5 to-accent/5 border-primary/20">
+            <CardContent className="py-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <BookOpen className="h-5 w-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm mb-1">New to Strategies?</h3>
+                    <p className="text-xs text-muted-foreground">
+                      Learn how to create effective strategies with our comprehensive guide.
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="self-start sm:self-auto whitespace-nowrap"
+                  onClick={() =>
+                    window.open(
+                      "https://help.kickergpt.com/en/articles/13248747-introducing-strategies-your-personal-match-finding-assistant",
+                      "_blank"
+                    )
+                  }
+                >
+                  Read Guide
+                  <ExternalLink className="h-3 w-3 ml-2" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Error State */}
           {error && (
             <Card className="bg-destructive/10 border-destructive/20">
@@ -120,7 +153,7 @@ export default function Strategies() {
                   {strategies.length} strateg{strategies.length === 1 ? "y" : "ies"}
                 </p>
               </div>
-              <div className="grid gap-4 md:grid-cols-2">
+              <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-2">
                 {strategies.map((strategy) => (
                   <StrategyCard
                     key={strategy.id}
