@@ -349,6 +349,95 @@ export default function Index() {
               </div>
             </section>
 
+            {/* Strategies Section */}
+            <section className="space-y-6">
+              <div className="flex flex-col gap-3 text-center">
+                <p className="text-xs uppercase tracking-[0.4em] text-muted-foreground">
+                  Strategies
+                </p>
+                <h2 className="text-3xl font-semibold tracking-tight">
+                  Your personal match-finding assistant
+                </h2>
+                <p className="mx-auto max-w-2xl text-muted-foreground">
+                  Stop manually searching through fixtures. Create custom strategies and let KickerGPT automatically find matches that meet your exact criteria.
+                </p>
+              </div>
+              <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/10 shadow-xl shadow-primary/10">
+                <CardHeader className="flex flex-row items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/20 text-primary">
+                      <Target className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <CardTitle className="text-2xl">Strategies</CardTitle>
+                        <Badge className="bg-primary/10 text-primary border-primary/20">PRO</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Automate your match research with intelligent filters
+                      </p>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-card/80 p-4">
+                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Sparkles className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Custom conditions</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Set precise criteria based on team form, goals scored/conceded, win rates, and more
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-3 rounded-lg border border-border/60 bg-card/80 p-4">
+                      <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Zap className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold mb-1">Auto-discovery</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Instantly find all fixtures matching your strategy across multiple leagues
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="rounded-lg border border-primary/30 bg-gradient-to-r from-primary/5 to-accent/5 p-4">
+                    <p className="text-sm font-medium text-foreground mb-3">
+                      Example strategy conditions:
+                    </p>
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-start gap-2">
+                        <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                        <p>Home team has won 3+ of their last 5 matches</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                        <p>Away team has conceded 2+ goals in 4 of their last 5 matches</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <div className="mt-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                        <p>Both teams have scored in 60%+ of recent meetings</p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex justify-center">
+                    <Button
+                      asChild
+                      className="gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
+                    >
+                      <Link to="/signup">
+                        Try Strategies with PRO
+                        <ArrowRight className="h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </section>
+
             {/* Example Questions Section */}
             <section className="space-y-6">
               <div className="flex flex-col gap-3 text-center">
