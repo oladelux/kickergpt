@@ -58,11 +58,14 @@ export default function AfropariPromoBanner() {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => {
-      if (!open) {
-        handleClose();
-      }
-    }}>
+    <Dialog
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          handleClose();
+        }
+      }}
+    >
       <DialogContent className="sm:max-w-md p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
           <div className="flex items-center justify-center gap-2 mb-2">
@@ -70,18 +73,14 @@ export default function AfropariPromoBanner() {
               <Gift className="h-5 w-5 text-primary" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl font-semibold">
-            Special Promotion
-          </DialogTitle>
+          <DialogTitle className="text-center text-xl font-semibold">Special Promotion</DialogTitle>
         </DialogHeader>
-        
+
         <div className="px-6 pb-4 space-y-4">
           <div className="w-full rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 p-5 text-center shadow-sm">
             <p className="text-sm font-medium text-foreground leading-relaxed">
               Deposit and get{" "}
-              <span className="font-bold text-green-600 dark:text-green-400 text-base">
-                300%
-              </span>{" "}
+              <span className="font-bold text-green-600 dark:text-green-400 text-base">300%</span>{" "}
               bonus on Afropari, using the promo code{" "}
               <span className="font-semibold text-primary">KICKERGPT</span>
             </p>
@@ -99,7 +98,7 @@ export default function AfropariPromoBanner() {
               </a>
             </Button>
           </div>
-          
+
           <div className="flex items-center space-x-2 pt-2">
             <Checkbox
               id="do-not-show-again"
@@ -114,7 +113,7 @@ export default function AfropariPromoBanner() {
             </Label>
           </div>
         </div>
-        
+
         <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/30">
           <Button onClick={handleClose} variant="outline" className="w-full sm:w-auto">
             Close
@@ -124,4 +123,3 @@ export default function AfropariPromoBanner() {
     </Dialog>
   );
 }
-

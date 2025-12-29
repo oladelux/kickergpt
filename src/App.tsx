@@ -18,6 +18,8 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const EmailVerification = lazy(() => import("./pages/EmailVerification"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Favorites = lazy(() => import("./pages/Favorites"));
+const Strategies = lazy(() => import("./pages/Strategies"));
+const StrategyMatches = lazy(() => import("./pages/StrategyMatches"));
 const Profile = lazy(() => import("./pages/Profile"));
 const History = lazy(() => import("./pages/History"));
 const Plans = lazy(() => import("./pages/Plans"));
@@ -231,6 +233,22 @@ const AppContent = () => {
             element={
               <SubscriptionRoute>
                 <Favorites />
+              </SubscriptionRoute>
+            }
+          />
+          <Route
+            path="/strategies"
+            element={
+              <SubscriptionRoute>
+                <Strategies />
+              </SubscriptionRoute>
+            }
+          />
+          <Route
+            path="/strategies/:strategyId/matches"
+            element={
+              <SubscriptionRoute>
+                <StrategyMatches />
               </SubscriptionRoute>
             }
           />

@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { MessageCircle, Clock, User, Heart, CreditCard } from "lucide-react";
+import { MessageCircle, Clock, User, Target, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { track } from "@vercel/analytics";
 import { memo } from "react";
@@ -7,7 +7,7 @@ import { isNativeMobile } from "@/lib/platform";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
-  { icon: Heart, label: "Favorites", path: "/favorites" },
+  { icon: Target, label: "Strategies", path: "/strategies" },
   { icon: Clock, label: "History", path: "/history" },
   { icon: CreditCard, label: "Plan", path: "/plans" },
   { icon: User, label: "Profile", path: "/profile" },

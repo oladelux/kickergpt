@@ -749,4 +749,81 @@ export const api = {
       return res.json();
     },
   },
+
+  // Strategies API
+  strategies: {
+    getAll: async () => {
+      const res = await apiRequest("/strategies", "GET");
+      return res.json();
+    },
+    getOne: async (id: string) => {
+      const res = await apiRequest(`/strategies/${id}`, "GET");
+      return res.json();
+    },
+    create: async (data: {
+      name: string;
+      description?: string;
+      conditions: Array<{
+        id: string;
+        type:
+          | "HOME_FORM"
+          | "AWAY_FORM"
+          | "WIN_RATE"
+          | "HEAD_TO_HEAD"
+          | "INJURIES"
+          | "GOALS_SCORED"
+          | "GOALS_CONCEDED"
+          | "RECENT_GOALS_TOTAL"
+          | "CLEAN_SHEETS"
+          | "BTTS"
+          | "H2H_GOALS_SCORED";
+        operator: ">" | "<" | "=" | ">=" | "<=";
+        value: number;
+        lastMatches: number;
+        target: "HOME" | "AWAY" | "BOTH";
+      }>;
+      isActive?: boolean;
+    }) => {
+      const res = await apiRequest("/strategies", "POST", data);
+      return res.json();
+    },
+    update: async (
+      id: string,
+      data: {
+        name?: string;
+        description?: string;
+        conditions?: Array<{
+          id: string;
+          type:
+            | "HOME_FORM"
+            | "AWAY_FORM"
+            | "WIN_RATE"
+            | "HEAD_TO_HEAD"
+            | "INJURIES"
+            | "GOALS_SCORED"
+            | "GOALS_CONCEDED"
+            | "RECENT_GOALS_TOTAL"
+            | "CLEAN_SHEETS"
+            | "BTTS"
+            | "H2H_GOALS_SCORED";
+          operator: ">" | "<" | "=" | ">=" | "<=";
+          value: number;
+          lastMatches: number;
+          target: "HOME" | "AWAY" | "BOTH";
+        }>;
+        isActive?: boolean;
+      }
+    ) => {
+      const res = await apiRequest(`/strategies/${id}`, "PATCH", data);
+      return res.json();
+    },
+    delete: async (id: string) => {
+      const res = await apiRequest(`/strategies/${id}`, "DELETE");
+      return res.status === 204 ? null : res.json();
+    },
+    findMatches: async (id: string) => {
+      const res = await apiRequest(`/strategies/${id}/find-matches`, "POST");
+      return res.json();
+    },
+  },
 };
