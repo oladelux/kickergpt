@@ -63,6 +63,29 @@ const targetLabels: Record<StrategyTarget, string> = {
   BOTH: "Both Teams",
 };
 
+const targetHints: Record<StrategyTarget, string> = {
+  HOME: "Apply this condition to the home team only.",
+  AWAY: "Apply this condition to the away team only.",
+  BOTH: "Apply this condition to both teams (both must meet the criteria).",
+};
+
+const conditionTypeHints: Record<StrategyConditionType, string> = {
+  HOME_FORM:
+    "Form points (W=3, D=1, L=0) from the home team's recent matches. Higher = better form.",
+  AWAY_FORM:
+    "Form points (W=3, D=1, L=0) from the away team's recent matches. Higher = better form.",
+  WIN_RATE: "Win percentage in recent matches. E.g., >= 60 means wins at least 60% of matches.",
+  HEAD_TO_HEAD: "Win percentage in head-to-head matches between these two teams.",
+  INJURIES: "Number of injured players. Use <= X to find teams with few injuries.",
+  GOALS_SCORED: "Minimum goals scored per match. >= 1 means scored at least 1 in every match.",
+  GOALS_CONCEDED: "Maximum goals conceded per match. <= 1 means conceded at most 1 in every match.",
+  RECENT_GOALS_TOTAL:
+    "Minimum total goals (both teams) per match. >= 3 means 3+ goals every match.",
+  CLEAN_SHEETS: "Clean sheet percentage. >= 40 means kept a clean sheet in 40%+ of matches.",
+  BTTS: "Both Teams To Score percentage. >= 60 means BTTS in 60%+ of matches.",
+  H2H_GOALS_SCORED: "Minimum goals scored per H2H match. >= 1 means scored in every H2H match.",
+};
+
 export function StrategyConditionBuilder({
   condition,
   onChange,
@@ -131,7 +154,7 @@ export function StrategyConditionBuilder({
         <div className="mt-4 space-y-4 animate-in slide-in-from-top-2 duration-200">
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Condition Type */}
-            <div className="space-y-2">
+            <div className="space-y-2 sm:col-span-2">
               <Label htmlFor={`condition-type-${index}`}>Condition Type</Label>
               <Select
                 value={condition.type}
@@ -150,6 +173,11 @@ export function StrategyConditionBuilder({
                   ))}
                 </SelectContent>
               </Select>
+              {condition.type && (
+                <p className="text-xs text-muted-foreground italic">
+                  💡 {conditionTypeHints[condition.type]}
+                </p>
+              )}
             </div>
 
             {/* Operator */}
@@ -238,6 +266,11 @@ export function StrategyConditionBuilder({
                   ))}
                 </SelectContent>
               </Select>
+              {condition.target && (
+                <p className="text-xs text-muted-foreground italic">
+                  💡 {targetHints[condition.target]}
+                </p>
+              )}
             </div>
           </div>
         </div>

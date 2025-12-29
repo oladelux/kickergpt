@@ -217,7 +217,15 @@ export function StrategyFormDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="w-[95vw] sm:w-auto sm:max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6"
+        style={{
+          left: "50%",
+          top: "50%",
+          transform: "translate(-50%, -50%)",
+          maxWidth: "95vw",
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{mode === "create" ? "Create Strategy" : "Edit Strategy"}</DialogTitle>
           <DialogDescription>
