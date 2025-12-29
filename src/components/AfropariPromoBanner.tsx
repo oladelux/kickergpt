@@ -1,25 +1,33 @@
 import { useState, useEffect } from "react";
-import { Gift } from "lucide-react";
+import { Target, Sparkles, Zap, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 import { track } from "@vercel/analytics";
 
-const AFROPARI_URL =
-  "https://refpa84423.com/L?tag=d_5072438m_70055c_&site=5072438&ad=70055&r=Registration";
-const BANNER_DISMISSED_KEY = "afropari-promo-banner-dismissed";
+const BANNER_DISMISSED_KEY = "strategies-announcement-banner-dismissed";
 const JUST_LOGGED_IN_KEY = "just-logged-in";
+
+const strategyFeatures = [
+  "Create custom conditions based on team form, goals, and stats",
+  "Automatically find fixtures matching your exact criteria",
+  "Save unlimited strategies and get instant match alerts",
+];
 
 export default function AfropariPromoBanner() {
   const { user, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [doNotShowAgain, setDoNotShowAgain] = useState(false);
 
@@ -48,9 +56,10 @@ export default function AfropariPromoBanner() {
     }
   };
 
-  const handleLinkClick = () => {
-    track("signup_afropari");
+  const handleExploreClick = () => {
+    track("strategies_announcement_explore_click");
     handleClose();
+    navigate("/strategies");
   };
 
   if (!isOpen) {
@@ -66,40 +75,61 @@ export default function AfropariPromoBanner() {
         }
       }}
     >
-      <DialogContent className="sm:max-w-md p-0 gap-0">
+      <DialogContent className="sm:max-w-lg p-0 gap-0">
         <DialogHeader className="px-6 pt-6 pb-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="rounded-full bg-primary/10 p-2">
-              <Gift className="h-5 w-5 text-primary" />
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <div className="rounded-full bg-gradient-to-br from-primary/20 to-accent/20 p-3 relative">
+              <Target className="h-6 w-6 text-primary" />
+              <Sparkles className="h-3 w-3 text-accent absolute -top-1 -right-1 animate-pulse" />
             </div>
           </div>
-          <DialogTitle className="text-center text-xl font-semibold">Special Promotion</DialogTitle>
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <DialogTitle className="text-center text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Introducing Strategies
+            </DialogTitle>
+            <Badge className="bg-primary/10 text-primary border-primary/20 text-xs">PRO</Badge>
+          </div>
+          <DialogDescription className="text-center text-base text-muted-foreground">
+            Your personal match-finding assistant
+          </DialogDescription>
         </DialogHeader>
 
-        <div className="px-6 pb-4 space-y-4">
-          <div className="w-full rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 p-5 text-center shadow-sm">
-            <p className="text-sm font-medium text-foreground leading-relaxed">
-              Deposit and get{" "}
-              <span className="font-bold text-green-600 dark:text-green-400 text-base">300%</span>{" "}
-              bonus on Afropari, using the promo code{" "}
-              <span className="font-semibold text-primary">KICKERGPT</span>
-            </p>
+        <div className="px-6 pb-4 space-y-5">
+          <div className="w-full rounded-2xl border border-primary/30 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/5 p-6 shadow-sm">
+            <div className="flex items-start gap-3 mb-4">
+              <div className="rounded-lg bg-primary/10 p-2 mt-0.5">
+                <Zap className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-foreground mb-2 text-base">
+                  Stop manually searching for matches
+                </h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Set your betting criteria once, and let Strategies automatically find fixtures
+                  that match your exact requirements. Save hours of research every week.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 mt-4">
+              {strategyFeatures.map((feature) => (
+                <div key={feature} className="flex items-start gap-3">
+                  <Check className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-foreground/90">{feature}</p>
+                </div>
+              ))}
+            </div>
+
             <Button
-              asChild
-              className="mt-4 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold"
+              onClick={handleExploreClick}
+              className="w-full mt-5 bg-gradient-to-r from-primary to-accent hover:opacity-90 text-primary-foreground font-semibold shadow-md"
             >
-              <a
-                href={AFROPARI_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={handleLinkClick}
-              >
-                Sign up here
-              </a>
+              Explore Strategies
+              <Sparkles className="h-4 w-4 ml-2" />
             </Button>
           </div>
 
-          <div className="flex items-center space-x-2 pt-2">
+          <div className="flex items-center space-x-2">
             <Checkbox
               id="do-not-show-again"
               checked={doNotShowAgain}
@@ -109,14 +139,14 @@ export default function AfropariPromoBanner() {
               htmlFor="do-not-show-again"
               className="text-sm font-normal cursor-pointer text-muted-foreground"
             >
-              Do not show again
+              Don't show this again
             </Label>
           </div>
         </div>
 
         <DialogFooter className="px-6 py-4 border-t border-border/50 bg-muted/30">
           <Button onClick={handleClose} variant="outline" className="w-full sm:w-auto">
-            Close
+            Maybe Later
           </Button>
         </DialogFooter>
       </DialogContent>
