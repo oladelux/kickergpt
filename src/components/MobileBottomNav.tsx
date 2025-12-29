@@ -1,4 +1,4 @@
-import { Home, MessageSquare, CreditCard, User } from "lucide-react";
+import { Home, Target, CreditCard, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { memo } from "react";
@@ -10,7 +10,7 @@ export const MobileBottomNav = memo(function MobileBottomNav() {
 
   const navItems = [
     { path: "/fixtures", icon: Home, label: "Home" },
-    { path: "/favorites", icon: MessageSquare, label: "Favorites" },
+    { path: "/strategies", icon: Target, label: "Strategies" },
     { path: "/plans", icon: CreditCard, label: "Plans" },
     { path: "/profile", icon: User, label: "Profile" },
   ];

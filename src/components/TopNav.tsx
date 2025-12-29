@@ -9,6 +9,7 @@ import {
   Settings,
   LogOut,
   Menu,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +31,7 @@ import { isNativeMobile } from "@/lib/platform";
 
 const navItems = [
   { icon: MessageCircle, label: "Fixtures", path: "/fixtures" },
-  { icon: Heart, label: "Favorites", path: "/favorites" },
+  { icon: Target, label: "Strategies", path: "/strategies" },
   { icon: Clock, label: "History", path: "/history" },
 ];
 
@@ -206,6 +207,12 @@ const TopNav = memo(function TopNav({ onFilterClick, selectedLeagueKey, leagueNa
                         <Link to="/profile" className="flex items-center gap-2 cursor-pointer">
                           <User className="h-4 w-4" />
                           <span>Profile</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem asChild>
+                        <Link to="/favorites" className="flex items-center gap-2 cursor-pointer">
+                          <Heart className="h-4 w-4" />
+                          <span>Favorites</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuItem asChild>
