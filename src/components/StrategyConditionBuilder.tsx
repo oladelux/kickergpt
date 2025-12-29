@@ -114,10 +114,10 @@ export function StrategyConditionBuilder({
       {/* Header - Always visible */}
       <div className="flex items-center justify-between cursor-pointer" onClick={onToggle}>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-2">
             <Label className="text-sm font-semibold">Condition {index + 1}</Label>
             {!isExpanded && (
-              <span className="text-xs text-muted-foreground truncate">{conditionSummary}</span>
+              <span className="text-xs text-muted-foreground break-words">{conditionSummary}</span>
             )}
           </div>
         </div>
