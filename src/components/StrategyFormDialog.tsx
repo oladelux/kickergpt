@@ -265,22 +265,24 @@ export function StrategyFormDialog({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <Label className="text-base font-semibold">Conditions *</Label>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddCondition}
-                disabled={conditions.length >= 10}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add Condition
-              </Button>
             </div>
+
+            {/* Add Condition Button - More prominent on mobile */}
+            <Button
+              type="button"
+              variant="default"
+              className="w-full sm:w-auto shadow-sm"
+              onClick={handleAddCondition}
+              disabled={conditions.length >= 10}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Condition {conditions.length > 0 && `(${conditions.length}/10)`}
+            </Button>
 
             {conditions.length === 0 && (
               <div className="p-8 border border-dashed border-border rounded-lg text-center text-muted-foreground">
                 <p className="text-sm">No conditions added yet.</p>
-                <p className="text-xs mt-1">Click "Add Condition" to get started.</p>
+                <p className="text-xs mt-1">Click "Add Condition" above to get started.</p>
               </div>
             )}
 
@@ -298,18 +300,36 @@ export function StrategyFormDialog({
                 />
               ))}
             </div>
+
+            {/* Repeat Add Condition at bottom for easier access */}
+            {conditions.length > 0 && conditions.length < 10 && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={handleAddCondition}
+                disabled={conditions.length >= 10}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Another Condition ({conditions.length}/10)
+              </Button>
+            )}
           </div>
 
-          <DialogFooter>
+          {/* Extra spacing on mobile before footer to prevent accidental taps */}
+          <div className="h-8 sm:h-4" />
+
+          <DialogFooter className="gap-3 sm:gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={saving}
+              className="min-h-[44px] sm:min-h-[36px]"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={saving}>
+            <Button type="submit" disabled={saving} className="min-h-[44px] sm:min-h-[36px]">
               {saving ? "Saving..." : mode === "create" ? "Create Strategy" : "Update Strategy"}
             </Button>
           </DialogFooter>
