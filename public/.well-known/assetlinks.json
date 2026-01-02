@@ -1,11 +1,15 @@
 [
   {
-    "relation": ["delegate_permission/common.handle_all_urls"],
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
     "target": {
       "namespace": "android_app",
       "package_name": "com.kickergpt.app",
       "sha256_cert_fingerprints": [
-        "EFBCBAC0F3818FE427EF0ED60296B4DDF45F8F6428F0E06C136B589DDEA41B96"
+        "EFBCBAC0F3818FE427EF0ED60296B4DDF45F8F6428F0E06C136B589DDEA41B96",
+        "AC:99:41:15:59:B5:76:BA:F2:54:A6:01:10:75:26:C1:46:D0:39:26:B1:E2:88:F4:81:54:6E:3D:27:72:18:8D"
       ]
     }
   }
