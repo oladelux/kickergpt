@@ -69,6 +69,14 @@ class AuthService {
     );
   }
 
+  resetPassword(hash: string, password: string): Observable<{ message: string }> {
+    return from(api.auth.resetPassword({ hash, password })).pipe(
+      map((response) => ({
+        message: response?.message ?? "Password reset successfully",
+      }))
+    );
+  }
+
   resendVerificationEmail(email: string): Observable<{ message: string }> {
     return from(api.auth.resendVerificationEmail({ email })).pipe(
       map((response) => ({

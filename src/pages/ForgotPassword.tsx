@@ -4,15 +4,35 @@ import { Mail, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const { forgotPassword, loading } = useAuth();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Backend integration will go here
-    setSubmitted(true);
+    if (loading) return;
+
+    try {
+      await forgotPassword(email);
+      setSubmitted(true);
+      toast({
+        title: "Reset link sent",
+        description: "Check your email for password reset instructions.",
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to send reset link. Please try again.";
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: message,
+      });
+    }
   };
 
   return (
@@ -55,9 +75,10 @@ export default function ForgotPassword() {
 
             <Button
               type="submit"
+              disabled={loading}
               className="w-full bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
             >
-              Send Reset Link
+              {loading ? "Sending..." : "Send Reset Link"}
             </Button>
 
             <Link

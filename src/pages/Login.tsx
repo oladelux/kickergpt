@@ -193,6 +193,25 @@ export default function Login() {
                   Sign up
                 </Link>
               </p>
+
+              <div className="pt-4 border-t border-border/40">
+                <p className="text-center text-xs text-muted-foreground">
+                  By signing in, you agree to our{" "}
+                  <Link
+                    to="/terms"
+                    className="text-primary hover:text-accent transition-colors underline"
+                  >
+                    Terms
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy"
+                    className="text-primary hover:text-accent transition-colors underline"
+                  >
+                    Privacy Policy
+                  </Link>
+                </p>
+              </div>
             </form>
           </section>
         </div>

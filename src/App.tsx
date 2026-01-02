@@ -15,6 +15,7 @@ const Index = lazy(() => import("./pages/Index"));
 const Login = lazy(() => import("./pages/Login"));
 const SignUp = lazy(() => import("./pages/SignUp"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const EmailVerification = lazy(() => import("./pages/EmailVerification"));
 const Chat = lazy(() => import("./pages/Chat"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -42,6 +43,7 @@ import { isNativeMobile } from "@/lib/platform";
 import { adsService } from "@/services/ads.service";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useAuth } from "@/hooks/useAuth";
+import { ThemeStatusBarSync } from "@/components/ThemeStatusBarSync";
 import VerifyAddonPurchase from "./pages/VerifyAddonPurchase";
 
 ls.init("d955c4e2.3d0acf18");
@@ -84,26 +86,47 @@ const ConfirmEmailRedirect = () => {
   );
 };
 
+const ResetPasswordRedirect = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get the current URL search params
+    const searchParams = new URLSearchParams(window.location.search);
+    const token = searchParams.get("token") || searchParams.get("hash");
+
+    // Redirect to reset-password with the token
+    if (token) {
+      navigate(`/reset-password?token=${token}`, { replace: true });
+    } else {
+      navigate("/forgot-password", { replace: true });
+    }
+  }, [navigate]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+      <p className="text-sm text-muted-foreground">Loading...</p>
+    </div>
+  );
+};
+
 const AppContent = () => {
   const { user } = useAuth();
 
-  // Force light mode - remove dark class and clear theme storage
+  // Force light mode for web only - allow theme switching on native mobile
   useEffect(() => {
-    // Remove dark class from html element
-    document.documentElement.classList.remove("dark");
-    document.documentElement.setAttribute("data-theme", "light");
-    // Clear any theme storage
-    localStorage.removeItem("theme");
-    localStorage.removeItem("vite-ui-theme");
-
-    // Hide loading screen for web immediately (native apps handle it in initializeMobilePlugins)
     if (!isNativeMobile()) {
+      // Web: Force light mode - remove dark class and clear theme storage
+      document.documentElement.classList.remove("dark");
+      document.documentElement.setAttribute("data-theme", "light");
+      localStorage.removeItem("theme");
+      localStorage.removeItem("vite-ui-theme");
+
       const loadingScreen = document.getElementById("loading-screen");
       if (loadingScreen) {
         loadingScreen.style.display = "none";
       }
     } else {
-      // On native, ensure loading screen is visible initially
+      // Native: Allow theme switching, but ensure loading screen is visible initially
       const loadingScreen = document.getElementById("loading-screen");
       if (loadingScreen) {
         loadingScreen.style.display = "flex";
@@ -119,9 +142,12 @@ const AppContent = () => {
           // Add mobile-native class to body for mobile-specific styling
           document.body.classList.add("mobile-native");
 
-          // Configure status bar to prevent content from going behind it
-          await StatusBar.setStyle({ style: Style.Dark });
-          await StatusBar.setBackgroundColor({ color: "#000000" });
+          // Configure status bar based on initial theme
+          // Wait a bit for theme to be applied from localStorage
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          const isDark = document.documentElement.classList.contains("dark");
+          await StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+          await StatusBar.setBackgroundColor({ color: isDark ? "#000000" : "#ffffff" });
 
           // Hide splash screen after app loads
           await SplashScreen.hide();
@@ -196,6 +222,7 @@ const AppContent = () => {
 
   return (
     <>
+      <ThemeStatusBarSync />
       <MetaManager />
       {/* <Intercom /> */}
       <HelpBanner />
@@ -206,8 +233,11 @@ const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/password-change" element={<ResetPassword />} />
           <Route path="/verify-email" element={<EmailVerification />} />
           <Route path="/confirm-email" element={<ConfirmEmailRedirect />} />
+          <Route path="/confirm-reset-password" element={<ResetPasswordRedirect />} />
           <Route
             path="/plans"
             element={
@@ -292,21 +322,31 @@ const AppContent = () => {
   );
 };
 
-const App = () => (
-  <HelmetProvider>
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Analytics />
-          <BrowserRouter>
-            <AppContent />
-          </BrowserRouter>
-        </TooltipProvider>
-      </QueryClientProvider>
-    </ThemeProvider>
-  </HelmetProvider>
-);
+const App = () => {
+  // Allow theme switching on native mobile, force light on web
+  const isMobile = isNativeMobile();
+
+  return (
+    <HelmetProvider>
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+        forcedTheme={isMobile ? undefined : "light"}
+      >
+        <QueryClientProvider client={queryClient}>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Analytics />
+            <BrowserRouter>
+              <AppContent />
+            </BrowserRouter>
+          </TooltipProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </HelmetProvider>
+  );
+};
 
 export default App;

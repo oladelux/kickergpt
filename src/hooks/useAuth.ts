@@ -137,6 +137,25 @@ export const useAuth = () => {
     });
   };
 
+  const resetPassword = (hash: string, password: string) => {
+    setLoading(true);
+    setError(null);
+
+    return new Promise<{ message: string }>((resolve, reject) => {
+      authService.resetPassword(hash, password).subscribe({
+        next: (response) => {
+          setLoading(false);
+          resolve(response);
+        },
+        error: (err) => {
+          setLoading(false);
+          setError(err.message);
+          reject(err);
+        },
+      });
+    });
+  };
+
   return {
     user,
     loading,
@@ -145,6 +164,7 @@ export const useAuth = () => {
     login,
     logout,
     forgotPassword,
+    resetPassword,
     resendVerificationEmail,
     confirmEmail,
     isAuthenticated: !!user,

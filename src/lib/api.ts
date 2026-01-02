@@ -503,12 +503,12 @@ export const api = {
     },
 
     forgotPassword: async (data: { email: string }) => {
-      const res = await apiRequest("/auth/email/forgot-password", "POST", data);
+      const res = await apiRequest("/auth/forgot/password", "POST", data);
       return res.status === 204 ? null : res.json();
     },
 
-    resetPassword: async (data: { token: string; password: string }) => {
-      const res = await apiRequest("/auth/email/reset-password", "POST", data);
+    resetPassword: async (data: { hash: string; password: string }) => {
+      const res = await apiRequest("/auth/reset/password", "POST", data);
       return res.status === 204 ? null : res.json();
     },
 

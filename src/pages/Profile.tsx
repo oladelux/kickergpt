@@ -1,12 +1,25 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { track } from "@vercel/analytics";
-import { User, Mail, CreditCard, Loader2, RefreshCw, AlertTriangle, Sparkles } from "lucide-react";
+import {
+  User,
+  Mail,
+  CreditCard,
+  Loader2,
+  RefreshCw,
+  AlertTriangle,
+  Sparkles,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "next-themes";
+import { isNativeMobile } from "@/lib/platform";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +49,8 @@ export default function Profile() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   const { toast } = useToast();
+  const { theme, setTheme } = useTheme();
+  const isMobile = isNativeMobile();
   const {
     plan: subscription,
     usage,
@@ -314,6 +329,29 @@ export default function Profile() {
                 <CardDescription>Quick links for common account tasks</CardDescription>
               </CardHeader>
               <CardContent className="space-y-2">
+                {isMobile && (
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-background/50">
+                    <div className="flex items-center gap-3">
+                      {theme === "dark" ? (
+                        <Moon className="h-5 w-5 text-muted-foreground" />
+                      ) : (
+                        <Sun className="h-5 w-5 text-muted-foreground" />
+                      )}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">Dark Mode</span>
+                        <span className="text-xs text-muted-foreground">
+                          {theme === "dark" ? "Dark theme enabled" : "Light theme enabled"}
+                        </span>
+                      </div>
+                    </div>
+                    <Switch
+                      checked={theme === "dark"}
+                      onCheckedChange={(checked) => {
+                        setTheme(checked ? "dark" : "light");
+                      }}
+                    />
+                  </div>
+                )}
                 <Button
                   asChild
                   variant="outline"
