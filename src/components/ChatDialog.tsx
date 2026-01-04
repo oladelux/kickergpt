@@ -273,23 +273,6 @@ export default function ChatDialog({
               You've reached your prompt limit for this fixture. Upgrade or buy credits to continue.
             </p>
           )}
-          <div className="mt-3 w-full rounded-2xl border border-primary/30 bg-primary/5 p-3 text-center max-sm:mt-2 max-sm:p-2.5">
-            <p className="text-sm font-medium text-foreground max-sm:text-xs max-sm:leading-relaxed">
-              Deposit and get{" "}
-              <span className="font-bold text-green-600 dark:text-green-400">300%</span> bonus on
-              Afropari, using the promo code{" "}
-              <span className="font-semibold text-primary">KICKERGPT</span>
-            </p>
-            <a
-              href="https://refpa84423.com/L?tag=d_5072438m_70055c_&site=5072438&ad=70055&r=Registration"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-block text-sm font-semibold text-primary hover:underline max-sm:text-xs"
-              onClick={() => track("signup_afropari")}
-            >
-              Sign up here
-            </a>
-          </div>
           <DialogClose className="absolute right-4 top-4 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border/70 bg-card/70 text-muted-foreground transition-colors hover:text-foreground hover:bg-accent/10 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
             <X className="h-4 w-4" />
             <span className="sr-only">Close chat dialog</span>
@@ -409,6 +392,14 @@ export default function ChatDialog({
         </ScrollArea>
 
         <div className="border-t bg-card/50 backdrop-blur-sm p-4">
+          {usage && (
+            <div className="mb-3 text-xs text-muted-foreground text-center">
+              <span className="font-medium text-foreground">
+                {usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining}
+              </span>{" "}
+              prompts remaining
+            </div>
+          )}
           <form onSubmit={handleSend} className="flex gap-2">
             <Input
               value={input}

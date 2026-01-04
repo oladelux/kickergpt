@@ -21,6 +21,7 @@ import TopNav from "@/components/TopNav";
 import ChatDialog from "@/components/ChatDialog";
 import FixturesLeftSidebar from "@/components/FixturesLeftSidebar";
 import FixturesRightSidebar from "@/components/FixturesRightSidebar";
+import AfropariPromoBannerFixtures from "@/components/AfropariPromoBannerFixtures";
 import { useMatches } from "@/hooks/useMatches";
 import { Match } from "@/services/matches.service";
 import { LoadingPage } from "@/components/LoadingPage";
@@ -750,6 +751,8 @@ const Chat = memo(function Chat() {
                   </Card>
                 ))}
               </div>
+
+              <AfropariPromoBannerFixtures />
 
               {subscriptionError && (
                 <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
