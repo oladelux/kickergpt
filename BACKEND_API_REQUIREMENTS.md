@@ -42,7 +42,7 @@ This document outlines ALL backend requirements for KickerGPT, including:
 - 100 prompts per month
 - Ad-free experience
 - Auto-renewal
-- **Web:** $15/month via Stripe
+- **Web:** $7/month via Stripe (non-Nigerian users)
 
 ---
 
@@ -274,7 +274,7 @@ Add any required environment variables for your backend configuration.
 
 **Pricing:**
 
-- Web (Stripe): $15/month
+- Web (Stripe): $7/month (non-Nigerian users)
 
 **Product Configuration:**
 

@@ -63,7 +63,7 @@ const PLAN_OPTIONS = [
   {
     tier: "PRO" as SubscriptionPlanName,
     name: "Pro",
-    price: "$15",
+    price: "$7",
     cadence: "per month",
     monthlyCredits: 100,
     features: [
@@ -153,10 +153,10 @@ export default function Plans() {
   const getPricingForCountry = (countryCode: string) => {
     switch (countryCode) {
       case "US":
-        return { symbol: "$", pro: "15" };
+        return { symbol: "$", pro: "7" };
       case "GB":
       case "UK":
-        return { symbol: "£", pro: "15" };
+        return { symbol: "£", pro: "7" };
       case "NG":
         return { symbol: "₦", pro: "10,000" };
       case "DE":
@@ -170,9 +170,9 @@ export default function Plans() {
       case "PT":
       case "FI":
       case "GR":
-        return { symbol: "€", pro: "15" };
+        return { symbol: "€", pro: "7" };
       default:
-        return { symbol: "$", pro: "15" };
+        return { symbol: "$", pro: "7" };
     }
   };
 
