@@ -709,7 +709,7 @@ export const api = {
       return res.status === 204 ? null : res.json();
     },
     selectPlan: async (data: {
-      plan: "FREE" | "PRO";
+      plan: "FREE" | "PRO" | "THREE_DAY_PASS" | "SEVEN_DAY_PASS" | "MONTHLY_UNLIMITED";
       countryCode?: string;
       isNativeUser: boolean;
     }) => {

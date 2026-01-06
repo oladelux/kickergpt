@@ -30,6 +30,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useSubscriptionData } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 import {
   Select,
   SelectContent,
@@ -283,6 +284,7 @@ const Chat = memo(function Chat() {
     refreshUsage,
     refreshAll,
   } = useSubscriptionData();
+  const { resolvedCountryCode } = useGeoCountry();
   const { predictions, getPredictionForFixture, loading: predictionsLoading } = usePredictions();
   const [selectedMatch, setSelectedMatch] = useState<Match | null>(null);
   const [chatOpen, setChatOpen] = useState(false);
@@ -479,7 +481,11 @@ const Chat = memo(function Chat() {
 
     // Get prediction for this match
     const prediction = getPredictionForFixture(match.id);
-    const isPro = subscriptionPlan?.plan === "PRO";
+    // For Nigerians: show predictions for PRO and MONTHLY_UNLIMITED
+    // For others: show predictions for PRO only
+    const isPro =
+      subscriptionPlan?.plan === "PRO" ||
+      (resolvedCountryCode === "NG" && subscriptionPlan?.plan === "MONTHLY_UNLIMITED");
     const isBlurred = predictionIndex >= 5 && !isPro;
 
     return (

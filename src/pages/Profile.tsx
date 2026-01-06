@@ -36,6 +36,7 @@ import { firstValueFrom } from "rxjs";
 import { profileService, type ProfileData } from "@/services/profile.service";
 import { useSubscriptionData } from "@/hooks/useSubscription";
 import { useAuth } from "@/hooks/useAuth";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 import { api } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 
@@ -58,6 +59,7 @@ export default function Profile() {
     error: subscriptionError,
     refreshAll: refreshSubscription,
   } = useSubscriptionData();
+  const { resolvedCountryCode } = useGeoCountry();
 
   const loadProfile = useCallback(async () => {
     setProfileLoading(true);
@@ -85,12 +87,31 @@ export default function Profile() {
     };
   }, [loadProfile]);
 
-  const planName =
-    subscription?.plan === "PRO"
-      ? "Pro plan"
-      : subscription?.plan === "FREE"
-        ? "Free plan"
-        : profile?.planName?.trim() || "Free plan";
+  // Get plan display name
+  const getPlanDisplayName = () => {
+    if (!subscription) return profile?.planName?.trim() || "Free plan";
+    const plan = subscription.plan;
+    if (plan === "PRO") return "Pro plan";
+    if (plan === "MONTHLY_UNLIMITED") return "Monthly Unlimited plan";
+    if (plan === "THREE_DAY_PASS") return "3-Day Pass plan";
+    if (plan === "SEVEN_DAY_PASS") return "7-Day Pass plan";
+    return "Free plan";
+  };
+
+  const planName = getPlanDisplayName();
+
+  // Get plan tier display name (for the "Plan tier" field)
+  const getPlanTierDisplayName = () => {
+    if (!subscription) return "FREE";
+    const plan = subscription.plan;
+    if (plan === "PRO") return "PRO";
+    if (plan === "MONTHLY_UNLIMITED") return "Monthly Unlimited";
+    if (plan === "THREE_DAY_PASS") return "3-Day Pass";
+    if (plan === "SEVEN_DAY_PASS") return "7-Day Pass";
+    return "FREE";
+  };
+
+  const planTierDisplayName = getPlanTierDisplayName();
   const subscriptionStatusLabel =
     subscription?.status === "ACTIVE"
       ? "Active"
@@ -100,16 +121,63 @@ export default function Profile() {
           ? "Active"
           : "Inactive";
 
-  const monthlyAllowance = usage?.monthlyAllowance ?? profile?.creditsTotal ?? 0;
-  const monthlyUsed = usage?.monthlyUsed ?? profile?.creditsUsed ?? 0;
-  const monthlyRemaining = usage?.monthlyRemaining ?? Math.max(monthlyAllowance - monthlyUsed, 0);
+  // Get usage display based on plan and country
+  const getUsageDisplay = () => {
+    const isNigerian = resolvedCountryCode === "NG";
+    const planName = subscription?.plan;
+    const monthlyAllowance = usage?.monthlyAllowance ?? profile?.creditsTotal ?? 0;
+    const monthlyUsed = usage?.monthlyUsed ?? profile?.creditsUsed ?? 0;
+    const monthlyRemaining = usage?.monthlyRemaining ?? Math.max(monthlyAllowance - monthlyUsed, 0);
+
+    // For Nigerian users on Monthly Unlimited or PRO, show unlimited
+    if (isNigerian && (planName === "MONTHLY_UNLIMITED" || planName === "PRO")) {
+      return {
+        monthlyAllowance: Infinity,
+        monthlyUsed,
+        monthlyRemaining: Infinity,
+        isUnlimited: true,
+        usageDisplay: `${monthlyUsed} prompts`,
+        usageHelper: "Unlimited prompts available",
+        usageProgress: 0,
+      };
+    }
+
+    // For 3-day or 7-day passes (Nigerian), show unlimited
+    if (isNigerian && (planName === "THREE_DAY_PASS" || planName === "SEVEN_DAY_PASS")) {
+      return {
+        monthlyAllowance: Infinity,
+        monthlyUsed,
+        monthlyRemaining: Infinity,
+        isUnlimited: true,
+        usageDisplay: `${monthlyUsed} prompts`,
+        usageHelper: "Unlimited prompts available",
+        usageProgress: 0,
+      };
+    }
+
+    // For FREE and other plans, show actual numbers
+    return {
+      monthlyAllowance,
+      monthlyUsed,
+      monthlyRemaining,
+      isUnlimited: false,
+      usageDisplay:
+        monthlyAllowance > 0 ? `${monthlyUsed} / ${monthlyAllowance}` : `${monthlyUsed} prompts`,
+      usageHelper:
+        monthlyAllowance > 0 ? `${monthlyRemaining} prompts remaining` : "Prompts refresh monthly.",
+      usageProgress:
+        monthlyAllowance > 0 ? Math.min(100, (monthlyUsed / monthlyAllowance) * 100) : 0,
+    };
+  };
+
+  const usageData = getUsageDisplay();
+  const monthlyAllowance = usageData.monthlyAllowance;
+  const monthlyUsed = usageData.monthlyUsed;
+  const monthlyRemaining = usageData.monthlyRemaining;
+  const usageDisplay = usageData.usageDisplay;
+  const usageHelper = usageData.usageHelper;
+  const usageProgress = usageData.usageProgress;
   const adCredits = usage?.adCreditsRemaining ?? 0;
-  const usageDisplay =
-    monthlyAllowance > 0 ? `${monthlyUsed} / ${monthlyAllowance}` : `${monthlyUsed} prompts`;
-  const usageHelper =
-    monthlyAllowance > 0 ? `${monthlyRemaining} prompts remaining` : "Prompts refresh monthly.";
-  const usageProgress =
-    monthlyAllowance > 0 ? Math.min(100, (monthlyUsed / monthlyAllowance) * 100) : 0;
   const renewalDate = subscription?.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString(undefined, {
         month: "short",
@@ -227,7 +295,7 @@ export default function Profile() {
                     <span className="text-muted-foreground">Prompts Used</span>
                     <span className="font-medium">{usageDisplay}</span>
                   </div>
-                  <Progress value={usageProgress} className="h-2" />
+                  {!usageData.isUnlimited && <Progress value={usageProgress} className="h-2" />}
                   <p className="text-xs text-muted-foreground">{usageHelper}</p>
                 </div>
 
@@ -240,10 +308,14 @@ export default function Profile() {
                   </div>
                   <div className="space-y-1">
                     <p className="text-2xl font-bold text-accent">
-                      {monthlyAllowance > 0 ? monthlyRemaining : "∞"}
+                      {usageData.isUnlimited ? "∞" : monthlyAllowance > 0 ? monthlyRemaining : "∞"}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {monthlyAllowance > 0 ? "Remaining" : "Included"}
+                      {usageData.isUnlimited
+                        ? "Unlimited"
+                        : monthlyAllowance > 0
+                          ? "Remaining"
+                          : "Included"}
                     </p>
                   </div>
                 </div>
@@ -251,7 +323,10 @@ export default function Profile() {
                 <Separator />
 
                 <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                  <span>Monthly allowance: {monthlyAllowance || "Included"}</span>
+                  <span>
+                    Monthly allowance:{" "}
+                    {usageData.isUnlimited ? "Unlimited" : monthlyAllowance || "Included"}
+                  </span>
                   {adCredits > 0 && (
                     <span className="text-emerald-600 dark:text-emerald-400 font-medium">
                       Ad credits: +{adCredits} 🎁
@@ -286,7 +361,7 @@ export default function Profile() {
                 <div className="grid gap-3 text-sm text-muted-foreground sm:grid-cols-3">
                   <div>
                     <p className="text-xs uppercase tracking-[0.4em]">Plan tier</p>
-                    <p className="text-foreground">{subscription?.plan ?? "FREE"}</p>
+                    <p className="text-foreground">{planTierDisplayName}</p>
                   </div>
                   <div>
                     <p className="text-xs uppercase tracking-[0.4em]">Status</p>

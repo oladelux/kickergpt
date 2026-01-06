@@ -25,6 +25,7 @@ import { Progress } from "@/components/ui/progress";
 import { track } from "@vercel/analytics";
 import { useAuth } from "@/hooks/useAuth";
 import { useSubscriptionData } from "@/hooks/useSubscription";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 import { useMemo, memo } from "react";
 import { cn } from "@/lib/utils";
 import { isNativeMobile } from "@/lib/platform";
@@ -45,11 +46,62 @@ const TopNav = memo(function TopNav({ onFilterClick, selectedLeagueKey, leagueNa
   const location = useLocation();
   const { user, isAuthenticated, logout } = useAuth();
   const { plan: subscriptionPlan, usage, loading: subscriptionLoading } = useSubscriptionData();
+  const { resolvedCountryCode } = useGeoCountry();
+
+  // Get plan display name
+  const getPlanDisplayName = () => {
+    if (!subscriptionPlan) return "FREE";
+    const plan = subscriptionPlan.plan;
+    if (plan === "PRO") return "PRO";
+    if (plan === "MONTHLY_UNLIMITED") return "Monthly Unlimited";
+    if (plan === "THREE_DAY_PASS") return "3-Day Pass";
+    if (plan === "SEVEN_DAY_PASS") return "7-Day Pass";
+    return "FREE";
+  };
+
+  // Get usage display text
+  const getUsageDisplay = () => {
+    if (!usage) return { remaining: 0, used: 0, allowance: 0, isUnlimited: false };
+
+    const isNigerian = resolvedCountryCode === "NG";
+    const planName = subscriptionPlan?.plan;
+
+    // For Nigerian users on Monthly Unlimited or PRO, show unlimited
+    if (isNigerian && (planName === "MONTHLY_UNLIMITED" || planName === "PRO")) {
+      return {
+        remaining: Infinity,
+        used: usage.monthlyUsed,
+        allowance: Infinity,
+        isUnlimited: true,
+      };
+    }
+
+    // For 3-day or 7-day passes, show unlimited
+    if (isNigerian && (planName === "THREE_DAY_PASS" || planName === "SEVEN_DAY_PASS")) {
+      return {
+        remaining: Infinity,
+        used: usage.monthlyUsed,
+        allowance: Infinity,
+        isUnlimited: true,
+      };
+    }
+
+    // For FREE and other plans, show actual numbers
+    return {
+      remaining: usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining,
+      used: usage.monthlyUsed,
+      allowance: usage.monthlyAllowance,
+      isUnlimited: false,
+    };
+  };
+
+  const usageDisplay = getUsageDisplay();
+  const planDisplayName = getPlanDisplayName();
 
   const usagePercent = useMemo(() => {
-    if (!usage?.monthlyAllowance) return 0;
-    return Math.min(100, Math.round((usage.monthlyUsed / usage.monthlyAllowance) * 100));
-  }, [usage?.monthlyAllowance, usage?.monthlyUsed]);
+    if (usageDisplay.isUnlimited || !usageDisplay.allowance) return 0;
+    return Math.min(100, Math.round((usageDisplay.used / usageDisplay.allowance) * 100));
+  }, [usageDisplay.allowance, usageDisplay.used, usageDisplay.isUnlimited]);
 
   const getInitials = (firstName?: string, lastName?: string) => {
     const first = firstName?.trim()?.[0]?.toUpperCase() || "";
@@ -169,14 +221,20 @@ const TopNav = memo(function TopNav({ onFilterClick, selectedLeagueKey, leagueNa
                           <div className="flex items-center justify-between mb-3">
                             <span className="text-sm font-semibold text-foreground">Credits</span>
                             <span className="text-sm font-semibold text-foreground">
-                              {usage.monthlyRemaining} left
+                              {usageDisplay.isUnlimited
+                                ? "Unlimited"
+                                : `${usageDisplay.remaining} left`}
                             </span>
                           </div>
-                          <Progress value={usagePercent} className="h-2 mb-2" />
+                          {!usageDisplay.isUnlimited && (
+                            <Progress value={usagePercent} className="h-2 mb-2" />
+                          )}
                           <div className="flex items-center justify-between text-xs text-muted-foreground">
-                            <span>{subscriptionPlan?.plan ?? "FREE"} plan</span>
+                            <span>{planDisplayName} plan</span>
                             <span>
-                              Used {usage.monthlyUsed} of {usage.monthlyAllowance}
+                              {usageDisplay.isUnlimited
+                                ? `Used ${usageDisplay.used}`
+                                : `Used ${usageDisplay.used} of ${usageDisplay.allowance}`}
                             </span>
                           </div>
                           <div className="flex flex-wrap gap-1 mt-1">

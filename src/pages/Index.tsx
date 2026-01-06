@@ -29,34 +29,34 @@ const featureHighlights = [
     icon: CalendarClock,
     title: "Pre-match intelligence",
     description:
-      "Date, venue, referee, weather, and odds analyzed together. Ask any question about upcoming matches and get data-backed insights.",
+      "Venue, weather, referee, and odds analyzed together. Get data-backed insights on any upcoming match.",
   },
   {
     icon: HeartPulse,
     title: "Form & availability",
     description:
-      "Recent results, scoring trends, clean sheets, injuries, and squad depth—stitched into one view with win/draw/loss records.",
+      "Recent results, scoring trends, injuries, and squad depth in one comprehensive view.",
   },
   {
     icon: Target,
     title: "Pattern recognition",
     description:
-      "Day-of-week performance, kickoff time trends, home/away splits, H2H history, and referee tendencies surfaced automatically.",
+      "Day-of-week performance, kickoff trends, home/away splits, and H2H history automatically surfaced.",
   },
   {
     icon: TrendingUp,
     title: "AI-powered predictions",
     description:
-      "Get probability-based match predictions with confidence levels. Data-driven outcome forecasts powered by historical patterns and current form analysis.",
+      "Probability-based match predictions with confidence levels powered by historical patterns and current form.",
   },
 ];
 
 const coverageStack = [
-  "Match context: date, venue, weather conditions, opening odds, and referee assignments.",
-  "Head-to-head history with win rates, goal patterns, and recent meeting trends.",
-  "Current form: last 5-10 matches, scoring trends, BTTS rates, clean sheets, home/away splits.",
-  "Squad availability: injuries, suspensions, and how absences have affected recent results.",
-  "Temporal patterns: weekday performance, kickoff time records, monthly form, and fatigue analysis.",
+  "Match context: venue, weather, odds, and referee assignments.",
+  "Head-to-head history with win rates, goal patterns, and recent trends.",
+  "Current form: recent matches, scoring trends, BTTS rates, and home/away splits.",
+  "Squad availability: injuries, suspensions, and their impact on recent results.",
+  "Temporal patterns: weekday performance, kickoff time records, and form analysis.",
 ];
 
 const signalBuckets = [
@@ -64,25 +64,25 @@ const signalBuckets = [
     icon: CloudSun,
     title: "Conditions & context",
     description:
-      "Weather impact, venue history, rest days between matches, and schedule congestion for both sides.",
+      "Weather impact, venue history, rest days, and schedule congestion analysis.",
   },
   {
     icon: LineChart,
     title: "Form & momentum",
     description:
-      "Current streaks, goals scored/conceded trends, BTTS and over/under records from recent matches.",
+      "Current streaks, goals trends, BTTS and over/under records from recent matches.",
   },
   {
     icon: ShieldCheck,
     title: "Squad reality",
     description:
-      "Injured players listed with reasons, squad depth comparison, and impact on recent performances.",
+      "Injuries with impact analysis, squad depth comparison, and performance effects.",
   },
   {
     icon: Radar,
     title: "Historical patterns",
     description:
-      "Referee history with both teams, head-to-head records, and day/time performance patterns.",
+      "Referee history, head-to-head records, and day/time performance patterns.",
   },
 ];
 
@@ -90,22 +90,22 @@ const dossierSnapshot = [
   {
     title: "Pre-match read",
     points: [
-      "Venue, weather, kickoff time, and referee mapped to each team's historical results in similar conditions.",
-      "Day-of-week and time-slot performance to spot scheduling edges or disadvantages.",
+      "Venue, weather, and referee mapped to team performance in similar conditions.",
+      "Day-of-week and time-slot performance patterns.",
     ],
   },
   {
     title: "Team form",
     points: [
-      "Last match results with scoring trends, clean sheet rates, and BTTS likelihood.",
-      "Injury list with player names, reasons, and how absences affect the starting XI.",
+      "Recent results with scoring trends, clean sheets, and BTTS likelihood.",
+      "Injury impact analysis and squad availability.",
     ],
   },
   {
     title: "Head-to-head history",
     points: [
       "Win/draw/loss rates, goal patterns, and recent meeting trends.",
-      "Referee history with both teams, head-to-head records, and day/time performance patterns.",
+      "Referee history and performance patterns.",
     ],
   },
 ];
@@ -250,10 +250,7 @@ export default function Index() {
                   </span>
                 </h1>
                 <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
-                  KickerGPT combines match context, current form, head-to-head history, injuries,
-                  and day/time patterns into conversational pre-match analysis and AI-powered
-                  predictions. Ask questions, get follow-ups, and dig deeper into the data with
-                  probability-based match forecasts.
+                  AI-powered football match analysis combining form, injuries, H2H history, and patterns into conversational insights with probability-based predictions.
                 </p>
               </div>
               <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -273,14 +270,6 @@ export default function Index() {
               </div>
               <p className="text-sm font-medium text-foreground/80">
                 Free tier available. No credit card required to get started.
-              </p>
-              <p className="text-xs text-muted-foreground max-w-2xl mx-auto">
-                <strong className="text-foreground">Disclaimer:</strong> KickerGPT provides data
-                analysis, statistical insights, and probability estimates based on historical data
-                and algorithms. Our predictions are for informational purposes only and are not
-                betting advice or guarantees. Past performance does not guarantee future results.
-                Any use of our analysis for betting purposes is at your own discretion and risk. We
-                are not responsible for any losses incurred from betting decisions.
               </p>
               <div className="grid gap-4 rounded-2xl border border-border/60 bg-card/70 p-6 backdrop-blur-sm sm:grid-cols-3">
                 {[
@@ -359,7 +348,7 @@ export default function Index() {
                   Your personal match-finding assistant
                 </h2>
                 <p className="mx-auto max-w-2xl text-muted-foreground">
-                  Stop manually searching through fixtures. Create custom strategies and let KickerGPT automatically find matches that meet your exact criteria.
+                  Create custom strategies and automatically find matches that meet your criteria.
                 </p>
               </div>
               <Card className="border-primary/20 bg-gradient-to-br from-primary/10 via-card to-accent/10 shadow-xl shadow-primary/10">
@@ -388,7 +377,7 @@ export default function Index() {
                       <div>
                         <h3 className="font-semibold mb-1">Custom conditions</h3>
                         <p className="text-sm text-muted-foreground">
-                          Set precise criteria based on team form, goals scored/conceded, win rates, and more
+                          Set criteria based on form, goals, win rates, and more.
                         </p>
                       </div>
                     </div>
@@ -399,7 +388,7 @@ export default function Index() {
                       <div>
                         <h3 className="font-semibold mb-1">Auto-discovery</h3>
                         <p className="text-sm text-muted-foreground">
-                          Instantly find all fixtures matching your strategy across multiple leagues
+                          Instantly find matching fixtures across multiple leagues.
                         </p>
                       </div>
                     </div>
@@ -471,8 +460,7 @@ export default function Index() {
                 </p>
                 <h2 className="text-3xl font-semibold tracking-tight">What gets analyzed</h2>
                 <p className="mx-auto max-w-3xl text-muted-foreground">
-                  Every analysis draws from multiple data dimensions to give you the full
-                  picture—not cherry-picked stats
+                  Comprehensive analysis from multiple data dimensions for the complete picture.
                 </p>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
@@ -523,8 +511,7 @@ export default function Index() {
                   What you get in every analysis
                 </h2>
                 <p className="mx-auto max-w-3xl text-muted-foreground">
-                  A structured breakdown covering match context, team form so you can spot what
-                  matters in seconds.
+                  Structured breakdown covering match context and team form for quick insights.
                 </p>
               </div>
               <div className="grid gap-6 md:grid-cols-3">
@@ -557,11 +544,10 @@ export default function Index() {
                   League coverage
                 </p>
                 <h2 className="text-3xl font-semibold tracking-tight">
-                  Major European competitions and beyond
+                  Global football competitions coverage
                 </h2>
                 <p className="mx-auto max-w-3xl text-muted-foreground">
-                  From title races to relegation battles, KickerGPT covers the leagues that matter
-                  with deep historical data.
+                  Coverage of major European leagues and competitions from around the globe with comprehensive historical data.
                 </p>
               </div>
               <Card className="border-border/70 bg-card/80">
@@ -573,7 +559,7 @@ export default function Index() {
                     <div>
                       <CardTitle className="text-xl">Competitions coverage</CardTitle>
                       <p className="text-sm text-muted-foreground">
-                        Data across domestic and European competitions.
+                        Data across domestic, European, and global competitions.
                       </p>
                     </div>
                   </div>
@@ -581,7 +567,7 @@ export default function Index() {
                     variant="secondary"
                     className="border border-border/60 bg-primary/10 text-primary"
                   >
-                    European focus
+                    Global coverage
                   </Badge>
                 </CardHeader>
                 <CardContent className="flex flex-wrap gap-3">
@@ -605,7 +591,7 @@ export default function Index() {
                   Ready to analyze your next match?
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-muted-foreground">
-                  Get pre-match intelligence powered by real data patterns. Start for free.
+                  Pre-match intelligence powered by data patterns. Start for free.
                 </p>
                 <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
                   <Button

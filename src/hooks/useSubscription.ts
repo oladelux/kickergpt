@@ -1,7 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { api, ClientError, ApiError } from "@/lib/api";
 
-export type SubscriptionPlanName = "FREE" | "PRO";
+export type SubscriptionPlanName =
+  | "FREE"
+  | "PRO"
+  | "THREE_DAY_PASS"
+  | "SEVEN_DAY_PASS"
+  | "MONTHLY_UNLIMITED";
 export type SubscriptionStatus = "ACTIVE" | "INACTIVE";
 
 export type SubscriptionRecord = {
@@ -20,6 +25,7 @@ export type SubscriptionUsage = {
   purchasedCreditsRemaining?: number;
   addonCreditsRemaining?: number;
   totalCreditsRemaining: number;
+  isUnlimited: boolean;
 };
 
 const parseErrorMessage = (error: unknown) => {

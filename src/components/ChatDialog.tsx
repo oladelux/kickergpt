@@ -19,6 +19,7 @@ import { MarkdownContent } from "@/components/MarkdownContent";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useToast } from "@/components/ui/use-toast";
 import { track } from "@vercel/analytics";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 
 type Message = {
   id: string;
@@ -60,9 +61,64 @@ export default function ChatDialog({
   const conversationCache = useRef<Map<string, Message[]>>(new Map());
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const { toast } = useToast();
+  const { resolvedCountryCode } = useGeoCountry();
   const kickoffLabel = match?.kickoffTime
     ? match.kickoffTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
     : null;
+
+  // Calculate prompts remaining display text
+  const getPromptsRemainingText = () => {
+    if (!usage || !plan) return null;
+
+    const isNigerian = resolvedCountryCode === "NG";
+    const planName = plan.plan;
+
+    // For Nigerian users on Monthly Unlimited or PRO, don't show anything
+    if (isNigerian && (planName === "MONTHLY_UNLIMITED" || planName === "PRO")) {
+      return null;
+    }
+
+    // For 3-day or 7-day passes (Nigerian), show expiration time
+    if (isNigerian && (planName === "THREE_DAY_PASS" || planName === "SEVEN_DAY_PASS")) {
+      if (plan.currentPeriodEnd) {
+        const expirationDate = new Date(plan.currentPeriodEnd);
+        const now = new Date();
+        const diffMs = expirationDate.getTime() - now.getTime();
+
+        if (diffMs <= 0) {
+          return "Unlimited prompts expired";
+        }
+
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+        const remainingHours = diffHours % 24;
+        const remainingMinutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+
+        if (diffDays > 0) {
+          return `Unlimited prompts expire in ${diffDays}d ${remainingHours}h`;
+        } else if (diffHours > 0) {
+          return `Unlimited prompts expire in ${diffHours}h ${remainingMinutes}m`;
+        } else {
+          return `Unlimited prompts expire in ${remainingMinutes}m`;
+        }
+      }
+      return "Unlimited prompts active";
+    }
+
+    // For FREE plan, show remaining prompts
+    if (planName === "FREE") {
+      const remaining =
+        usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining;
+      return `${remaining} prompts remaining`;
+    }
+
+    // For other plans (non-Nigerian PRO), show remaining
+    const remaining =
+      usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining;
+    return `${remaining} prompts remaining`;
+  };
+
+  const promptsRemainingText = getPromptsRemainingText();
 
   useEffect(() => {
     if (!match?.id) {
@@ -392,12 +448,9 @@ export default function ChatDialog({
         </ScrollArea>
 
         <div className="border-t bg-card/50 backdrop-blur-sm p-4">
-          {usage && (
+          {promptsRemainingText && (
             <div className="mb-3 text-xs text-muted-foreground text-center">
-              <span className="font-medium text-foreground">
-                {usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining}
-              </span>{" "}
-              prompts remaining
+              <span className="font-medium text-foreground">{promptsRemainingText}</span>
             </div>
           )}
           <form onSubmit={handleSend} className="flex gap-2">

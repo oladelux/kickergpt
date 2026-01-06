@@ -45,36 +45,102 @@ const ADD_ON_NOTES = [
   "Addon credits never expire and stack with your monthly allowance.",
 ] as const;
 
-const PLAN_OPTIONS = [
-  {
+type PlanOption = {
+  tier: SubscriptionPlanName;
+  name: string;
+  price: string;
+  cadence: string;
+  monthlyCredits: number;
+  popular?: boolean;
+  features: string[];
+};
+
+const getPlanOptions = (countryCode: string): PlanOption[] => {
+  const isNigeria = countryCode === "NG";
+
+  const freePlan: PlanOption = {
     tier: "FREE" as SubscriptionPlanName,
     name: "Free",
     price: "$0",
     cadence: "per month",
-    monthlyCredits: 10,
+    monthlyCredits: isNigeria ? 3 : 10,
     popular: false,
     features: [
       "Live fixtures dashboard",
-      "10 AI prompts every month",
+      isNigeria ? "3 AI prompts every month" : "10 AI prompts every month",
       "Favorites & history sync",
       "Watch ads for extra prompts (mobile)",
     ],
-  },
-  {
-    tier: "PRO" as SubscriptionPlanName,
-    name: "Pro",
-    price: "$7",
-    cadence: "per month",
-    monthlyCredits: 100,
-    features: [
-      "100 AI prompts each month",
-      "Ad-free experience",
-      "Priority chat throughput",
-      "Email support from the team",
-    ],
-    popular: true,
-  },
-] as const;
+  };
+
+  if (isNigeria) {
+    return [
+      freePlan,
+      {
+        tier: "THREE_DAY_PASS" as SubscriptionPlanName,
+        name: "3-Day Pass",
+        price: "₦700",
+        cadence: "for 3 days",
+        monthlyCredits: 999999,
+        popular: false,
+        features: [
+          "Unlimited AI prompts for 3 days",
+          "Ad-free experience",
+          "Priority chat throughput",
+          "Email support from the team",
+        ],
+      },
+      {
+        tier: "SEVEN_DAY_PASS" as SubscriptionPlanName,
+        name: "7-Day Pass",
+        price: "₦1,200",
+        cadence: "for 7 days",
+        monthlyCredits: 999999,
+        popular: false,
+        features: [
+          "Unlimited AI prompts for 7 days",
+          "Ad-free experience",
+          "Priority chat throughput",
+          "Email support from the team",
+        ],
+      },
+      {
+        tier: "MONTHLY_UNLIMITED" as SubscriptionPlanName,
+        name: "Monthly Unlimited",
+        price: "₦3,000",
+        cadence: "per month",
+        monthlyCredits: 999999,
+        popular: true,
+        features: [
+          "Unlimited AI prompts each month",
+          "AI-powered match predictions",
+          "Ad-free experience",
+          "Priority chat throughput",
+          "Email support from the team",
+          "Strategy analysis feature",
+        ],
+      },
+    ];
+  }
+
+  return [
+    freePlan,
+    {
+      tier: "PRO" as SubscriptionPlanName,
+      name: "Pro",
+      price: "$7",
+      cadence: "per month",
+      monthlyCredits: 100,
+      features: [
+        "100 AI prompts each month",
+        "Ad-free experience",
+        "Priority chat throughput",
+        "Email support from the team",
+      ],
+      popular: true,
+    },
+  ];
+};
 
 const getErrorMessage = (error: unknown) => {
   if (error instanceof ClientError) {
@@ -225,6 +291,17 @@ export default function Plans() {
   const activePlan: SubscriptionPlanName = subscription?.plan ?? "FREE";
 
   const getPlanPrice = (tier: SubscriptionPlanName) => {
+    // Handle Nigerian plans
+    if (tier === "THREE_DAY_PASS") {
+      return "₦700";
+    }
+    if (tier === "SEVEN_DAY_PASS") {
+      return "₦1,200";
+    }
+    if (tier === "MONTHLY_UNLIMITED") {
+      return "₦3,000";
+    }
+
     const { symbol, pro } = getPricingForCountry(resolvedCountryCode);
     if (tier === "PRO") {
       // Special Nigeria promo: ₦1,000 for exhausted FREE users
@@ -514,11 +591,23 @@ export default function Plans() {
       setPendingPlan(null);
     }
   };
-  const planMeta = PLAN_OPTIONS.find((plan) => plan.tier === activePlan) ?? PLAN_OPTIONS[0];
+  const planOptions = getPlanOptions(resolvedCountryCode);
+  const planMeta = planOptions.find((plan) => plan.tier === activePlan) ?? planOptions[0];
+  const isUnlimitedPlan = usage?.isUnlimited ?? false;
   const monthlyAllowance = usage?.monthlyAllowance ?? planMeta.monthlyCredits;
   const monthlyUsed = usage?.monthlyUsed ?? 0;
   const monthlyRemaining = usage?.monthlyRemaining ?? Math.max(monthlyAllowance - monthlyUsed, 0);
   const addonCredits = usage?.addonCreditsRemaining ?? 0;
+
+  // Nigerian users on unlimited plans should see different display
+  const isNigerianUnlimitedUser =
+    resolvedCountryCode === "NG" &&
+    (activePlan === "THREE_DAY_PASS" ||
+      activePlan === "SEVEN_DAY_PASS" ||
+      activePlan === "MONTHLY_UNLIMITED");
+
+  // Hide addon credits card for Nigerians with 0 addon credits
+  const shouldHideAddonCredits = resolvedCountryCode === "NG" && addonCredits === 0;
   const renewalDate = subscription?.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString(undefined, {
         month: "short",
@@ -585,22 +674,33 @@ export default function Plans() {
                   <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
                     {currentPlanBadge}
                     <span className="text-sm uppercase tracking-[0.4em] text-muted-foreground">
-                      {activePlan} · {statusLabel}
+                      {planMeta.name} · {statusLabel}
                     </span>
                   </div>
                   <CardTitle className="text-2xl">
                     {planMeta.name} plan — {getPlanPrice(planMeta.tier)} {planMeta.cadence}
                   </CardTitle>
                   <p className="text-muted-foreground">
-                    {monthlyAllowance} prompts refresh every month. Top up whenever you need more
-                    runway.
+                    {isUnlimitedPlan || isNigerianUnlimitedUser
+                      ? "Unlimited prompts for the duration of your subscription."
+                      : `${planMeta.monthlyCredits} prompts refresh every month. Top up whenever you need more runway.`}
                   </p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div
+                    className={`grid gap-4 ${shouldHideAddonCredits ? "md:grid-cols-3" : "md:grid-cols-4"}`}
+                  >
                     <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
-                      <p className="text-sm text-muted-foreground">Monthly allowance</p>
-                      <p className="text-2xl font-semibold text-foreground">{monthlyAllowance}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {isUnlimitedPlan || isNigerianUnlimitedUser
+                          ? "Allowance"
+                          : "Monthly allowance"}
+                      </p>
+                      <p className="text-2xl font-semibold text-foreground">
+                        {isUnlimitedPlan || isNigerianUnlimitedUser
+                          ? "Unlimited"
+                          : monthlyAllowance}
+                      </p>
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
                       <p className="text-sm text-muted-foreground">Used this month</p>
@@ -608,19 +708,25 @@ export default function Plans() {
                     </div>
                     <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
                       <p className="text-sm text-muted-foreground">Credits left</p>
-                      <p className="text-2xl font-semibold text-foreground">{monthlyRemaining}</p>
+                      <p className="text-2xl font-semibold text-foreground">
+                        {isNigerianUnlimitedUser ? "Unlimited" : monthlyRemaining}
+                      </p>
                     </div>
-                    <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
-                      <p className="text-sm text-muted-foreground">Add-on credits</p>
-                      <p className="text-2xl font-semibold text-foreground">{addonCredits}</p>
-                    </div>
+                    {!shouldHideAddonCredits && (
+                      <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
+                        <p className="text-sm text-muted-foreground">Add-on credits</p>
+                        <p className="text-2xl font-semibold text-foreground">{addonCredits}</p>
+                      </div>
+                    )}
                   </div>
                   <p className="text-sm text-muted-foreground">Renews: {renewalDate}</p>
                 </CardContent>
               </Card>
 
-              <div className="grid gap-6 lg:grid-cols-2">
-                {PLAN_OPTIONS.map((plan) => {
+              <div
+                className={`grid gap-6 ${resolvedCountryCode === "NG" ? "lg:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-2"}`}
+              >
+                {planOptions.map((plan) => {
                   const isCurrentPlan = plan.tier === activePlan;
                   const isLoading = isLoadingPlan(plan.tier);
                   return (
@@ -643,7 +749,10 @@ export default function Plans() {
                         </Badge>
                       )}
                       {isCurrentPlan && (
-                        <Badge className="absolute left-6 top-6 border-primary/40 text-primary">
+                        <Badge
+                          variant="outline"
+                          className="absolute left-6 top-6 border-primary/40 text-primary"
+                        >
                           Current plan
                         </Badge>
                       )}
@@ -665,7 +774,11 @@ export default function Plans() {
                           <span className="text-muted-foreground text-sm">{plan.cadence}</span>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {plan.monthlyCredits} prompts included
+                          {plan.tier === "THREE_DAY_PASS" ||
+                          plan.tier === "SEVEN_DAY_PASS" ||
+                          plan.tier === "MONTHLY_UNLIMITED"
+                            ? "Unlimited prompts"
+                            : `${plan.monthlyCredits} prompts included`}
                         </p>
                         {plan.tier === "PRO" && isNigeriaPromoActive() && (
                           <p className="text-xs text-orange-600 dark:text-orange-400 font-medium">
@@ -755,7 +868,7 @@ export default function Plans() {
               )}
 
               {/* Add-on Credits Section */}
-              <AddonCreditsSection isMobile={true} />
+              {resolvedCountryCode !== "NG" && <AddonCreditsSection isMobile={true} />}
 
               <div className="text-center text-sm text-muted-foreground">
                 Need help with billing?{" "}
@@ -778,7 +891,10 @@ export default function Plans() {
                   subscription and you will lose access to:
                 </p>
                 <ul className="list-disc pl-6 space-y-1 text-sm">
-                  <li>100 AI prompts per month (downgrades to 10 prompts)</li>
+                  <li>
+                    100 AI prompts per month (downgrades to{" "}
+                    {resolvedCountryCode === "NG" ? "3" : "10"} prompts)
+                  </li>
                   <li>Ad-free experience</li>
                   <li>Priority chat throughput</li>
                   <li>Email support from the team</li>
@@ -848,22 +964,31 @@ export default function Plans() {
                 <div className="flex flex-wrap items-center justify-center gap-3 md:justify-start">
                   {currentPlanBadge}
                   <span className="text-sm uppercase tracking-[0.4em] text-muted-foreground">
-                    {activePlan} · {statusLabel}
+                    {planMeta.name} · {statusLabel}
                   </span>
                 </div>
                 <CardTitle className="text-2xl">
                   {planMeta.name} plan — {getPlanPrice(planMeta.tier)} {planMeta.cadence}
                 </CardTitle>
                 <p className="text-muted-foreground">
-                  {monthlyAllowance} prompts refresh every month. Top up whenever you need more
-                  runway.
+                  {isUnlimitedPlan || isNigerianUnlimitedUser
+                    ? "Unlimited prompts for the duration of your subscription."
+                    : `${planMeta.monthlyCredits} prompts refresh every month. Top up whenever you need more runway.`}
                 </p>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-3">
+                <div
+                  className={`grid gap-4 ${shouldHideAddonCredits ? "md:grid-cols-3" : "md:grid-cols-4"}`}
+                >
                   <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
-                    <p className="text-sm text-muted-foreground">Monthly allowance</p>
-                    <p className="text-2xl font-semibold text-foreground">{monthlyAllowance}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {isUnlimitedPlan || isNigerianUnlimitedUser
+                        ? "Allowance"
+                        : "Monthly allowance"}
+                    </p>
+                    <p className="text-2xl font-semibold text-foreground">
+                      {isUnlimitedPlan || isNigerianUnlimitedUser ? "Unlimited" : monthlyAllowance}
+                    </p>
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
                     <p className="text-sm text-muted-foreground">Used this month</p>
@@ -871,19 +996,25 @@ export default function Plans() {
                   </div>
                   <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
                     <p className="text-sm text-muted-foreground">Credits left</p>
-                    <p className="text-2xl font-semibold text-foreground">{monthlyRemaining}</p>
+                    <p className="text-2xl font-semibold text-foreground">
+                      {isNigerianUnlimitedUser ? "Unlimited" : monthlyRemaining}
+                    </p>
                   </div>
-                  <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
-                    <p className="text-sm text-muted-foreground">Add-on credits</p>
-                    <p className="text-2xl font-semibold text-foreground">{addonCredits}</p>
-                  </div>
+                  {!shouldHideAddonCredits && (
+                    <div className="rounded-2xl border border-border/60 bg-background/40 p-4">
+                      <p className="text-sm text-muted-foreground">Add-on credits</p>
+                      <p className="text-2xl font-semibold text-foreground">{addonCredits}</p>
+                    </div>
+                  )}
                 </div>
                 <p className="text-sm text-muted-foreground">Renews: {renewalDate}</p>
               </CardContent>
             </Card>
 
-            <div className="grid gap-6 lg:grid-cols-2">
-              {PLAN_OPTIONS.map((plan) => {
+            <div
+              className={`grid gap-6 ${resolvedCountryCode === "NG" ? "lg:grid-cols-2 xl:grid-cols-4" : "lg:grid-cols-2"}`}
+            >
+              {planOptions.map((plan) => {
                 const isCurrentPlan = plan.tier === activePlan;
                 const isLoading = isLoadingPlan(plan.tier);
                 return (
@@ -906,7 +1037,10 @@ export default function Plans() {
                       </Badge>
                     )}
                     {isCurrentPlan && (
-                      <Badge className="absolute left-6 top-6 border-primary/40 text-primary">
+                      <Badge
+                        variant="outline"
+                        className="absolute left-6 top-6 border-primary/40 text-primary"
+                      >
                         Current plan
                       </Badge>
                     )}
@@ -925,7 +1059,11 @@ export default function Plans() {
                     <CardContent className="space-y-6">
                       <div className="space-y-2">
                         <div className="text-sm text-muted-foreground">
-                          {plan.monthlyCredits} monthly prompts
+                          {plan.tier === "THREE_DAY_PASS" ||
+                          plan.tier === "SEVEN_DAY_PASS" ||
+                          plan.tier === "MONTHLY_UNLIMITED"
+                            ? "Unlimited prompts"
+                            : `${plan.monthlyCredits} monthly prompts`}
                         </div>
                         <ul className="space-y-2">
                           {plan.features.map((feature, i) => (
@@ -967,7 +1105,7 @@ export default function Plans() {
               })}
             </div>
 
-            <AddonCreditsSection isMobile={false} />
+            {resolvedCountryCode !== "NG" && <AddonCreditsSection isMobile={false} />}
 
             {isMobile && activePlan === "FREE" && (
               <Card className="border-border/70 bg-card/80 backdrop-blur">
@@ -1030,7 +1168,10 @@ export default function Plans() {
                 subscription and you will lose access to:
               </p>
               <ul className="list-disc pl-6 space-y-1 text-sm">
-                <li>100 AI prompts per month (downgrades to 10 prompts)</li>
+                <li>
+                  100 AI prompts per month (downgrades to{" "}
+                  {resolvedCountryCode === "NG" ? "3" : "10"} prompts)
+                </li>
                 <li>Ad-free experience</li>
                 <li>Priority chat throughput</li>
                 <li>Email support from the team</li>
