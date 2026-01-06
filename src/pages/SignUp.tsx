@@ -225,6 +225,9 @@ export default function SignUp() {
                     required
                   />
                 </div>
+                <p className="text-xs text-muted-foreground">
+                  Please use a valid email address. You'll be asked to verify it before accessing the app.
+                </p>
               </div>
 
               <div className="space-y-2">
