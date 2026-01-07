@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSubscriptionData } from "@/hooks/useSubscription";
+import { useGeoCountry } from "@/hooks/useGeoCountry";
 
 interface StrategiesPROGateProps {
   children: ReactNode;
@@ -12,14 +13,19 @@ interface StrategiesPROGateProps {
 
 export function StrategiesPROGate({ children }: StrategiesPROGateProps) {
   const { plan, loading } = useSubscriptionData();
+  const { resolvedCountryCode } = useGeoCountry();
 
   // Show loading state while checking subscription
   if (loading) {
     return null; // Parent component will show loading
   }
 
-  // If user has PRO plan, show the children (strategies content)
-  if (plan?.plan === "PRO") {
+  // Check if user has access to strategies (PRO or MONTHLY_UNLIMITED for Nigerians)
+  const hasStrategiesAccess =
+    plan?.plan === "PRO" || (resolvedCountryCode === "NG" && plan?.plan === "MONTHLY_UNLIMITED");
+
+  // If user has PRO or Monthly Unlimited plan, show the children (strategies content)
+  if (hasStrategiesAccess) {
     return <>{children}</>;
   }
 
