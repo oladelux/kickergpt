@@ -44,6 +44,7 @@ import { adsService } from "@/services/ads.service";
 import { MobileBottomNav } from "@/components/MobileBottomNav";
 import { useAuth } from "@/hooks/useAuth";
 import { ThemeStatusBarSync } from "@/components/ThemeStatusBarSync";
+import { useInterstitialAds } from "@/hooks/useInterstitialAds";
 import VerifyAddonPurchase from "./pages/VerifyAddonPurchase";
 
 ls.init("d955c4e2.3d0acf18");
@@ -111,6 +112,9 @@ const ResetPasswordRedirect = () => {
 
 const AppContent = () => {
   const { user } = useAuth();
+
+  // Handle interstitial ads on navigation (only for FREE plan users)
+  useInterstitialAds();
 
   // Force light mode for web only - allow theme switching on native mobile
   useEffect(() => {

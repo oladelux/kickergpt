@@ -154,7 +154,9 @@ export default function Privacy() {
                     <ul className="list-disc pl-6 mt-2 space-y-1">
                       <li>
                         <strong>Google AdMob:</strong> For displaying advertisements. AdMob may
-                        collect device identifiers and usage data. See Google's Privacy Policy:{" "}
+                        collect device identifiers and usage data. We use personalized advertising
+                        by default, but you can manage your ad preferences at any time. See Google's
+                        Privacy Policy:{" "}
                         <a
                           href="https://policies.google.com/privacy"
                           className="text-primary hover:underline"
@@ -163,6 +165,16 @@ export default function Privacy() {
                         >
                           https://policies.google.com/privacy
                         </a>
+                        . You can manage your ad personalization settings through your{" "}
+                        <a
+                          href="https://adssettings.google.com/authenticated"
+                          className="text-primary hover:underline"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          Google Ad Settings
+                        </a>{" "}
+                        or through your account profile page.
                       </li>
                       <li>
                         <strong>Stripe / PayPal:</strong> For processing subscriptions and
@@ -361,6 +373,62 @@ export default function Privacy() {
                   <li>
                     <strong className="text-foreground">Right to Withdraw Consent:</strong> Where
                     processing is based on consent, you can withdraw it at any time.
+                  </li>
+                </ul>
+                <h3 className="text-lg font-medium text-foreground mb-2 mt-4">
+                  12.1 Ad Personalization and Consent
+                </h3>
+                <p>
+                  We use Google AdMob to display advertisements in our mobile application. By
+                  default, we use personalized advertising, which means ads may be tailored to your
+                  interests based on your activity. You have the right to manage and revoke your
+                  consent for ad personalization at any time.
+                </p>
+                <p className="mt-2">
+                  <strong className="text-foreground">How to Manage Ad Preferences:</strong>
+                </p>
+                <ul className="list-disc pl-6 space-y-2 mt-2">
+                  <li>
+                    Visit your{" "}
+                    <a
+                      href="https://adssettings.google.com/authenticated"
+                      className="text-primary hover:underline"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Google Ad Settings
+                    </a>{" "}
+                    to control ad personalization across Google services.
+                  </li>
+                  <li>
+                    Access the "Manage ad preferences" option in your account profile page within
+                    our application.
+                  </li>
+                  <li>
+                    Contact us at{" "}
+                    <a href="mailto:admin@kickergpt.com" className="text-primary hover:underline">
+                      admin@kickergpt.com
+                    </a>{" "}
+                    if you need assistance managing your ad preferences.
+                  </li>
+                </ul>
+                <p className="mt-2">
+                  <strong className="text-foreground">Important Notes:</strong>
+                </p>
+                <ul className="list-disc pl-6 space-y-2 mt-2">
+                  <li>
+                    Revoking consent for personalized ads will result in non-personalized ads being
+                    shown instead. You will still see advertisements if you are on the FREE tier,
+                    but they will not be tailored to your interests.
+                  </li>
+                  <li>
+                    Revoking ad personalization consent does not remove ads entirely. To remove ads
+                    completely, you must upgrade to a paid subscription plan (PRO, 3-Day Pass, 7-Day
+                    Pass, or Monthly Unlimited).
+                  </li>
+                  <li>
+                    Changes to your ad preferences may take effect immediately or within a short
+                    period, depending on Google's systems.
                   </li>
                 </ul>
                 <p className="mt-3">
