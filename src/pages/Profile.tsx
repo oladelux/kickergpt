@@ -11,6 +11,8 @@ import {
   Sparkles,
   Moon,
   Sun,
+  Shield,
+  LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -437,6 +439,28 @@ export default function Profile() {
                 </Button>
                 <Button asChild variant="outline" className="w-full justify-start">
                   <Link to="/forgot-password">Change password</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full justify-start">
+                  <a
+                    href="https://adssettings.google.com/authenticated"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2"
+                  >
+                    <Shield className="h-4 w-4" />
+                    Manage ad preferences
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={async () => {
+                    await logout();
+                    window.location.href = "/login";
+                  }}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log out
                 </Button>
                 <Button
                   variant="outline"

@@ -1,11 +1,12 @@
 import {
   AdMob,
   RewardAdPluginEvents,
+  InterstitialAdPluginEvents,
   AdMobRewardItem,
   AdLoadInfo,
 } from "@capacitor-community/admob";
 import { areAdsAvailable, isNativeMobile } from "@/lib/platform";
-import { getRewardedVideoAdUnitId, ADMOB_CONFIG } from "@/lib/config";
+import { getRewardedVideoAdUnitId, getInterstitialAdUnitId, ADMOB_CONFIG } from "@/lib/config";
 
 export type AdRewardResult = {
   success: boolean;
@@ -18,11 +19,16 @@ export type AdState = "not_loaded" | "loading" | "loaded" | "showing" | "complet
 class AdsService {
   private isInitialized = false;
   private adState: AdState = "not_loaded";
+  private interstitialAdState: AdState = "not_loaded";
   private lastAdWatchedTime: number = 0;
+  private lastInterstitialShownTime: number = 0;
   private adsWatchedToday: number = 0;
   private todayDate: string = new Date().toDateString();
   private rewardListeners: Array<(result: AdRewardResult) => void> = [];
   private stateListeners: Array<(state: AdState) => void> = [];
+  private interstitialListeners: Array<() => void> = [];
+  private interstitialStateListeners: Array<(state: AdState) => void> = [];
+  private interstitialCooldownMinutes: number = ADMOB_CONFIG.INTERSTITIAL_COOLDOWN_MINUTES;
 
   /**
    * Initialize AdMob
@@ -94,6 +100,41 @@ class AdsService {
     AdMob.addListener(RewardAdPluginEvents.Rewarded, (reward: AdMobRewardItem) => {
       console.log("User earned reward", reward);
       this.handleAdReward(reward);
+    });
+
+    // Setup interstitial ad event listeners
+    this.setupInterstitialEventListeners();
+  }
+
+  /**
+   * Setup interstitial ad event listeners
+   */
+  private setupInterstitialEventListeners(): void {
+    AdMob.addListener(InterstitialAdPluginEvents.Loaded, (info: AdLoadInfo) => {
+      console.log("Interstitial ad loaded", info);
+      this.updateInterstitialAdState("loaded");
+    });
+
+    AdMob.addListener(InterstitialAdPluginEvents.FailedToLoad, (error) => {
+      console.error("Interstitial ad failed to load", error);
+      this.updateInterstitialAdState("failed");
+    });
+
+    AdMob.addListener(InterstitialAdPluginEvents.Showed, () => {
+      console.log("Interstitial ad showed");
+      this.updateInterstitialAdState("showing");
+    });
+
+    AdMob.addListener(InterstitialAdPluginEvents.FailedToShow, (error) => {
+      console.error("Interstitial ad failed to show", error);
+      this.updateInterstitialAdState("failed");
+    });
+
+    AdMob.addListener(InterstitialAdPluginEvents.Dismissed, () => {
+      console.log("Interstitial ad dismissed");
+      this.updateInterstitialAdState("not_loaded");
+      this.lastInterstitialShownTime = Date.now();
+      this.notifyInterstitialListeners();
     });
   }
 
@@ -335,11 +376,164 @@ class AdsService {
   }
 
   /**
+   * Load an interstitial ad
+   */
+  async loadInterstitialAd(): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!areAdsAvailable()) {
+      throw new Error("Ads not available on this platform");
+    }
+
+    if (this.interstitialAdState === "loading" || this.interstitialAdState === "loaded") {
+      return;
+    }
+
+    try {
+      this.updateInterstitialAdState("loading");
+      const adUnitId = getInterstitialAdUnitId();
+
+      await AdMob.prepareInterstitial({
+        adId: adUnitId,
+        npa: false, // Set to true for non-personalized ads
+      });
+    } catch (error) {
+      console.error("Failed to load interstitial ad:", error);
+      this.updateInterstitialAdState("failed");
+      throw error;
+    }
+  }
+
+  /**
+   * Show an interstitial ad
+   */
+  async showInterstitialAd(): Promise<void> {
+    if (!this.isInitialized) {
+      await this.initialize();
+    }
+
+    if (!areAdsAvailable()) {
+      throw new Error("Ads not available on this platform");
+    }
+
+    // Check if we can show an interstitial ad
+    const canShow = this.canShowInterstitial();
+    if (!canShow.allowed) {
+      console.log("Cannot show interstitial ad:", canShow.reason);
+      return;
+    }
+
+    // Load ad if not loaded
+    if (this.interstitialAdState !== "loaded") {
+      try {
+        await this.loadInterstitialAd();
+      } catch (error) {
+        console.error("Failed to load interstitial ad:", error);
+        return;
+      }
+    }
+
+    try {
+      await AdMob.showInterstitial();
+    } catch (error) {
+      console.error("Failed to show interstitial ad:", error);
+      this.updateInterstitialAdState("failed");
+      throw error;
+    }
+  }
+
+  /**
+   * Check if we can show an interstitial ad
+   */
+  canShowInterstitial(): { allowed: boolean; reason?: string } {
+    if (!areAdsAvailable()) {
+      return { allowed: false, reason: "Ads not available on this platform" };
+    }
+
+    // Check cooldown
+    const now = Date.now();
+    const timeSinceLastInterstitial = now - this.lastInterstitialShownTime;
+    const cooldownMs = this.interstitialCooldownMinutes * 60 * 1000;
+
+    if (timeSinceLastInterstitial < cooldownMs && this.lastInterstitialShownTime > 0) {
+      const remainingMs = cooldownMs - timeSinceLastInterstitial;
+      const remainingMinutes = Math.ceil(remainingMs / 60000);
+      return {
+        allowed: false,
+        reason: `Please wait ${remainingMinutes} minute${remainingMinutes > 1 ? "s" : ""} before showing another interstitial ad`,
+      };
+    }
+
+    return { allowed: true };
+  }
+
+  /**
+   * Get current interstitial ad state
+   */
+  getInterstitialAdState(): AdState {
+    return this.interstitialAdState;
+  }
+
+  /**
+   * Update interstitial ad state and notify listeners
+   */
+  private updateInterstitialAdState(state: AdState): void {
+    this.interstitialAdState = state;
+    this.notifyInterstitialStateListeners(state);
+  }
+
+  /**
+   * Add interstitial listener
+   */
+  addInterstitialListener(listener: () => void): void {
+    this.interstitialListeners.push(listener);
+  }
+
+  /**
+   * Remove interstitial listener
+   */
+  removeInterstitialListener(listener: () => void): void {
+    this.interstitialListeners = this.interstitialListeners.filter((l) => l !== listener);
+  }
+
+  /**
+   * Notify interstitial listeners
+   */
+  private notifyInterstitialListeners(): void {
+    this.interstitialListeners.forEach((listener) => listener());
+  }
+
+  /**
+   * Add interstitial state listener
+   */
+  addInterstitialStateListener(listener: (state: AdState) => void): void {
+    this.interstitialStateListeners.push(listener);
+  }
+
+  /**
+   * Remove interstitial state listener
+   */
+  removeInterstitialStateListener(listener: (state: AdState) => void): void {
+    this.interstitialStateListeners = this.interstitialStateListeners.filter((l) => l !== listener);
+  }
+
+  /**
+   * Notify interstitial state listeners
+   */
+  private notifyInterstitialStateListeners(state: AdState): void {
+    this.interstitialStateListeners.forEach((listener) => listener(state));
+  }
+
+  /**
    * Cleanup
    */
   async cleanup(): Promise<void> {
     this.rewardListeners = [];
     this.stateListeners = [];
+    this.interstitialListeners = [];
+    this.interstitialStateListeners = [];
     // AdMob doesn't require explicit cleanup in v7
   }
 }
