@@ -298,30 +298,14 @@ export default function ChatDialog({
           {match && kickoffLabel && (
             <p className="text-xs text-muted-foreground">{`${match.league} • ${kickoffLabel}`}</p>
           )}
-          {prediction && prediction.predictions.length > 0 && (
-            <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 space-y-1 max-sm:mt-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          {prediction && prediction.predictions.length > 0 && prediction.predictions[0].summary && (
+            <div className="mt-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5 max-sm:mt-2">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
                 AI Prediction
               </p>
-              <div className="flex items-center justify-center gap-1.5">
-                <span className="text-sm font-bold text-primary">
-                  {prediction.predictions[0].result === "home"
-                    ? match?.homeTeam
-                    : prediction.predictions[0].result === "away"
-                      ? match?.awayTeam
-                      : "Draw"}
-                </span>
-                <span className="text-xs text-muted-foreground">•</span>
-                <span className="text-sm font-bold text-foreground">
-                  {Math.round(prediction.predictions[0].probability)}%
-                </span>
-                <span className="text-xs text-muted-foreground">•</span>
-                <span
-                  className={`text-xs capitalize font-medium ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
-                >
-                  {prediction.predictions[0].confidence} confidence
-                </span>
-              </div>
+              <p className="text-sm text-primary font-medium leading-snug">
+                {prediction.predictions[0].summary}
+              </p>
             </div>
           )}
           {limitReached && (

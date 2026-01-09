@@ -11,6 +11,8 @@ import {
   Menu,
   X,
   Lock,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -295,6 +297,7 @@ const Chat = memo(function Chat() {
   const [selectedLeagueKey, setSelectedLeagueKey] = useState<string | null>(null);
   const [leftSidebarOpen, setLeftSidebarOpen] = useState(false);
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
+  const [expandedPredictions, setExpandedPredictions] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (isAuthenticated && user) {
@@ -471,6 +474,18 @@ const Chat = memo(function Chat() {
     setSelectedLeagueKey(null);
   };
 
+  const toggleKeyFactors = (matchId: string) => {
+    setExpandedPredictions((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) {
+        next.delete(matchId);
+      } else {
+        next.add(matchId);
+      }
+      return next;
+    });
+  };
+
   const renderCompactMatchRow = (match: Match, predictionIndex: number) => {
     const statusLabel = getMatchStatusLabel(match);
     const statusBadgeClasses = getStatusBadgeClasses(match);
@@ -491,209 +506,183 @@ const Chat = memo(function Chat() {
     return (
       <div
         key={match.id}
-        className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 px-2 sm:px-4 py-2 sm:py-3 border-b border-border/50 hover:bg-card/50 transition-colors group"
+        className="flex flex-col gap-2 sm:gap-3 px-2 sm:px-4 py-2 sm:py-3 border-b border-border/50 hover:bg-card/50 transition-colors group"
       >
-        {/* Teams display - full width on mobile, flex-1 on desktop */}
-        <div className="flex items-center gap-1.5 sm:gap-3 w-full sm:flex-1 min-w-0 justify-around">
-          <div className="flex items-center gap-1 flex-col">
-            {/* Home team logo */}
-            <Avatar className="size-7 sm:size-8 flex-shrink-0">
-              <AvatarImage src={match.homeTeamLogo} alt={match.homeTeam} />
-              <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                {getInitials(match.homeTeam)}
-              </AvatarFallback>
-            </Avatar>
-            {/* Home team name */}
-            <span className="text-xs sm:text-sm font-medium text-foreground truncate min-w-0 flex-1">
-              {match.homeTeam}
-            </span>
+        {/* First Row: Teams, Status/Time, Actions */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
+          {/* Teams display - full width on mobile, flex-1 on desktop */}
+          <div className="flex items-center gap-1.5 sm:gap-3 w-full sm:flex-1 min-w-0 justify-around">
+            <div className="flex items-center gap-1 flex-col">
+              {/* Home team logo */}
+              <Avatar className="size-7 sm:size-8 flex-shrink-0">
+                <AvatarImage src={match.homeTeamLogo} alt={match.homeTeam} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {getInitials(match.homeTeam)}
+                </AvatarFallback>
+              </Avatar>
+              {/* Home team name */}
+              <span className="text-xs sm:text-sm font-medium text-foreground truncate min-w-0 flex-1">
+                {match.homeTeam}
+              </span>
+            </div>
+            {/* VS separator - mobile only */}
+            <span className="text-xs text-muted-foreground sm:hidden flex-shrink-0 mx-0.5">vs</span>
+            <div className="flex items-center gap-1 flex-col">
+              {/* Away team logo - mobile */}
+              <Avatar className="size-7 sm:hidden flex-shrink-0">
+                <AvatarImage src={match.awayTeamLogo} alt={match.awayTeam} />
+                <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                  {getInitials(match.awayTeam)}
+                </AvatarFallback>
+              </Avatar>
+              {/* Away team name - mobile */}
+              <span className="text-xs sm:hidden font-medium text-foreground truncate min-w-0 flex-1 text-right">
+                {match.awayTeam}
+              </span>
+            </div>
           </div>
-          {/* VS separator - mobile only */}
-          <span className="text-xs text-muted-foreground sm:hidden flex-shrink-0 mx-0.5">vs</span>
-          <div className="flex items-center gap-1 flex-col">
-            {/* Away team logo - mobile */}
-            <Avatar className="size-7 sm:hidden flex-shrink-0">
+
+          {/* Desktop: Away team */}
+          <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0 justify-end">
+            <span className="text-sm font-medium text-foreground truncate text-right">
+              {match.awayTeam}
+            </span>
+            <Avatar className="size-8 flex-shrink-0">
               <AvatarImage src={match.awayTeamLogo} alt={match.awayTeam} />
               <AvatarFallback className="bg-primary/10 text-primary text-xs">
                 {getInitials(match.awayTeam)}
               </AvatarFallback>
             </Avatar>
-            {/* Away team name - mobile */}
-            <span className="text-xs sm:hidden font-medium text-foreground truncate min-w-0 flex-1 text-right">
-              {match.awayTeam}
-            </span>
           </div>
-        </div>
 
-        {/* Desktop: Status and time */}
-        <div className="hidden sm:flex flex-col gap-1 items-end flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
-              {statusLabel}
-            </Badge>
-            <span className="text-xs text-muted-foreground font-mono w-12 text-center">
-              {kickoffTime}
-            </span>
-          </div>
-          {prediction && !isBlurred && prediction.predictions.length > 0 && (
-            <div className="rounded-md border border-primary/30 bg-primary/5 px-2.5 py-1">
-              <div className="flex items-center gap-1.5 text-[11px] leading-tight text-primary font-medium">
-                <span className="font-bold">
-                  {prediction.predictions[0].result === "home"
-                    ? match.homeTeam
-                    : prediction.predictions[0].result === "away"
-                      ? match.awayTeam
-                      : "Draw"}
-                </span>
-                <span>•</span>
-                <span className="font-bold">
-                  {Math.round(prediction.predictions[0].probability)}%
-                </span>
-                <span>•</span>
-                <span
-                  className={`capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
-                >
-                  {prediction.predictions[0].confidence}
-                </span>
-              </div>
-            </div>
-          )}
-          {isBlurred && !isPro && (
-            <div className="rounded-md border border-border/40 bg-muted/30 px-2.5 py-1">
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
-                <span className="font-bold blur-[2px]">Team Name</span>
-                <span className="blur-[2px]">• XX% • High</span>
-                <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
-                  <Lock className="h-3 w-3" />
-                  <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">
-                    PRO
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Mobile: Status and time */}
-        <div className="flex sm:hidden items-center gap-1.5 w-full justify-between min-w-0">
-          <div className="flex flex-col gap-1 min-w-0 flex-shrink">
-            <div className="flex items-center gap-1.5">
-              <Badge
-                variant="outline"
-                className={`text-[10px] sm:text-xs font-semibold ${statusBadgeClasses} flex-shrink-0`}
-              >
+          {/* Status and time */}
+          <div className="flex items-center gap-2 flex-shrink-0 w-full sm:w-auto justify-between sm:justify-start">
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className={`text-xs font-semibold ${statusBadgeClasses}`}>
                 {statusLabel}
               </Badge>
-              <span className="text-[10px] sm:text-xs text-muted-foreground font-mono whitespace-nowrap flex-shrink-0">
+              <span className="text-xs text-muted-foreground font-mono w-12 text-center">
                 {kickoffTime}
               </span>
             </div>
-            {prediction && !isBlurred && prediction.predictions.length > 0 && (
-              <div className="rounded-md border border-primary/30 bg-primary/5 px-2 py-1">
-                <div className="flex items-center gap-1 text-[10px] leading-tight text-primary font-medium">
-                  <span className="font-bold">
-                    {prediction.predictions[0].result === "home"
-                      ? match.homeTeam
-                      : prediction.predictions[0].result === "away"
-                        ? match.awayTeam
-                        : "Draw"}
-                  </span>
-                  <span>•</span>
-                  <span className="font-bold">
-                    {Math.round(prediction.predictions[0].probability)}%
-                  </span>
-                  <span>•</span>
-                  <span
-                    className={`capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
-                  >
-                    {prediction.predictions[0].confidence}
-                  </span>
-                </div>
-              </div>
-            )}
-            {isBlurred && !isPro && (
-              <div className="rounded-md border border-border/40 bg-muted/30 px-2 py-1">
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground font-medium">
-                  <span className="font-bold blur-[2px]">Team Name</span>
-                  <span className="blur-[2px]">• XX% • High</span>
-                  <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
-                    <Lock className="h-2.5 w-2.5" />
-                    <span className="text-[8px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1 py-0.5 rounded">
-                      PRO
-                    </span>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex-shrink-0 ${
-                match.isFavorite
-                  ? "text-destructive"
-                  : "text-muted-foreground hover:text-destructive"
-              }`}
-              onClick={() => toggleFavorite(match.id)}
-            >
-              <Heart
-                className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${match.isFavorite ? "fill-current" : ""}`}
-              />
-            </Button>
-            {!isFinishedMatch(match) && (
+            {/* Actions */}
+            <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
               <Button
-                variant="default"
-                size="sm"
-                className="h-7 sm:h-8 gap-1 px-2 sm:px-3 bg-gradient-to-r from-primary to-accent text-primary-foreground flex-shrink-0"
-                onClick={() => handleAnalysisClick(match)}
+                type="button"
+                variant="ghost"
+                size="icon"
+                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full flex-shrink-0 ${
+                  match.isFavorite
+                    ? "text-destructive"
+                    : "text-muted-foreground hover:text-destructive"
+                }`}
+                onClick={() => toggleFavorite(match.id)}
               >
-                <MessageSquare className="h-3 w-3" />
-                <span className="text-[14px] sm:text-sm">Analyze</span>
+                <Heart
+                  className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${match.isFavorite ? "fill-current" : ""}`}
+                />
               </Button>
-            )}
+              {!isFinishedMatch(match) && (
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-7 sm:h-8 gap-1 px-2 sm:px-3 bg-gradient-to-r from-primary to-accent text-primary-foreground flex-shrink-0"
+                  onClick={() => handleAnalysisClick(match)}
+                >
+                  <MessageSquare className="h-3 w-3" />
+                  <span className="text-[14px] sm:text-sm">Chat</span>
+                </Button>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Desktop: Away team */}
-        <div className="hidden sm:flex items-center gap-3 flex-1 min-w-0 justify-end">
-          <span className="text-sm font-medium text-foreground truncate text-right">
-            {match.awayTeam}
-          </span>
-          <Avatar className="size-8 flex-shrink-0">
-            <AvatarImage src={match.awayTeamLogo} alt={match.awayTeam} />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs">
-              {getInitials(match.awayTeam)}
-            </AvatarFallback>
-          </Avatar>
-        </div>
+        {/* Second Row: Prediction Summary - Full Width */}
+        {prediction && !isBlurred && prediction.predictions.length > 0 && (
+          <div className="w-full rounded-lg border border-primary/30 bg-primary/5 p-2.5 sm:p-3 space-y-2">
+            {/* Summary */}
+            {prediction.predictions[0].summary && (
+              <p className="text-xs sm:text-sm text-primary font-medium leading-snug">
+                {prediction.predictions[0].summary}
+              </p>
+            )}
 
-        {/* Desktop: Actions */}
-        <div className="hidden sm:flex items-center gap-2 flex-shrink-0">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className={`h-8 w-8 rounded-full ${
-              match.isFavorite ? "text-destructive" : "text-muted-foreground hover:text-destructive"
-            }`}
-            onClick={() => toggleFavorite(match.id)}
-          >
-            <Heart className={`h-4 w-4 ${match.isFavorite ? "fill-current" : ""}`} />
-          </Button>
-          {!isFinishedMatch(match) && (
-            <Button
-              variant="default"
-              size="sm"
-              className="h-8 gap-2 bg-gradient-to-r from-primary to-accent text-primary-foreground"
-              onClick={() => handleAnalysisClick(match)}
-            >
-              <MessageSquare className="h-3 w-3" />
-              <span className="text-xs">Analyze</span>
-            </Button>
-          )}
-        </div>
+            {/* Probability and Confidence */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <Badge
+                variant="secondary"
+                className="text-[11px] sm:text-xs font-semibold bg-primary/20 text-primary border-primary/30"
+              >
+                {Math.round(prediction.predictions[0].probability)}%
+              </Badge>
+              <Badge
+                variant="outline"
+                className={`text-[11px] sm:text-xs font-semibold capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
+              >
+                {prediction.predictions[0].confidence}
+              </Badge>
+            </div>
+
+            {/* Key Factors - Collapsible */}
+            {prediction.predictions[0].keyFactors &&
+              prediction.predictions[0].keyFactors.length > 0 && (
+                <div className="pt-2 border-t border-border/50">
+                  <button
+                    type="button"
+                    onClick={() => toggleKeyFactors(match.id)}
+                    className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {expandedPredictions.has(match.id) ? (
+                      <>
+                        <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <span>Hide key factors</span>
+                      </>
+                    ) : (
+                      <>
+                        <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                        <span>See key factors</span>
+                      </>
+                    )}
+                  </button>
+                  {expandedPredictions.has(match.id) && (
+                    <div className="space-y-1.5 mt-2">
+                      <div className="space-y-1">
+                        {prediction.predictions[0].keyFactors.map((factor, idx) => (
+                          <div key={idx} className="flex items-start gap-1.5">
+                            <span className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                              •
+                            </span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs sm:text-sm font-medium text-foreground">
+                                {factor.name}
+                              </p>
+                              <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
+                                {factor.description}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+          </div>
+        )}
+        {isBlurred && !isPro && (
+          <div className="w-full rounded-md border border-border/40 bg-muted/30 px-2.5 py-1">
+            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground font-medium">
+              <span className="font-bold blur-[2px]">Team Name</span>
+              <span className="blur-[2px]">• XX% • High</span>
+              <div className="flex items-center gap-1 flex-shrink-0 relative z-10">
+                <Lock className="h-3 w-3" />
+                <span className="text-[9px] font-bold bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 px-1.5 py-0.5 rounded">
+                  PRO
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   };

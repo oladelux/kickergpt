@@ -42,4 +42,3 @@ export const usePredictions = () => {
     reload: loadPredictions,
   };
 };
-

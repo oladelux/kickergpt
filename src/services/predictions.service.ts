@@ -32,10 +32,7 @@ class PredictionsService {
       }),
       catchError((error) =>
         throwError(
-          () =>
-            new Error(
-              error?.message ?? "Failed to load predictions. Please try again."
-            )
+          () => new Error(error?.message ?? "Failed to load predictions. Please try again.")
         )
       )
     );
@@ -52,4 +49,3 @@ class PredictionsService {
 }
 
 export const predictionsService = new PredictionsService();
-

@@ -329,11 +329,61 @@ export type PredictionLeague = {
   country: string;
 };
 
+/**
+ * Outcome probabilities for all three possible results.
+ */
+export type OutcomeProbabilities = {
+  /** Win probability for home team (0-100) */
+  homeWin: number;
+  /** Draw probability (0-100) */
+  draw: number;
+  /** Win probability for away team (0-100) */
+  awayWin: number;
+};
+
+/**
+ * Factor contribution to the prediction.
+ */
+export type PredictionFactor = {
+  /** Name of the factor (e.g., "Bookmaker Odds", "Recent Form") */
+  name: string;
+  /** Description of the factor's influence */
+  description: string;
+  /** Impact direction: positive favors home, negative favors away */
+  impact: "home" | "away" | "neutral";
+  /** Weight of this factor (0-1) */
+  weight: number;
+};
+
+/**
+ * The predicted match result (including draw).
+ */
+export type MatchResult = "home" | "away" | "draw";
+
+/**
+ * Favored team information for the prediction.
+ */
+export type FavoredTeam = {
+  id: number;
+  name: string;
+};
+
 export type PredictionResult = {
   type: string;
   result: "home" | "away" | "draw";
   probability: number;
   confidence: "very high" | "high" | "medium" | "low";
+  // --- New fields ---
+  /** Probabilities for all three outcomes */
+  probabilities: OutcomeProbabilities;
+  /** The predicted outcome: 'home', 'draw', or 'away' */
+  predictedOutcome: MatchResult;
+  /** The favored team (null for draw prediction) */
+  favoredTeam: FavoredTeam | null;
+  /** Key factors that influenced this prediction (top 3) */
+  keyFactors: PredictionFactor[];
+  /** Human-readable summary for UI display */
+  summary: string;
 };
 
 export type FixturePrediction = {
