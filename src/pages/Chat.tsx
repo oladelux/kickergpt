@@ -308,8 +308,16 @@ const Chat = memo(function Chat() {
 
   const normalizedMatchQuery = matchSearch.trim().toLowerCase();
 
+  // Check if user should see predictions prioritized (non-PRO, non-MONTHLY_UNLIMITED)
+  const shouldPrioritizePredictions = useMemo(() => {
+    const isPro =
+      subscriptionPlan?.plan === "PRO" ||
+      (resolvedCountryCode === "NG" && subscriptionPlan?.plan === "MONTHLY_UNLIMITED");
+    return !isPro;
+  }, [subscriptionPlan, resolvedCountryCode]);
+
   const filteredMatches = useMemo(() => {
-    return matches.filter((match) => {
+    const filtered = matches.filter((match) => {
       if (statusFilter === "live" && !isLiveMatch(match)) return false;
       if (statusFilter === "upcoming" && !isUpcomingMatch(match)) return false;
       if (statusFilter === "favorites" && !match.isFavorite) return false;
@@ -334,7 +342,32 @@ const Chat = memo(function Chat() {
 
       return true;
     });
-  }, [matches, statusFilter, selectedDay, selectedLeagueKey, countryFilter, normalizedMatchQuery]);
+
+    // Sort matches globally: predictions first (if shouldPrioritizePredictions)
+    if (shouldPrioritizePredictions) {
+      return filtered.sort((a, b) => {
+        const predictionA = getPredictionForFixture(a.id);
+        const predictionB = getPredictionForFixture(b.id);
+        const hasPredictionA = predictionA && predictionA.predictions.length > 0;
+        const hasPredictionB = predictionB && predictionB.predictions.length > 0;
+
+        if (hasPredictionA && !hasPredictionB) return -1;
+        if (!hasPredictionA && hasPredictionB) return 1;
+        return 0; // Keep original order if both have or both don't have predictions
+      });
+    }
+
+    return filtered;
+  }, [
+    matches,
+    statusFilter,
+    selectedDay,
+    selectedLeagueKey,
+    countryFilter,
+    normalizedMatchQuery,
+    shouldPrioritizePredictions,
+    getPredictionForFixture,
+  ]);
 
   // Group matches by day first, then by league within each day
   const matchesByDayAndLeague = useMemo(() => {
@@ -370,6 +403,20 @@ const Chat = memo(function Chat() {
     sortedDays.forEach((dayKey) => {
       const leagues = Object.entries(grouped[dayKey]).sort(
         ([leagueKeyA, matchesA], [leagueKeyB, matchesB]) => {
+          // If prioritizing predictions, sort leagues by whether they have matches with predictions
+          if (shouldPrioritizePredictions) {
+            const hasPredictionA = matchesA.some(
+              (m) => getPredictionForFixture(m.id)?.predictions.length > 0
+            );
+            const hasPredictionB = matchesB.some(
+              (m) => getPredictionForFixture(m.id)?.predictions.length > 0
+            );
+
+            if (hasPredictionA && !hasPredictionB) return -1;
+            if (!hasPredictionA && hasPredictionB) return 1;
+            // If both have or both don't have predictions, fall through to priority sorting
+          }
+
           // Get league names for priority comparison
           const leagueNameA = matchesA[0]?.league ?? "Other";
           const leagueNameB = matchesB[0]?.league ?? "Other";
@@ -394,7 +441,7 @@ const Chat = memo(function Chat() {
     });
 
     return result;
-  }, [filteredMatches]);
+  }, [filteredMatches, shouldPrioritizePredictions, getPredictionForFixture]);
 
   const availableDays = useMemo(() => getUniqueDays(matches), [matches]);
 
