@@ -5,7 +5,7 @@ import {
   AdMobRewardItem,
   AdLoadInfo,
 } from "@capacitor-community/admob";
-import { areAdsAvailable, isNativeMobile } from "@/lib/platform";
+import { areAdsAvailable } from "@/lib/platform";
 import { getRewardedVideoAdUnitId, getInterstitialAdUnitId, ADMOB_CONFIG } from "@/lib/config";
 
 export type AdRewardResult = {
@@ -46,8 +46,7 @@ class AdsService {
     try {
       // Initialize AdMob
       await AdMob.initialize({
-        testingDevices: ["YOUR_TEST_DEVICE_ID"], // Add your test device ID for testing
-        initializeForTesting: true, // Set to false in production
+        initializeForTesting: false,
       });
 
       // Add event listeners

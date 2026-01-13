@@ -6,24 +6,22 @@ import { isAndroid, isIOS, isWeb } from "./platform";
 
 // AdMob Configuration
 export const ADMOB_CONFIG = {
-  // Test IDs for development - replace with your actual AdMob IDs in production
   APP_ID: {
-    android: "ca-app-pub-3625004979166724~8542529874", // Test App ID
-    ios: "ca-app-pub-3940256099942544~1458002511", // Test App ID
+    android: "ca-app-pub-3625004979166724~8542529874",
+    ios: "ca-app-pub-3940256099942544~1458002511",
   },
   REWARDED_VIDEO_ID: {
-    android: "ca-app-pub-3625004979166724/5942796005", // Test Rewarded Video
-    ios: "ca-app-pub-3940256099942544/1712485313", // Test Rewarded Video
+    android: "ca-app-pub-3625004979166724/5942796005",
+    ios: "ca-app-pub-3940256099942544/1712485313",
   },
   INTERSTITIAL_ID: {
-    android: "ca-app-pub-3625004979166724/8327078894", // Test Interstitial
-    ios: "ca-app-pub-3940256099942544/4411468910", // Test Interstitial
+    android: "ca-app-pub-3625004979166724/8327078894",
+    ios: "ca-app-pub-3940256099942544/4411468910",
   },
-  // Ad settings
-  AD_COOLDOWN_MINUTES: 3, // Minimum time between ads
-  INTERSTITIAL_COOLDOWN_MINUTES: 2, // Minimum time between interstitial ads
-  CREDITS_PER_AD: 2, // Credits earned per completed ad
-  MAX_ADS_PER_DAY: 20, // Maximum ads a user can watch per day
+  AD_COOLDOWN_MINUTES: 1,
+  INTERSTITIAL_COOLDOWN_MINUTES: 2,
+  CREDITS_PER_AD: 2,
+  MAX_ADS_PER_DAY: 20,
 };
 
 /**
