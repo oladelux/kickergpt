@@ -23,6 +23,7 @@ import { Helmet } from "react-helmet-async";
 import { useEffect, useState } from "react";
 import { isNativeMobile } from "@/lib/platform";
 import { useAuth } from "@/hooks/useAuth";
+import { track } from "@vercel/analytics";
 
 const featureHighlights = [
   {
@@ -172,6 +173,17 @@ export default function Index() {
       }
     }
   }, [user, navigate]);
+
+  // Track UTM source visits
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source");
+
+    if (utmSource) {
+      track("referral_visit", { source: utmSource });
+      localStorage.setItem("utm_source", utmSource);
+    }
+  }, []);
 
   // Show loading screen for mobile while redirecting
   if (isNativeMobile()) {

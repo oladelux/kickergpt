@@ -18,6 +18,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 import { COUNTRIES } from "@/constants/countries";
+import { track } from "@vercel/analytics";
 
 const onboardingPillars = [
   {
@@ -54,6 +55,17 @@ export default function SignUp() {
       navigate(redirectTo, { replace: true });
     }
   }, [isAuthenticated, navigate, redirectTo, user]);
+
+  // Track UTM source visits
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const utmSource = params.get("utm_source");
+
+    if (utmSource) {
+      track("referral_visit", { source: utmSource });
+      localStorage.setItem("utm_source", utmSource);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -226,7 +238,8 @@ export default function SignUp() {
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Please use a valid email address. You'll be asked to verify it before accessing the app.
+                  Please use a valid email address. You'll be asked to verify it before accessing
+                  the app.
                 </p>
               </div>
 

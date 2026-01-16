@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Helmet } from "react-helmet-async";
 import { useGeoCountry } from "@/hooks/useGeoCountry";
+import { track } from "@vercel/analytics";
 
 export default function EmailVerification() {
   const { resendVerificationEmail, confirmEmail, login, loading, user, isAuthenticated } =
@@ -57,6 +58,13 @@ export default function EmailVerification() {
               // Auto-login the user
               login(userEmail, password, geoCountryCode)
                 .then(() => {
+                  // Track verified registration with UTM source
+                  const utmSource = localStorage.getItem("utm_source");
+                  track("registration", { source: utmSource || "direct" });
+                  if (utmSource) {
+                    localStorage.removeItem("utm_source");
+                  }
+
                   // Set flag to show promo banner on first page load after login
                   sessionStorage.setItem("just-logged-in", "true");
                   toast({
