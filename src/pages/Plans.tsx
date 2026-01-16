@@ -106,7 +106,7 @@ const getPlanOptions = (countryCode: string): PlanOption[] => {
       },
       {
         tier: "MONTHLY_UNLIMITED" as SubscriptionPlanName,
-        name: "Monthly Unlimited",
+        name: "Monthly Unlimited (PRO)",
         price: "₦3,000",
         cadence: "per month",
         monthlyCredits: 999999,
