@@ -3,7 +3,13 @@ import { TrendingUp, Lock, Star, AlertCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FixturePrediction } from "@/lib/api";
-import { getConfidenceColorClasses } from "@/lib/utils";
+import {
+  getConfidenceColorClasses,
+  isMatchPrediction,
+  isGoalPrediction,
+  getMatchResultLabel,
+  getGoalPredictionLabel,
+} from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface PredictionBadgeProps {
@@ -25,19 +31,6 @@ const getConfidenceIcon = (confidence: string) => {
       return <TrendingUp className="h-3 w-3 text-red-500" />;
     default:
       return null;
-  }
-};
-
-const getResultLabel = (result: string) => {
-  switch (result) {
-    case "home":
-      return "Home";
-    case "away":
-      return "Away";
-    case "draw":
-      return "Draw";
-    default:
-      return result;
   }
 };
 
@@ -85,10 +78,14 @@ export default function PredictionBadge({
 
   // Show actual prediction (for PRO users or first 10 for free users)
   if (prediction && prediction.predictions.length > 0) {
-    const primaryPrediction = prediction.predictions[0];
+    const matchPredictions = prediction.predictions.filter(isMatchPrediction);
+    const goalPredictions = prediction.predictions.filter(isGoalPrediction);
 
     if (compact) {
-      // Compact version for mobile/tight spaces
+      // Compact version - show count and highest probability
+      const highestProb = Math.max(...prediction.predictions.map((p) => p.probability));
+      const count = prediction.predictions.length;
+
       return (
         <TooltipProvider>
           <Tooltip>
@@ -98,20 +95,41 @@ export default function PredictionBadge({
                 className="text-[10px] px-1.5 py-0.5 h-5 gap-1 border-primary/40 bg-primary/5 text-primary font-semibold"
               >
                 <TrendingUp className="h-2.5 w-2.5" />
-                <span>{Math.round(primaryPrediction.probability)}%</span>
+                <span>{Math.round(highestProb)}%</span>
+                {count > 1 && <span className="text-[9px]">×{count}</span>}
               </Badge>
             </TooltipTrigger>
             <TooltipContent>
-              <div className="text-xs space-y-1">
-                <p className="font-semibold">{getResultLabel(primaryPrediction.result)} Win</p>
-                <p>
-                  <span className="text-muted-foreground">
-                    {Math.round(primaryPrediction.probability)}% •{" "}
-                  </span>
-                  <span className={getConfidenceColorClasses(primaryPrediction.confidence)}>
-                    {primaryPrediction.confidence} confidence
-                  </span>
-                </p>
+              <div className="text-xs space-y-2 max-w-[220px]">
+                {/* Match predictions */}
+                {matchPredictions.map((pred, idx) => (
+                  <div key={`match-${idx}`}>
+                    <p className="font-semibold">{getMatchResultLabel(pred.result)} Win</p>
+                    <p>
+                      <span className="text-muted-foreground">
+                        {Math.round(pred.probability)}% •{" "}
+                      </span>
+                      <span className={getConfidenceColorClasses(pred.confidence)}>
+                        {pred.confidence} confidence
+                      </span>
+                    </p>
+                  </div>
+                ))}
+
+                {/* Goal predictions */}
+                {goalPredictions.map((pred, idx) => (
+                  <div key={`goal-${idx}`}>
+                    <p className="font-semibold">{getGoalPredictionLabel(pred)}</p>
+                    <p>
+                      <span className="text-muted-foreground">
+                        {Math.round(pred.probability)}% •{" "}
+                      </span>
+                      <span className={getConfidenceColorClasses(pred.confidence)}>
+                        {pred.confidence} confidence
+                      </span>
+                    </p>
+                  </div>
+                ))}
               </div>
             </TooltipContent>
           </Tooltip>
@@ -119,18 +137,44 @@ export default function PredictionBadge({
       );
     }
 
-    // Full version for desktop
+    // Full version for desktop - stack predictions vertically
     return (
-      <div className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/30">
-        <TrendingUp className="h-3 w-3 text-primary" />
-        <span className="text-xs font-semibold text-primary">
-          {getResultLabel(primaryPrediction.result)}
-        </span>
-        <span className="text-xs text-muted-foreground">•</span>
-        <span className="text-xs font-bold text-foreground">
-          {Math.round(primaryPrediction.probability)}%
-        </span>
-        {getConfidenceIcon(primaryPrediction.confidence)}
+      <div className="inline-flex flex-col gap-1">
+        {/* Match predictions */}
+        {matchPredictions.map((pred, idx) => (
+          <div
+            key={`match-${idx}`}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/30"
+          >
+            <TrendingUp className="h-3 w-3 text-primary" />
+            <span className="text-xs font-semibold text-primary">
+              {getMatchResultLabel(pred.result)}
+            </span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="text-xs font-bold text-foreground">
+              {Math.round(pred.probability)}%
+            </span>
+            {getConfidenceIcon(pred.confidence)}
+          </div>
+        ))}
+
+        {/* Goal predictions */}
+        {goalPredictions.map((pred, idx) => (
+          <div
+            key={`goal-${idx}`}
+            className="inline-flex items-center gap-1.5 px-2 py-1 rounded-md bg-emerald-500/5 border border-emerald-500/30"
+          >
+            <TrendingUp className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+              {getGoalPredictionLabel(pred)}
+            </span>
+            <span className="text-xs text-muted-foreground">•</span>
+            <span className="text-xs font-bold text-foreground">
+              {Math.round(pred.probability)}%
+            </span>
+            {getConfidenceIcon(pred.confidence)}
+          </div>
+        ))}
       </div>
     );
   }

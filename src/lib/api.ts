@@ -368,11 +368,19 @@ export type FavoredTeam = {
   name: string;
 };
 
+/**
+ * Confidence level for predictions.
+ */
+export type ConfidenceLevel = "very high" | "high" | "medium" | "low";
+
+/**
+ * Match result prediction (home/away/draw).
+ */
 export type PredictionResult = {
   type: string;
   result: "home" | "away" | "draw";
   probability: number;
-  confidence: "very high" | "high" | "medium" | "low";
+  confidence: ConfidenceLevel;
   // --- New fields ---
   /** Probabilities for all three outcomes */
   probabilities: OutcomeProbabilities;
@@ -386,13 +394,50 @@ export type PredictionResult = {
   summary: string;
 };
 
+/**
+ * The predicted outcome for goal predictions.
+ */
+export type GoalOutcome = "over" | "under";
+
+/**
+ * Probabilities for over/under goal predictions.
+ */
+export type GoalProbabilities = {
+  /** Probability of goals being over threshold (0-100) */
+  over: number;
+  /** Probability of goals being under threshold (0-100) */
+  under: number;
+};
+
+/**
+ * Goal prediction for over/under thresholds.
+ */
+export type GoalPrediction = {
+  /** The type of prediction (over_1_5_goals or over_2_5_goals) */
+  type: "over_1_5_goals" | "over_2_5_goals";
+  /** The predicted outcome: 'over' or 'under' */
+  predictedOutcome: GoalOutcome;
+  /** Probability of the predicted outcome (0-100) */
+  probability: number;
+  /** Confidence level based on probability threshold */
+  confidence: ConfidenceLevel;
+  /** Probabilities for both outcomes */
+  probabilities: GoalProbabilities;
+  /** Goal threshold (1.5 or 2.5) */
+  threshold: number;
+  /** Key factors that influenced this prediction (top 3) */
+  keyFactors: PredictionFactor[];
+  /** Human-readable summary for UI display */
+  summary: string;
+};
+
 export type FixturePrediction = {
   fixtureId: number;
   homeTeam: PredictionTeam;
   awayTeam: PredictionTeam;
   startingAt: string;
   league: PredictionLeague;
-  predictions: PredictionResult[];
+  predictions: (PredictionResult | GoalPrediction)[];
   generatedAt: string;
 };
 

@@ -646,76 +646,82 @@ const Chat = memo(function Chat() {
           </div>
         </div>
 
-        {/* Second Row: Prediction Summary - Full Width */}
+        {/* Second Row: Prediction Grid - 3 Columns */}
         {prediction && !isBlurred && prediction.predictions.length > 0 && (
-          <div className="w-full rounded-lg border border-primary/30 bg-primary/5 p-2.5 sm:p-3 space-y-2">
-            {/* Summary */}
-            {prediction.predictions[0].summary && (
-              <p className="text-xs sm:text-sm text-primary font-medium leading-snug">
-                {prediction.predictions[0].summary}
-              </p>
-            )}
-
-            {/* Probability and Confidence */}
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge
-                variant="secondary"
-                className="text-[11px] sm:text-xs font-semibold bg-primary/20 text-primary border-primary/30"
+          <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3">
+            {prediction.predictions.map((pred, predIdx) => (
+              <div
+                key={predIdx}
+                className="rounded-lg border border-primary/30 bg-primary/5 p-2.5 sm:p-3 space-y-2"
               >
-                {Math.round(prediction.predictions[0].probability)}%
-              </Badge>
-              <Badge
-                variant="outline"
-                className={`text-[11px] sm:text-xs font-semibold capitalize ${getConfidenceColorClasses(prediction.predictions[0].confidence)}`}
-              >
-                {prediction.predictions[0].confidence}
-              </Badge>
-            </div>
+                {/* Summary */}
+                {pred.summary && (
+                  <p className="text-xs sm:text-sm text-primary font-medium leading-snug">
+                    {pred.summary}
+                  </p>
+                )}
 
-            {/* Key Factors - Collapsible */}
-            {prediction.predictions[0].keyFactors &&
-              prediction.predictions[0].keyFactors.length > 0 && (
-                <div className="pt-2 border-t border-border/50">
-                  <button
-                    type="button"
-                    onClick={() => toggleKeyFactors(match.id)}
-                    className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                {/* Probability and Confidence */}
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Badge
+                    variant="secondary"
+                    className="text-[11px] sm:text-xs font-semibold bg-primary/20 text-primary border-primary/30"
                   >
-                    {expandedPredictions.has(match.id) ? (
-                      <>
-                        <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                        <span>Hide key factors</span>
-                      </>
-                    ) : (
-                      <>
-                        <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                        <span>See key factors</span>
-                      </>
-                    )}
-                  </button>
-                  {expandedPredictions.has(match.id) && (
-                    <div className="space-y-1.5 mt-2">
-                      <div className="space-y-1">
-                        {prediction.predictions[0].keyFactors.map((factor, idx) => (
-                          <div key={idx} className="flex items-start gap-1.5">
-                            <span className="text-xs sm:text-sm text-muted-foreground mt-0.5">
-                              •
-                            </span>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs sm:text-sm font-medium text-foreground">
-                                {factor.name}
-                              </p>
-                              <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
-                                {factor.description}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                    {Math.round(pred.probability)}%
+                  </Badge>
+                  <Badge
+                    variant="outline"
+                    className={`text-[11px] sm:text-xs font-semibold capitalize ${getConfidenceColorClasses(pred.confidence)}`}
+                  >
+                    {pred.confidence}
+                  </Badge>
                 </div>
-              )}
+
+                {/* Key Factors - Collapsible */}
+                {pred.keyFactors && pred.keyFactors.length > 0 && (
+                  <div className="pt-2 border-t border-border/50">
+                    <button
+                      type="button"
+                      onClick={() => toggleKeyFactors(`${match.id}-${predIdx}`)}
+                      className="flex items-center gap-1.5 text-[10px] sm:text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      {expandedPredictions.has(`${match.id}-${predIdx}`) ? (
+                        <>
+                          <ChevronUp className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <span>Hide key factors</span>
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <span>See key factors</span>
+                        </>
+                      )}
+                    </button>
+                    {expandedPredictions.has(`${match.id}-${predIdx}`) && (
+                      <div className="space-y-1.5 mt-2">
+                        <div className="space-y-1">
+                          {pred.keyFactors.map((factor, idx) => (
+                            <div key={idx} className="flex items-start gap-1.5">
+                              <span className="text-xs sm:text-sm text-muted-foreground mt-0.5">
+                                •
+                              </span>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-xs sm:text-sm font-medium text-foreground">
+                                  {factor.name}
+                                </p>
+                                <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
+                                  {factor.description}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         )}
         {isBlurred && !isPro && (
