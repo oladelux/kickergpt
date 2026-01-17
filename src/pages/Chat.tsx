@@ -43,6 +43,8 @@ import {
 import { usePredictions } from "@/hooks/usePredictions";
 import { getConfidenceColorClasses } from "@/lib/utils";
 
+const FREE_PREDICTION_LIMIT = 10;
+
 const LIVE_DEVELOPER_CODES = new Set([
   "INPLAY_1ST_HALF",
   "INPLAY_2ND_HALF",
@@ -548,7 +550,7 @@ const Chat = memo(function Chat() {
     const isPro =
       subscriptionPlan?.plan === "PRO" ||
       (resolvedCountryCode === "NG" && subscriptionPlan?.plan === "MONTHLY_UNLIMITED");
-    const isBlurred = predictionIndex >= 5 && !isPro;
+    const isBlurred = predictionIndex >= FREE_PREDICTION_LIMIT && !isPro;
 
     return (
       <div
@@ -748,7 +750,7 @@ const Chat = memo(function Chat() {
           leagueName={selectedLeagueName}
         />
 
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex overflow-hidden mt-[52px]">
           {/* Left Sidebar - Desktop */}
           <div className="hidden lg:block flex-shrink-0">
             <FixturesLeftSidebar

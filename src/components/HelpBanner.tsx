@@ -27,13 +27,13 @@ export default function HelpBanner() {
   }
 
   return (
-    <div className="relative z-50 w-full border-b border-border/60 bg-gradient-to-r from-primary/10 via-card to-accent/5 backdrop-blur-sm">
+    <div className="fixed top-16 left-0 right-0 z-40 w-full border-b border-border/60 bg-gradient-to-r from-primary/10 via-card to-accent/5 backdrop-blur-sm">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
         <a
           href={HELP_ARTICLE_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-1 text-center text-sm font-medium text-foreground hover:text-primary transition-colors sm:text-left"
+          className="flex-1 min-w-0 text-left text-xs sm:text-sm font-medium text-foreground hover:text-primary transition-colors"
         >
           Want to Get the Best Out of KickerGPT?
         </a>

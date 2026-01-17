@@ -52,7 +52,7 @@ export default function PredictionBadge({
     return null;
   }
 
-  // Show blurred state for free users after 5 predictions
+  // Show blurred state for free users after 10 predictions
   if (isBlurred && !isPro) {
     return (
       <TooltipProvider>
@@ -83,7 +83,7 @@ export default function PredictionBadge({
     );
   }
 
-  // Show actual prediction (for PRO users or first 5 for free users)
+  // Show actual prediction (for PRO users or first 10 for free users)
   if (prediction && prediction.predictions.length > 0) {
     const primaryPrediction = prediction.predictions[0];
 
