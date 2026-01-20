@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { PredictionResult, GoalPrediction } from "./api";
+import type { PredictionResult, GoalPrediction, NaturalQueryAnalyzedMatch } from "./api";
+import type { Match } from "@/services/matches.service";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -76,4 +77,25 @@ export function getGoalPredictionLabel(prediction: GoalPrediction): string {
     prediction.predictedOutcome.charAt(0).toUpperCase() +
     prediction.predictedOutcome.slice(1);
   return `${outcome} ${prediction.threshold}`;
+}
+
+/**
+ * Convert a NaturalQueryAnalyzedMatch to the Match interface used by ChatDialog
+ */
+export function naturalQueryMatchToMatch(nqMatch: NaturalQueryAnalyzedMatch): Match {
+  const fixture = nqMatch.fixture;
+  return {
+    id: String(fixture.id),
+    homeTeam: fixture.homeTeam.name,
+    awayTeam: fixture.awayTeam.name,
+    homeTeamLogo: fixture.homeTeam.logo ?? "",
+    awayTeamLogo: fixture.awayTeam.logo ?? "",
+    league: fixture.league.name,
+    leagueId: String(fixture.league.id),
+    leagueKey: `id::${fixture.league.id}`,
+    country: fixture.league.country,
+    leagueIcon: fixture.league.logo ?? "",
+    kickoffTime: new Date(fixture.date),
+    isFavorite: false,
+  };
 }

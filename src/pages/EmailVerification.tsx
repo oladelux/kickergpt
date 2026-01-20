@@ -65,8 +65,6 @@ export default function EmailVerification() {
                     localStorage.removeItem("utm_source");
                   }
 
-                  // Set flag to show promo banner on first page load after login
-                  sessionStorage.setItem("just-logged-in", "true");
                   toast({
                     title: "Welcome!",
                     description: "You're all set. Redirecting to your fixtures...",
