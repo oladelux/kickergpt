@@ -820,29 +820,33 @@ const Chat = memo(function Chat() {
         />
 
         <div className="flex-1 flex overflow-hidden mt-[52px]">
-          {/* Left Sidebar - Desktop */}
-          <div className="hidden lg:block flex-shrink-0">
-            <FixturesLeftSidebar
-              matches={matches}
-              selectedLeagueKey={selectedLeagueKey}
-              onLeagueSelect={setSelectedLeagueKey}
-              countryFilter={countryFilter}
-              onCountryFilterChange={setCountryFilter}
-            />
-          </div>
-
-          {/* Left Sidebar - Mobile */}
-          <Sheet open={leftSidebarOpen} onOpenChange={setLeftSidebarOpen}>
-            <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+          {/* Left Sidebar - Desktop (only show in fixtures mode) */}
+          {viewMode === "fixtures" && (
+            <div className="hidden lg:block flex-shrink-0">
               <FixturesLeftSidebar
                 matches={matches}
                 selectedLeagueKey={selectedLeagueKey}
-                onLeagueSelect={handleMobileLeagueSelect}
+                onLeagueSelect={setSelectedLeagueKey}
                 countryFilter={countryFilter}
                 onCountryFilterChange={setCountryFilter}
               />
-            </SheetContent>
-          </Sheet>
+            </div>
+          )}
+
+          {/* Left Sidebar - Mobile (only show in fixtures mode) */}
+          {viewMode === "fixtures" && (
+            <Sheet open={leftSidebarOpen} onOpenChange={setLeftSidebarOpen}>
+              <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
+                <FixturesLeftSidebar
+                  matches={matches}
+                  selectedLeagueKey={selectedLeagueKey}
+                  onLeagueSelect={handleMobileLeagueSelect}
+                  countryFilter={countryFilter}
+                  onCountryFilterChange={setCountryFilter}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
 
           {/* Main Content */}
           <ScrollArea className="flex-1 p-2 sm:p-4">
