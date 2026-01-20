@@ -449,6 +449,204 @@ export type PredictionsResponse = {
 };
 
 /**
+ * Supported prediction types for natural language queries
+ */
+export type NaturalQueryPredictionType =
+  | "over_1_5_goals"
+  | "over_2_5_goals"
+  | "btts"
+  | "result"
+  | "home_win"
+  | "away_win"
+  | "draw"
+  | "high_scoring"
+  | "any";
+
+/**
+ * Date range type for queries
+ */
+export type DateRangeType = "today" | "tomorrow" | "next_3_days";
+
+/**
+ * Confidence threshold for filtering results
+ */
+export type ConfidenceThreshold = "any" | "medium" | "high" | "very_high";
+
+/**
+ * Sort options for query results
+ */
+export type SortOption = "confidence" | "date" | "goals_expected";
+
+/**
+ * Date range filter extracted from query
+ */
+export type DateRangeFilter = {
+  type: DateRangeType;
+  startDate?: string;
+  endDate?: string;
+};
+
+/**
+ * Filters extracted from the user's natural language query
+ */
+export type ClassifiedFilters = {
+  countries: string[];
+  leagues: string[];
+  dateRange: DateRangeFilter;
+  confidenceThreshold: ConfidenceThreshold;
+};
+
+/**
+ * Entities extracted from the query
+ */
+export type ExtractedEntities = {
+  teams: string[];
+  keywords: string[];
+};
+
+/**
+ * The classified intent from a natural language query
+ */
+export type ClassifiedIntent = {
+  predictionType: NaturalQueryPredictionType;
+  filters: ClassifiedFilters;
+  sortBy: SortOption;
+  limit: number;
+  isAmbiguous: boolean;
+  clarificationNeeded: string | null;
+  extractedEntities?: ExtractedEntities;
+};
+
+/**
+ * Team info in natural query response
+ */
+export type NaturalQueryTeam = {
+  id: number;
+  name: string;
+  logo: string | null;
+};
+
+/**
+ * League info in natural query response
+ */
+export type NaturalQueryLeague = {
+  id: number;
+  name: string;
+  country: string;
+  logo?: string | null;
+  flag?: string | null;
+};
+
+/**
+ * Venue info in natural query response
+ */
+export type NaturalQueryVenue = {
+  name: string | null;
+  city: string | null;
+};
+
+/**
+ * Fixture details in query response
+ */
+export type NaturalQueryMatchFixture = {
+  id: number;
+  date: string;
+  homeTeam: NaturalQueryTeam;
+  awayTeam: NaturalQueryTeam;
+  league: NaturalQueryLeague;
+  venue?: NaturalQueryVenue | null;
+};
+
+/**
+ * Prediction probabilities for natural query
+ */
+export type NaturalQueryProbabilities = {
+  over?: number;
+  under?: number;
+  homeWin?: number;
+  draw?: number;
+  awayWin?: number;
+  yes?: number;
+  no?: number;
+};
+
+/**
+ * Prediction result for a queried match
+ */
+export type NaturalQueryMatchPrediction = {
+  type: NaturalQueryPredictionType;
+  probability: number;
+  predictedOutcome: string;
+  confidence: ConfidenceLevel;
+  probabilities?: NaturalQueryProbabilities;
+};
+
+/**
+ * An analyzed match returned from a query
+ */
+export type NaturalQueryAnalyzedMatch = {
+  fixture: NaturalQueryMatchFixture;
+  prediction: NaturalQueryMatchPrediction;
+  relevantFactors: PredictionFactor[];
+};
+
+/**
+ * Metadata about the query execution
+ */
+export type NaturalQueryMetadata = {
+  query: string;
+  normalizedQuery: string;
+  intent: ClassifiedIntent;
+  fixturesSearched: number;
+  matchesFound: number;
+  executionTimeMs?: number;
+  cacheHit?: boolean;
+};
+
+/**
+ * Response from a natural language query
+ */
+export type NaturalQueryResponse = {
+  success: boolean;
+  matches: NaturalQueryAnalyzedMatch[];
+  summary?: string;
+  clarificationNeeded?: string;
+  suggestions?: string[];
+  metadata: NaturalQueryMetadata;
+};
+
+/**
+ * Suggestions response from the query API
+ */
+export type NaturalQuerySuggestionsResponse = {
+  examples: string[];
+  supportedCountries: string[];
+  supportedLeagues: string[];
+};
+
+/**
+ * Cache health response
+ */
+export type NaturalQueryCacheHealth = {
+  dates: Array<{ date: string; fixtureCount: number }>;
+  totalFixtures: number;
+};
+
+/**
+ * Available countries response
+ */
+export type NaturalQueryAvailableCountries = {
+  countries: string[];
+};
+
+/**
+ * Available leagues response
+ */
+export type NaturalQueryAvailableLeagues = {
+  leagues: Array<{ id: number; name: string; country: string }>;
+};
+
+/**
  * Error class for API requests resulting in a 5xx status code.
  */
 export class ApiError extends Error {
@@ -918,6 +1116,51 @@ export const api = {
     },
     findMatches: async (id: string) => {
       const res = await apiRequest(`/strategies/${id}/find-matches`, "POST");
+      return res.json();
+    },
+  },
+
+  // ============ Natural Query API ============
+  query: {
+    /**
+     * Search for matches using natural language
+     * @example
+     * const result = await api.query.search({ query: "BTTS from England today" });
+     */
+    search: async (data: { query: string }): Promise<NaturalQueryResponse> => {
+      const res = await apiRequest("/query", "POST", data);
+      return res.json();
+    },
+
+    /**
+     * Get example queries and supported options
+     */
+    getSuggestions: async (): Promise<NaturalQuerySuggestionsResponse> => {
+      const res = await apiRequest("/query/suggestions", "GET");
+      return res.json();
+    },
+
+    /**
+     * Get cache health status (useful for debugging)
+     */
+    getCacheHealth: async (): Promise<NaturalQueryCacheHealth> => {
+      const res = await apiRequest("/query/health", "GET");
+      return res.json();
+    },
+
+    /**
+     * Get list of countries with available fixtures
+     */
+    getAvailableCountries: async (): Promise<NaturalQueryAvailableCountries> => {
+      const res = await apiRequest("/query/countries", "GET");
+      return res.json();
+    },
+
+    /**
+     * Get list of leagues with available fixtures
+     */
+    getAvailableLeagues: async (): Promise<NaturalQueryAvailableLeagues> => {
+      const res = await apiRequest("/query/leagues", "GET");
       return res.json();
     },
   },

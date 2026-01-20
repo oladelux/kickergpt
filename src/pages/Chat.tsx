@@ -41,7 +41,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { usePredictions } from "@/hooks/usePredictions";
-import { getConfidenceColorClasses } from "@/lib/utils";
+import { getConfidenceColorClasses, naturalQueryMatchToMatch } from "@/lib/utils";
+import { ModeToggle, ViewMode } from "@/components/ModeToggle";
+import { NaturalQuerySearchBar } from "@/components/NaturalQuerySearchBar";
+import { NaturalQueryResults } from "@/components/NaturalQueryResults";
+import { useNaturalQuery } from "@/hooks/useNaturalQuery";
+import { NaturalQueryAnalyzedMatch } from "@/lib/api";
 
 const FREE_PREDICTION_LIMIT = 10;
 
@@ -301,6 +306,23 @@ const Chat = memo(function Chat() {
   const [rightSidebarOpen, setRightSidebarOpen] = useState(false);
   const [expandedPredictions, setExpandedPredictions] = useState<Set<string>>(new Set());
 
+  // Search mode state
+  const [viewMode, setViewMode] = useState<ViewMode>("search");
+  const [searchQuery, setSearchQuery] = useState("");
+  const {
+    results: searchResults,
+    summary: searchSummary,
+    clarificationNeeded,
+    followUpSuggestions,
+    metadata: searchMetadata,
+    exampleQueries,
+    searching,
+    error: searchError,
+    hasSearched,
+    search,
+    clearResults,
+  } = useNaturalQuery();
+
   useEffect(() => {
     if (isAuthenticated && user) {
       // Ensure user data stays fresh when authenticated
@@ -470,6 +492,47 @@ const Chat = memo(function Chat() {
     if (!selectedLeagueKey) return undefined;
     return matches.find((m) => m.leagueKey === selectedLeagueKey)?.league;
   }, [selectedLeagueKey, matches]);
+
+  // Search mode handlers - must be defined before early return
+  const handleSearchQueryChange = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleSearch = useCallback(
+    async (query: string) => {
+      try {
+        await search(query);
+      } catch (err) {
+        // Error is handled by the hook
+      }
+    },
+    [search]
+  );
+
+  const handleSearchSuggestionClick = useCallback(
+    (suggestion: string) => {
+      setSearchQuery(suggestion);
+      handleSearch(suggestion);
+    },
+    [handleSearch]
+  );
+
+  const handleSearchResultClick = useCallback((match: NaturalQueryAnalyzedMatch) => {
+    const convertedMatch = naturalQueryMatchToMatch(match);
+    setSelectedMatch(convertedMatch);
+    setChatOpen(true);
+  }, []);
+
+  const handleViewModeChange = useCallback(
+    (mode: ViewMode) => {
+      setViewMode(mode);
+      if (mode === "fixtures") {
+        clearResults();
+        setSearchQuery("");
+      }
+    },
+    [clearResults]
+  );
 
   if (loading || subscriptionLoading) return <LoadingPage />;
 
@@ -784,202 +847,235 @@ const Chat = memo(function Chat() {
           {/* Main Content */}
           <ScrollArea className="flex-1 p-2 sm:p-4">
             <div className="max-w-full mx-auto space-y-4 sm:space-y-6 pb-4">
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {summaryCards.map((card) => (
-                  <Card key={card.label} className="border-border bg-card">
-                    <CardContent className="flex items-center justify-between p-5">
-                      <div>
-                        <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
-                          {card.label}
-                        </p>
-                        <p className="text-2xl font-semibold text-foreground">{card.value}</p>
-                      </div>
-                      <div className={`rounded-2xl p-3 ${card.accent}`}>
-                        <card.icon className="h-5 w-5" />
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+              {/* Mode Toggle */}
+              <div className="flex justify-center">
+                <ModeToggle mode={viewMode} onChange={handleViewModeChange} />
               </div>
 
-              <AfropariPromoBannerFixtures />
+              {viewMode === "search" ? (
+                /* Search Mode Content */
+                <div className="space-y-6">
+                  <NaturalQuerySearchBar
+                    value={searchQuery}
+                    onChange={handleSearchQueryChange}
+                    onSearch={handleSearch}
+                    suggestions={exampleQueries}
+                    loading={searching}
+                  />
+                  <NaturalQueryResults
+                    results={searchResults}
+                    summary={searchSummary}
+                    clarificationNeeded={clarificationNeeded}
+                    followUpSuggestions={followUpSuggestions}
+                    metadata={searchMetadata}
+                    onResultClick={handleSearchResultClick}
+                    onSuggestionClick={handleSearchSuggestionClick}
+                    loading={searching}
+                    hasSearched={hasSearched}
+                    error={searchError}
+                  />
+                </div>
+              ) : (
+                /* Fixtures Mode Content */
+                <>
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {summaryCards.map((card) => (
+                      <Card key={card.label} className="border-border bg-card">
+                        <CardContent className="flex items-center justify-between p-5">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-muted-foreground">
+                              {card.label}
+                            </p>
+                            <p className="text-2xl font-semibold text-foreground">{card.value}</p>
+                          </div>
+                          <div className={`rounded-2xl p-3 ${card.accent}`}>
+                            <card.icon className="h-5 w-5" />
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
 
-              {subscriptionError && (
-                <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
-                  <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                    <span>{subscriptionError}</span>
-                    <Button variant="outline" size="sm" onClick={refreshAll}>
-                      Retry
-                    </Button>
-                  </CardContent>
-                </Card>
-              )}
-              <div className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-border bg-card p-2 sm:p-3">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 sm:gap-3 lg:gap-2">
-                  {availableDays.length > 0 && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                      <Button
-                        type="button"
-                        variant={selectedDay === null ? "default" : "outline"}
-                        size="sm"
-                        className={`h-8 sm:h-9 text-[12px] sm:text-xs rounded-md flex-shrink-0 px-2 sm:px-3 ${
-                          selectedDay === null ? "" : "border-border/60"
-                        }`}
-                        onClick={() => setSelectedDay(null)}
-                      >
-                        All days
-                      </Button>
-                      {availableDays.map((day) => (
-                        <Button
-                          key={day.key}
-                          type="button"
-                          variant={selectedDay === day.key ? "default" : "outline"}
-                          size="sm"
-                          className={`h-8 sm:h-9 text-[12px] sm:text-xs rounded-md flex-shrink-0 px-2 sm:px-3 ${
-                            selectedDay === day.key ? "" : "border-border/60"
-                          }`}
-                          onClick={() => setSelectedDay(day.key)}
-                        >
-                          {day.label}
+                  <AfropariPromoBannerFixtures />
+
+                  {subscriptionError && (
+                    <Card className="border-destructive/50 bg-destructive/5 text-sm text-destructive">
+                      <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                        <span>{subscriptionError}</span>
+                        <Button variant="outline" size="sm" onClick={refreshAll}>
+                          Retry
                         </Button>
+                      </CardContent>
+                    </Card>
+                  )}
+                  <div className="flex flex-col gap-2 sm:gap-3 rounded-lg border border-border bg-card p-2 sm:p-3">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center gap-2 sm:gap-3 lg:gap-2">
+                      {availableDays.length > 0 && (
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <Button
+                            type="button"
+                            variant={selectedDay === null ? "default" : "outline"}
+                            size="sm"
+                            className={`h-8 sm:h-9 text-[12px] sm:text-xs rounded-md flex-shrink-0 px-2 sm:px-3 ${
+                              selectedDay === null ? "" : "border-border/60"
+                            }`}
+                            onClick={() => setSelectedDay(null)}
+                          >
+                            All days
+                          </Button>
+                          {availableDays.map((day) => (
+                            <Button
+                              key={day.key}
+                              type="button"
+                              variant={selectedDay === day.key ? "default" : "outline"}
+                              size="sm"
+                              className={`h-8 sm:h-9 text-[12px] sm:text-xs rounded-md flex-shrink-0 px-2 sm:px-3 ${
+                                selectedDay === day.key ? "" : "border-border/60"
+                              }`}
+                              onClick={() => setSelectedDay(day.key)}
+                            >
+                              {day.label}
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                      {filtersApplied && (
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 sm:h-9 text-[10px] sm:text-xs text-muted-foreground hover:text-primary flex-shrink-0 px-2"
+                            onClick={handleResetFilters}
+                          >
+                            Reset
+                          </Button>
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0 flex justify-end w-full sm:w-auto">
+                        <Select
+                          value={statusFilter}
+                          onValueChange={(value) => setStatusFilter(value as StatusFilter)}
+                        >
+                          <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[180px] text-[13px] sm:text-xs">
+                            <SelectValue placeholder="Filter by status" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {statusOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="relative flex-1 min-w-0">
+                      <Search
+                        className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+                        size={14}
+                      />
+                      <Input
+                        className="pl-8 sm:pl-10 h-8 sm:h-9 text-xs sm:text-sm"
+                        placeholder="Search clubs, leagues..."
+                        value={matchSearch}
+                        onChange={(event) => setMatchSearch(event.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {matchesByDayAndLeague.length === 0 ? (
+                    <Card className="border border-dashed bg-card">
+                      <CardContent className="py-8 text-center text-muted-foreground">
+                        No matches fit your filters yet. Try adjusting your search or filters.
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-6">
+                      {matchesByDayAndLeague.map(({ dayKey, dayLabel, leagues }) => (
+                        <div key={dayKey} className="space-y-4">
+                          {matchesByDayAndLeague.length > 1 && (
+                            <div className="flex items-center gap-2 px-2">
+                              <h2 className="text-lg font-bold text-foreground">{dayLabel}</h2>
+                              <div className="flex-1 h-px bg-border" />
+                            </div>
+                          )}
+                          {leagues.map(([leagueKey, leagueMatches]) => {
+                            const leagueName = leagueMatches[0]?.league ?? "Other";
+                            const leaguePriority = getLeaguePriority(leagueName);
+                            const isPriorityLeague = leaguePriority > 0;
+
+                            return (
+                              <Card
+                                key={`${dayKey}-${leagueKey}`}
+                                className={`border bg-card ${
+                                  isPriorityLeague ? "border-primary/30" : "border-border"
+                                }`}
+                              >
+                                <CardContent className="p-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 px-4 py-3 border-b border-border bg-muted/50">
+                                    <div className="flex items-center flex-1 min-w-0">
+                                      <Avatar className="size-7 flex-shrink-0 mr-3">
+                                        <AvatarImage
+                                          src={leagueMatches[0]?.leagueIcon}
+                                          alt={leagueName}
+                                        />
+                                        <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                          {leagueName
+                                            .split(" ")
+                                            .map((name) => name[0])
+                                            .join("")
+                                            .slice(0, 2)
+                                            .toUpperCase()}
+                                        </AvatarFallback>
+                                      </Avatar>
+                                      <h3 className="text-sm font-bold text-foreground flex-1 min-w-0 truncate sm:mr-4">
+                                        {leagueName}
+                                      </h3>
+                                    </div>
+                                    <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                                      {leagueMatches[0]?.country && (
+                                        <div className="flex items-center gap-3 sm:mr-3">
+                                          <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
+                                          <Badge
+                                            variant="outline"
+                                            className="text-xs font-medium px-2.5 py-0.5 flex-shrink-0"
+                                          >
+                                            {leagueMatches[0].country}
+                                          </Badge>
+                                        </div>
+                                      )}
+                                      <div className="flex items-center gap-3">
+                                        <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
+                                        <Badge
+                                          variant="secondary"
+                                          className="text-xs font-semibold px-2.5 py-0.5 flex-shrink-0 bg-muted text-muted-foreground"
+                                        >
+                                          {leagueMatches.length}{" "}
+                                          {leagueMatches.length === 1 ? "match" : "matches"}
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="divide-y divide-border/50">
+                                    {leagueMatches.map((match, idx) => {
+                                      // Calculate global prediction index across all matches
+                                      const globalIndex = filteredMatches.findIndex(
+                                        (m) => m.id === match.id
+                                      );
+                                      return renderCompactMatchRow(match, globalIndex);
+                                    })}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            );
+                          })}
+                        </div>
                       ))}
                     </div>
                   )}
-                  {filtersApplied && (
-                    <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 sm:h-9 text-[10px] sm:text-xs text-muted-foreground hover:text-primary flex-shrink-0 px-2"
-                        onClick={handleResetFilters}
-                      >
-                        Reset
-                      </Button>
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0 flex justify-end w-full sm:w-auto">
-                    <Select
-                      value={statusFilter}
-                      onValueChange={(value) => setStatusFilter(value as StatusFilter)}
-                    >
-                      <SelectTrigger className="h-8 sm:h-9 w-full sm:w-[180px] text-[13px] sm:text-xs">
-                        <SelectValue placeholder="Filter by status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {statusOptions.map((option) => (
-                          <SelectItem key={option.value} value={option.value}>
-                            {option.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <div className="relative flex-1 min-w-0">
-                  <Search
-                    className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
-                    size={14}
-                  />
-                  <Input
-                    className="pl-8 sm:pl-10 h-8 sm:h-9 text-xs sm:text-sm"
-                    placeholder="Search clubs, leagues..."
-                    value={matchSearch}
-                    onChange={(event) => setMatchSearch(event.target.value)}
-                  />
-                </div>
-              </div>
-
-              {matchesByDayAndLeague.length === 0 ? (
-                <Card className="border border-dashed bg-card">
-                  <CardContent className="py-8 text-center text-muted-foreground">
-                    No matches fit your filters yet. Try adjusting your search or filters.
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-6">
-                  {matchesByDayAndLeague.map(({ dayKey, dayLabel, leagues }) => (
-                    <div key={dayKey} className="space-y-4">
-                      {matchesByDayAndLeague.length > 1 && (
-                        <div className="flex items-center gap-2 px-2">
-                          <h2 className="text-lg font-bold text-foreground">{dayLabel}</h2>
-                          <div className="flex-1 h-px bg-border" />
-                        </div>
-                      )}
-                      {leagues.map(([leagueKey, leagueMatches]) => {
-                        const leagueName = leagueMatches[0]?.league ?? "Other";
-                        const leaguePriority = getLeaguePriority(leagueName);
-                        const isPriorityLeague = leaguePriority > 0;
-
-                        return (
-                          <Card
-                            key={`${dayKey}-${leagueKey}`}
-                            className={`border bg-card ${
-                              isPriorityLeague ? "border-primary/30" : "border-border"
-                            }`}
-                          >
-                            <CardContent className="p-0">
-                              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 px-4 py-3 border-b border-border bg-muted/50">
-                                <div className="flex items-center flex-1 min-w-0">
-                                  <Avatar className="size-7 flex-shrink-0 mr-3">
-                                    <AvatarImage
-                                      src={leagueMatches[0]?.leagueIcon}
-                                      alt={leagueName}
-                                    />
-                                    <AvatarFallback className="bg-primary/10 text-primary text-xs">
-                                      {leagueName
-                                        .split(" ")
-                                        .map((name) => name[0])
-                                        .join("")
-                                        .slice(0, 2)
-                                        .toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <h3 className="text-sm font-bold text-foreground flex-1 min-w-0 truncate sm:mr-4">
-                                    {leagueName}
-                                  </h3>
-                                </div>
-                                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                                  {leagueMatches[0]?.country && (
-                                    <div className="flex items-center gap-3 sm:mr-3">
-                                      <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
-                                      <Badge
-                                        variant="outline"
-                                        className="text-xs font-medium px-2.5 py-0.5 flex-shrink-0"
-                                      >
-                                        {leagueMatches[0].country}
-                                      </Badge>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-3">
-                                    <div className="hidden sm:block h-5 w-px bg-border flex-shrink-0" />
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs font-semibold px-2.5 py-0.5 flex-shrink-0 bg-muted text-muted-foreground"
-                                    >
-                                      {leagueMatches.length}{" "}
-                                      {leagueMatches.length === 1 ? "match" : "matches"}
-                                    </Badge>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="divide-y divide-border/50">
-                                {leagueMatches.map((match, idx) => {
-                                  // Calculate global prediction index across all matches
-                                  const globalIndex = filteredMatches.findIndex(
-                                    (m) => m.id === match.id
-                                  );
-                                  return renderCompactMatchRow(match, globalIndex);
-                                })}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  ))}
-                </div>
+                </>
               )}
             </div>
           </ScrollArea>
