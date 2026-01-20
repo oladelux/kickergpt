@@ -142,7 +142,11 @@ export const NaturalQueryResults = memo(function NaturalQueryResults({
       {/* Results Grid */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {results.map((match) => (
-          <NaturalQueryResultCard key={match.fixture.id} match={match} onAnalyzeClick={onResultClick} />
+          <NaturalQueryResultCard
+            key={match.fixture.id}
+            match={match}
+            onAnalyzeClick={onResultClick}
+          />
         ))}
       </div>
 

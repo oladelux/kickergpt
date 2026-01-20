@@ -23,9 +23,7 @@ class QueryService {
   search(query: string): Observable<NaturalQueryResponse> {
     return from(api.query.search({ query })).pipe(
       map((response) => response),
-      catchError((error) =>
-        throwError(() => new Error(error?.message ?? "Search failed. Please try again."))
-      )
+      catchError((error) => throwError(() => error))
     );
   }
 

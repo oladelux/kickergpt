@@ -323,6 +323,9 @@ const Chat = memo(function Chat() {
     clearResults,
   } = useNaturalQuery();
 
+  // Track if user dismissed the limit banner
+  const [limitDismissed, setLimitDismissed] = useState(false);
+
   useEffect(() => {
     if (isAuthenticated && user) {
       // Ensure user data stays fresh when authenticated
@@ -339,6 +342,72 @@ const Chat = memo(function Chat() {
       (resolvedCountryCode === "NG" && subscriptionPlan?.plan === "MONTHLY_UNLIMITED");
     return !isPro;
   }, [subscriptionPlan, resolvedCountryCode]);
+
+  // Calculate prompts remaining text for search feature
+  const searchPromptsRemainingText = useMemo(() => {
+    if (!usage || !subscriptionPlan) return null;
+
+    const isNigerian = resolvedCountryCode === "NG";
+    const planName = subscriptionPlan.plan;
+
+    // For Nigerian users on Monthly Unlimited or PRO, don't show anything
+    if (isNigerian && (planName === "MONTHLY_UNLIMITED" || planName === "PRO")) {
+      return null;
+    }
+
+    // For 3-day or 7-day passes (Nigerian), show expiration time
+    if (isNigerian && (planName === "THREE_DAY_PASS" || planName === "SEVEN_DAY_PASS")) {
+      if (subscriptionPlan.currentPeriodEnd) {
+        const expirationDate = new Date(subscriptionPlan.currentPeriodEnd);
+        const now = new Date();
+        const diffMs = expirationDate.getTime() - now.getTime();
+
+        if (diffMs <= 0) {
+          return "Unlimited prompts expired";
+        }
+
+        const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+        const diffDays = Math.floor(diffHours / 24);
+        const remainingHours = diffHours % 24;
+
+        if (diffDays > 0) {
+          return `Unlimited prompts expire in ${diffDays}d ${remainingHours}h`;
+        } else {
+          return `Unlimited prompts expire in ${diffHours}h`;
+        }
+      }
+      return "Unlimited prompts active";
+    }
+
+    // For FREE plan and other plans, show remaining prompts
+    const remaining =
+      usage.monthlyRemaining > 0 ? usage.monthlyRemaining : usage.totalCreditsRemaining;
+    return `${remaining} prompts remaining`;
+  }, [usage, subscriptionPlan, resolvedCountryCode]);
+
+  // Detect if user has exhausted their prompts based on usage data
+  const searchLimitReached = useMemo(() => {
+    if (!usage || !subscriptionPlan || limitDismissed) return false;
+
+    const isNigerian = resolvedCountryCode === "NG";
+    const planName = subscriptionPlan.plan;
+
+    // Unlimited users never hit limit
+    if (usage.isUnlimited) return false;
+    if (isNigerian && (planName === "MONTHLY_UNLIMITED" || planName === "PRO")) return false;
+    if (isNigerian && (planName === "THREE_DAY_PASS" || planName === "SEVEN_DAY_PASS")) {
+      // Check if pass has expired
+      if (subscriptionPlan.currentPeriodEnd) {
+        const expirationDate = new Date(subscriptionPlan.currentPeriodEnd);
+        return expirationDate.getTime() < Date.now();
+      }
+      return false;
+    }
+
+    // Check if credits are exhausted
+    const totalRemaining = usage.totalCreditsRemaining;
+    return totalRemaining <= 0;
+  }, [usage, subscriptionPlan, resolvedCountryCode, limitDismissed]);
 
   const filteredMatches = useMemo(() => {
     const filtered = matches.filter((match) => {
@@ -502,12 +571,19 @@ const Chat = memo(function Chat() {
     async (query: string) => {
       try {
         await search(query);
+        // Refresh usage after successful search to show updated prompts remaining
+        refreshUsage();
       } catch (err) {
-        // Error is handled by the hook
+        // If limit was reached, refresh usage to get updated count
+        refreshUsage();
       }
     },
-    [search]
+    [search, refreshUsage]
   );
+
+  const handleDismissSearchLimit = useCallback(() => {
+    setLimitDismissed(true);
+  }, []);
 
   const handleSearchSuggestionClick = useCallback(
     (suggestion: string) => {
@@ -865,6 +941,9 @@ const Chat = memo(function Chat() {
                     onSearch={handleSearch}
                     suggestions={exampleQueries}
                     loading={searching}
+                    promptsRemainingText={searchPromptsRemainingText}
+                    limitReached={searchLimitReached}
+                    onDismissLimit={handleDismissSearchLimit}
                   />
                   <NaturalQueryResults
                     results={searchResults}

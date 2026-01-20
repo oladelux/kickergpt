@@ -111,7 +111,7 @@ export const useNaturalQuery = (): UseNaturalQueryReturn => {
           resolve();
         },
         error: (err) => {
-          setError(err.message);
+          setError(err?.message ?? "Search failed. Please try again.");
           setSearching(false);
           reject(err);
         },
