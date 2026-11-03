@@ -13,6 +13,15 @@ What's planned for the KickerGPT client, roughly in priority order. Tick items o
 - [ ] **Stop using the test endpoint.** Move the fixtures search off `/fixtures/test` onto the production endpoint.
 - [ ] **Remove the old name.** Rename the `boot-room:favorites` storage key to a KickerGPT key, migrating saved favorites.
 
+## Next: tech stack
+
+- [ ] **Move to a monorepo.** Bring the web app, the mobile apps and the API into one repository, using npm workspaces with Turborepo:
+  - `apps/web`: the React + Vite web client
+  - `apps/mobile`: the Capacitor Android (and later iOS) apps
+  - `apps/api`: the NestJS backend
+  - `packages/shared`: shared TypeScript types and API contracts (fixtures, strategies, subscriptions), so the client and server stay in sync
+- [ ] **One pipeline.** Run lint, type-check, tests and builds for every app from a single CI workflow, and only rebuild the apps that changed.
+
 ## Next: product
 
 - [ ] **iOS app.** Add the Capacitor iOS platform, real AdMob iOS unit IDs (the current ones are Google test IDs) and App Store in-app purchases.
