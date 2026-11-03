@@ -1,73 +1,109 @@
-# Welcome to your Lovable project
+# KickerGPT
 
-## Project info
+**AI-powered football match intelligence.** KickerGPT gives you probability-based match predictions plus the context behind them: form, head-to-head, injuries, officiating and weather. You can ask questions in plain English, chat with an AI analyst about a fixture, and build your own rule-based strategies that pick out matching games automatically.
 
-**URL**: https://lovable.dev/projects/f5bb4266-0969-4c21-9c33-6761af5a49dc
+> KickerGPT gives probability-based forecasts to support match analysis. It does not guarantee results.
 
-## How can I edit this code?
+This repository holds the **web and Android client** (React + Capacitor). It talks to a separate KickerGPT backend API over HTTP.
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Who it's for
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/f5bb4266-0969-4c21-9c33-6761af5a49dc) and start prompting.
+- **Match analysts and football enthusiasts** who want to study fixtures with data instead of gut feeling.
+- **Fans** who want a quick, readable breakdown of upcoming fixtures.
+- **Data-minded followers of the game** who want to write their own filters (for example "home side scored 2+ in each of its last 5 games") and see which fixtures match them.
 
-Changes made via Lovable will be committed automatically to this repo.
+## Features
 
-**Use your preferred IDE**
+| Area | What it does |
+| --- | --- |
+| **Fixtures & predictions** | Browse matches for the next three days, with AI predictions and confidence badges. |
+| **Natural-language search** | Type queries like *"Premier League games where both teams score often"*. They are turned into structured fixture searches, with suggestions and filters for country and league. |
+| **AI match chat** | Chat about a specific fixture. Answers are rendered as Markdown, and past conversations are saved in History. |
+| **Strategies** | Build rule-based strategies from conditions (form, win rate, H2H, goals scored or conceded, clean sheets, BTTS, injuries) and find the fixtures that match. A PRO feature. |
+| **Control Room** | Track how past predictions turned out. |
+| **Favorites & history** | Save fixtures and revisit earlier analyses. |
+| **Accounts** | Email sign-up and login, email verification, and password reset. |
+| **Plans & credits** | Free tier with a monthly prompt allowance, and a PRO subscription (Stripe on the web, Google Play on Android). On Android, users can watch rewarded ads (AdMob) to earn extra prompts. |
+| **Mobile app** | A native Android app built with Capacitor, with a splash screen, status-bar theming, the hardware back button and dark/light mode. |
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Tech stack
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- **Frontend:** [React 18](https://react.dev), [TypeScript](https://www.typescriptlang.org), [Vite](https://vitejs.dev)
+- **UI:** [Tailwind CSS](https://tailwindcss.com), [shadcn/ui](https://ui.shadcn.com) (Radix UI), lucide-react icons, Recharts
+- **Data & state:** TanStack Query, React Hook Form + Zod, RxJS
+- **Routing & SEO:** React Router, react-helmet-async
+- **Mobile:** [Capacitor](https://capacitorjs.com) (Android), AdMob via `@capacitor-community/admob`
+- **Analytics & support:** Vercel Analytics, LiveSession, Intercom (currently disabled)
+- **Hosting:** Vercel (web). The project started with [Lovable](https://lovable.dev) and is now developed by hand.
 
-Follow these steps:
+## Project structure
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+.
+├── src/
+│   ├── pages/        # Route-level screens (Index, Chat/Fixtures, Strategies, Plans, Profile, ...)
+│   ├── components/   # Feature components + ui/ (shadcn primitives)
+│   ├── hooks/        # React hooks wrapping services (useAuth, useMatches, useNaturalQuery, ...)
+│   ├── services/     # API clients for each backend area (auth, chat, strategies, ads, ...)
+│   ├── lib/          # API wrapper, config, platform detection, SEO helpers
+│   └── types/        # Shared TypeScript types
+├── android/          # Capacitor Android project
+├── public/           # Static assets
+└── capacitor.config.ts
 ```
 
-**Edit a file directly in GitHub**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Getting started
 
-**Use GitHub Codespaces**
+### Prerequisites
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- Node.js 18+ and npm
+- A running KickerGPT backend API. This repo is the client only.
+- For Android: Java 21 and Android Studio
 
-## What technologies are used for this project?
+### Run the web app
 
-This project is built with:
+```bash
+git clone https://github.com/oladelux/boot-room-bot.git
+cd boot-room-bot
+npm install
+cp .env.example .env      # then set VITE_API_URL to your backend URL
+npm run dev               # opens on the local URL Vite prints (default http://localhost:5173)
+```
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Environment variables
 
-## How can I deploy this project?
+| Variable | Required | Description |
+| --- | --- | --- |
+| `VITE_API_URL` | yes | Base URL of the KickerGPT backend API |
+| `VITE_APP_VERSION` | no | App version shown in the UI (default `1.0.0`) |
 
-Simply open [Lovable](https://lovable.dev/projects/f5bb4266-0969-4c21-9c33-6761af5a49dc) and click on Share -> Publish.
+Never commit `.env`. It is listed in `.gitignore`, and `.env.example` is the template.
 
-## Can I connect a custom domain to my Lovable project?
+### Other scripts
 
-Yes, you can!
+```bash
+npm run build             # production build to dist/
+npm run preview           # serve the production build locally
+npm run lint              # ESLint
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### Run the Android app
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+```bash
+npm run cap:build         # build the web app and sync it into android/
+npm run cap:open:android  # open in Android Studio, or:
+npm run cap:run:android   # run on a connected device or emulator
+```
+
+Release signing reads from `android/key.properties`, which is git-ignored.
+
+## Roadmap
+
+The plans for what comes next are in **[ROADMAP.md](ROADMAP.md)**.
+
+## License
+
+[MIT](LICENSE) © Oladele Olorunsola
