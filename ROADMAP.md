@@ -1,6 +1,6 @@
 # KickerGPT Roadmap
 
-What's planned for the KickerGPT client, roughly in priority order. Tick items off as they ship.
+What's planned for the KickerGPT client, roughly in priority order. Tick items off as they ship. The backend roadmap is in [oladelux/kickergpt-api](https://github.com/oladelux/kickergpt-api/blob/main/ROADMAP.md).
 
 ## Now: hardening and cleanup
 

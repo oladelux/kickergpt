@@ -4,7 +4,9 @@
 
 > KickerGPT gives probability-based forecasts to support match analysis. It does not guarantee results.
 
-This repository holds the **web and Android client** (React + Capacitor). It talks to a separate KickerGPT backend API over HTTP.
+This repository holds the **web and Android client** (React + Capacitor).
+
+**Backend API:** [oladelux/kickergpt-api](https://github.com/oladelux/kickergpt-api) (NestJS, PostgreSQL, OpenAI). The client talks to it over HTTP.
 
 ---
 
@@ -54,22 +56,21 @@ This repository holds the **web and Android client** (React + Capacitor). It tal
 └── capacitor.config.ts
 ```
 
-
 ## Getting started
 
 ### Prerequisites
 
 - Node.js 18+ and npm
-- A running KickerGPT backend API. This repo is the client only.
+- A running [KickerGPT API](https://github.com/oladelux/kickergpt-api). See its README to start it locally.
 - For Android: Java 21 and Android Studio
 
 ### Run the web app
 
 ```bash
-git clone https://github.com/oladelux/boot-room-bot.git
-cd boot-room-bot
+git clone https://github.com/oladelux/kickergpt.git
+cd kickergpt
 npm install
-cp .env.example .env      # then set VITE_API_URL to your backend URL
+cp .env.example .env      # set VITE_API_URL, e.g. http://localhost:3000/api/v1
 npm run dev               # opens on the local URL Vite prints (default http://localhost:5173)
 ```
 
@@ -77,7 +78,7 @@ npm run dev               # opens on the local URL Vite prints (default http://l
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `VITE_API_URL` | yes | Base URL of the KickerGPT backend API |
+| `VITE_API_URL` | yes | Base URL of the [KickerGPT API](https://github.com/oladelux/kickergpt-api), including `/api/v1` |
 | `VITE_APP_VERSION` | no | App version shown in the UI (default `1.0.0`) |
 
 Never commit `.env`. It is listed in `.gitignore`, and `.env.example` is the template.
