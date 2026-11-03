@@ -355,7 +355,7 @@ export default function History() {
               Chat History
             </h1>
             <p className="text-muted-foreground">
-              Revisit every fixture analysis you&apos;ve requested from the Boot Room Bot.
+              Revisit every fixture analysis you&apos;ve requested from KickerGPT.
             </p>
           </div>
           <Button
